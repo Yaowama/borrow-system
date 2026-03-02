@@ -1,0 +1,45 @@
+<link rel="stylesheet" href="/css/auth.css">
+
+<div class="container">
+
+  <div class="left">
+    <h1>ยืนยันรหัส OTP</h1>
+    
+    <% if (typeof error !== "undefined") { %>
+      <div class="error-box show">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/verify-otp">
+      <input type="hidden" name="email" value="<%= email %>">
+
+      <div class="label">รหัสยืนยัน (6 หลัก)</div>
+      <div class="input">
+        <input
+          type="text"
+          name="otp"
+          maxlength="6"
+          placeholder="กรอกรหัส OTP"
+          required
+        >
+      </div>
+
+      <a href="/forgot" class="link">ขอรหัส OTP ใหม่</a>
+
+      <button class="btn">ยืนยัน</button>
+    </form>
+
+  </div>
+
+  <div class="right">
+
+     <div class="logo-box">
+      <img src="/images/logo2.png" alt="logo">
+    </div>
+    <h2>ความปลอดภัย</h2>
+    <p>รหัส OTP มีอายุการใช้งานภายใน 10 นาที</p>
+  </div>
+
+</div>
+<script src="/js/login.js"></script>

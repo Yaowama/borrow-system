@@ -1,0 +1,133 @@
+<link rel="stylesheet" href="/css/admin-device.css">
+
+<div class="top-bar">
+    <h1>คลังอุปกรณ์</h1>
+
+    <div class="top-right">
+        <div class="search">
+            <input
+                type="text"
+                class="admin-search"
+                data-target=".device-row"
+                placeholder="ค้นหาอุปกรณ์"
+                >
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+
+        <div class="admin-box">
+            <span>Admin</span>
+            <i class="fa-solid fa-user"></i>
+        </div>
+
+        <div class="logo-box">
+            <img src="/images/logo.png">
+        </div>
+    </div>
+</div>
+
+<a href="/admin/device/add" class="btn-add">
+    <i class="fa-solid fa-plus"></i> เพิ่มอุปกรณ์
+</a>
+
+<br><br>
+
+<table class="table">
+
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>รูป</th>
+            <th>อุปกรณ์</th>
+            <th>หมวด</th>
+            <th>ประเภท</th>
+            <th>ยี่ห้อ</th>
+            <th>รุ่น</th>
+            <th>ทั้งหมด</th>
+            <th>ว่าง</th>
+            <th>ยืม</th>
+            <th>ซ่อม</th>
+            <th>จัดการ</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    <% models.forEach((m, index) => { %>
+        <tr class="device-row">
+
+            <td class="center"><%= index + 1 %></td>
+
+            <td class="center">
+                <% if (m.DeviceImage) { %>
+                    <img src="/uploads/device/<%= m.DeviceImage %>" class="device-img">
+                <% } else { %>
+                    <span class="no-img">—</span>
+                <% } %>
+            </td>
+
+            <td>
+                <div class="device-name"><%= m.DeviceName %></div>
+                <div class="device-sub"><%= m.TypeName %> • <%= m.BrandName %></div>
+            </td>
+
+            <td><%= m.CategoryName %></td>
+            <td><%= m.TypeName %></td>
+            <td><%= m.BrandName %></td>
+            <td><%= m.ModelName %></td>
+
+            <td class="center"><span class="badge gray"><%= m.TotalQty %></span></td>
+            <td class="center"><span class="badge green"><%= m.AvailableQty %></span></td>
+            <td class="center"><span class="badge yellow"><%= m.BorrowQty %></span></td>
+            <td class="center"><span class="badge red"><%= m.RepairQty %></span></td>
+
+            <td class="center">
+            <div class="action-box">
+
+                <a href="/admin/device/<%= m.ModelID %>"
+                class="btn-icon view"
+                title="ดูเครื่อง">
+                <i class="fa-solid fa-eye"></i>
+                </a>
+
+                <a href="/admin/device/edit/<%= m.DeviceID %>"
+                class="btn-icon edit"
+                title="แก้ไข">
+                <i class="fa-solid fa-pen"></i>
+                </a>
+
+                <a href="#"
+                class="btn-icon del"
+                data-id="<%= m.ModelID %>"
+                data-type="model"
+                title="ลบ">
+                <i class="fa-solid fa-trash"></i>
+                </a>
+            </div>
+            </td>
+
+        </tr>
+    <% }) %>
+    </tbody>
+</table>
+
+<!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
+<div id="deleteModal" class="delete-modal">
+  <div class="modal-box">
+
+    <div class="check-wrapper danger">
+      <svg class="warningmark" viewBox="0 0 52 52">
+        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
+        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+        <circle class="warning-dot" cx="26" cy="36" r="2"/>
+      </svg>
+    </div>
+
+    <h3>ยืนยันการลบ</h3>
+    <p>คุณต้องการลบอุปกรณ์นี้ใช่หรือไม่ ?</p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel">ยกเลิก</button>
+      <button id="confirmDeleteBtn" class="btn-danger">ลบ</button>
+    </div>
+  </div>
+</div>
+

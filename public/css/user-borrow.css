@@ -1,0 +1,41 @@
+.page-title {
+  font-size: 22px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  border-collapse: collapse;
+  overflow: hidden;
+}
+
+.table th {
+  background: #f4f6fa;
+  padding: 12px;
+  text-align: left;
+}
+
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.table tr:hover {
+  background: #fafafa;
+}
+
+.btn.blue {
+  background: #2563eb;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn.blue:hover {
+  background: #1e40af;
+}

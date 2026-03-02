@@ -1,0 +1,129 @@
+<link rel="stylesheet" href="/css/device_add.css">
+
+<div class="top-bar">
+  <h1>แก้ไขเครื่องอุปกรณ์</h1>
+
+  <div class="top-right">
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+</div>
+
+<div class="admin-card">
+
+  <div class="card-header">
+    <i class="fa-solid fa-desktop"></i>
+    <span>ข้อมูลเครื่อง (Asset)</span>
+  </div>
+
+  <!-- 🔴 เปลี่ยน action -->
+  <form
+    action="/admin/device/item/<%= device.DVID %>/edit"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+
+    <div class="form-grid">
+
+      <!-- รุ่นอุปกรณ์ (แก้ไม่ได้) -->
+      <div class="form-group">
+        <label>รุ่นอุปกรณ์</label>
+        <input
+          type="text"
+          class="form-control"
+          value="<%= device.ModelName || '-' %>"
+          readonly
+        >
+      </div>
+
+      <!-- Serial Number -->
+      <div class="form-group">
+        <label>Serial Number</label>
+        <input
+          type="text"
+          name="SerialNumber"
+          value="<%= device.SerialNumber %>"
+          required
+        >
+      </div>
+
+      <!-- Asset Code -->
+      <div class="form-group">
+        <label>Asset Code</label>
+        <input
+          type="text"
+          name="AssetCode"
+          value="<%= device.AssetCode %>"
+        >
+      </div>
+
+      <!-- สถานะ -->
+      <div class="form-group">
+        <label>สถานะ</label>
+        <select name="DVStatusID" required>
+          <% statusList.forEach(s => { %>
+            <option
+              value="<%= s.DVStatusID %>"
+              <%= s.DVStatusID === device.DVStatusID ? "selected" : "" %>
+            >
+              <%= s.StatusName %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- รูป -->
+      <div class="form-group upload-box full">
+        <label>รูป Serial Number</label>
+
+        <input
+          type="file"
+          name="AssetImage"
+          id="asset_image"
+          accept="image/*"
+          hidden
+        >
+
+        <label for="asset_image" class="upload-btn">
+
+          <% if (!device.BarcodeImage) { %>
+            <div class="upload-placeholder">
+                <span>📷 อัปโหลดรูป</span>
+                <small>รองรับ jpg / png</small>
+            </div>
+            <% } %>
+
+          <% if (device.BarcodeImage) { %>
+            <img
+                id="preview"
+                class="preview-img"
+                src="/uploads/asset/<%= device.BarcodeImage %>"
+                style="display:block"
+                />
+          <% } else { %>
+            <img id="preview" class="preview-img" />
+          <% } %>
+
+        </label>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+    <a href="/admin/device/<%= device.ModelID %>" class="btn-cancel">
+      ยกเลิก
+    </a>
+      <button type="submit" class="btn-save">
+        บันทึกการแก้ไข
+      </button>
+    </div>
+
+  </form>
+</div>
+

@@ -1,0 +1,229 @@
+<link rel="stylesheet" href="/css/admin-borrow-list.css">
+<div class="top-bar">
+
+        <h1>รายการขอยืมอุปกรณ์</h1>
+
+        <div class="top-right">
+          <div class="search">
+              <input
+                type="text"
+                class="admin-search"
+                data-target=".borrow_list-row"
+                placeholder="ค้นหาอุปกรณ์"
+                >
+              <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+            <div class="admin-box">
+                <span>Admin</span>
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div class="logo-box">
+                <img src="/images/logo.png">
+            </div>
+        </div>
+
+    </div>
+      <div class="borrow-tabs">
+        <button class="tab active" data-status="1">รออนุมัติ</button>
+        <button class="tab" data-status="2">อนุมัติแล้ว</button>
+        <button class="tab" data-status="6">กำลังยืม</button>
+        <button class="tab" data-status="3">ปฏิเสธ</button>
+        <button class="tab" data-status="4">คืนแล้ว</button>
+        <button class="tab" data-status="5">ยกเลิก</button>
+        <button class="tab" data-status="all">ทั้งหมด</button>
+      </div>
+
+<table class="table">
+
+<tr>
+  <th>รูป</th>
+  <th>เลขเอกสาร</th>
+  <th>ผู้ยืม</th>
+  <th>อุปกรณ์</th>
+  <th>วันยืม</th>
+  <th>กำหนดคืน</th>
+  <th>สถานะ</th>
+  <th>ดำเนินการโดย</th>
+  <th>จัดการ</th>
+  <th></th>
+</tr>
+
+<% borrows.forEach(b => { %>
+<tr class="borrow_list-row" data-status="<%= b.BorrowStatusID %>">
+  <td class="center">
+    <% if (b.DeviceImage) { %>
+      <img src="/uploads/device/<%= b.DeviceImage %>" class="device-img">
+    <% } else { %>
+      <span class="no-img">ไม่มีรูป</span>
+    <% } %>
+  </td>
+
+  <td><%= b.BorrowCode %></td>
+  <td><%= b.fname %> <%= b.lname %></td>
+
+  <td>
+    <%= b.AssetCode %><br>
+    <small><%= b.DeviceName %></small>
+  </td>
+
+  <td><%= b.BorrowDate %></td>
+  <td><%= b.DueDate %></td>
+
+  <td>
+    <% if (b.BorrowStatusID == 1) { %>
+      <span class="badge gray">รออนุมัติ</span>
+    <% } else if (b.BorrowStatusID == 3) { %>
+      <span class="badge red">ปฏิเสธ</span>
+    <% } else if (b.BorrowStatusID == 4) { %>
+      <span class="badge green">คืนแล้ว</span>
+    <% } else if (b.BorrowStatusID == 5) { %>
+      <span class="badge orange">ยกเลิก</span>
+    <% } %>
+
+    <% if (b.statusText) { %>
+      <span class="<%= b.statusClass %>">
+        <%= b.statusText %>
+      </span>
+    <% } %>
+
+  </td>
+
+
+<td>
+  <% if (b.ActionBy) { %>
+    <%= b.ActionBy %><br>
+  <% } else { %>
+    <span style="color:#9ca3af;">—</span>
+  <% } %>
+</td>
+
+ <td class="center">
+  <div class="action-box">
+
+    <% if (b.BorrowStatusID == 1) { %>
+      <form action="/admin/borrow/approve/<%= b.BorrowID %>" method="POST">
+        <button class="btn green">อนุมัติ</button>
+      </form>
+
+      <button
+        type="button"
+        class="btn red btn-reject"
+        data-id="<%= b.BorrowID %>">
+        ไม่อนุมัติ
+      </button>
+    <% } %>
+
+    <% if (b.BorrowStatusID == 6 ) { %>
+      <form action="/admin/borrow/return/<%= b.BorrowID %>" method="POST">
+        <button class="btn blue">คืนอุปกรณ์</button>
+      </form>
+    <% } %>
+
+    <% if (
+      (b.BorrowStatusID == 3 || b.BorrowStatusID == 4)
+      && !b.RepairID
+    ) { %>
+
+      <!-- ยังไม่เคยส่งซ่อม -->
+      <form
+        action="/admin/repair/create/<%= b.DVID %>"
+        method="POST"
+        class="repair-form"
+        style="display:inline;"
+      >
+        <button type="submit" class="icon-action warning" title="ส่งซ่อม">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </button>
+      </form>
+
+    <% } else if (b.RepairID) { %>
+
+      <!-- กำลังซ่อม -->
+      <button class="icon-action gray" disabled title="อยู่ระหว่างซ่อม">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+      </button>
+
+    <% } %>
+  </div>
+</td>
+
+<td class="center">
+  <div class="action-box">
+
+    <!-- ดูรายละเอียดการยืม -->
+    <button
+      class="btn-detail"
+      data-code="<%= b.BorrowCode %>"
+      title="ดูรายละเอียดการยืม"
+    >
+      <i class="fa-solid fa-eye"></i>
+    </button>
+
+    <!-- ดูข้อมูลผู้ยืม -->
+    <button
+      class="icon-action user"
+      data-user-id="<%= b.EMPID %>"
+      title="ข้อมูลผู้ยืม"
+    >
+      <i class="fa-solid fa-user"></i>
+    </button>
+
+  </div>
+</td>
+
+</tr>
+<% }) %>
+</table>
+
+<div id="detailOverlay" class="detail-overlay">
+  <div class="detail-box">
+    <button id="closeDetail" class="close-btn">✕</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div id="rejectModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box reject-modal">
+    <h3>ปฏิเสธการยืม</h3>
+
+    <form id="rejectForm" method="POST">
+
+      <label class="modal-label">เหตุผลที่พบบ่อย</label>
+      <select id="rejectReasonSelect" class="modal-select">
+        <option value="">— เลือกเหตุผล —</option>
+        <option value="อุปกรณ์ไม่พร้อมใช้งาน">อุปกรณ์ไม่พร้อมใช้งาน</option>
+        <option value="ช่วงเวลายืมซ้ำกับผู้อื่น">ช่วงเวลายืมซ้ำกับผู้อื่น</option>
+        <option value="ข้อมูลการยืมไม่ครบถ้วน">ข้อมูลการยืมไม่ครบถ้วน</option>
+        <option value="ไม่ผ่านการอนุมัติจากหน่วยงาน">ไม่ผ่านการอนุมัติจากหน่วยงาน</option>
+        <option value="อื่น ๆ">อื่น ๆ (พิมพ์เอง)</option>
+      </select>
+
+      <label class="modal-label">รายละเอียดเหตุผล</label>
+      <textarea
+        name="remark"
+        id="rejectRemark"
+        required
+        placeholder="สามารถพิมพ์เหตุผลเพิ่มเติมได้"></textarea>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn red">ยืนยันปฏิเสธ</button>
+        <button type="button" id="closeReject" class="btn gray">ยกเลิก</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<div id="userOverlay" class="detail-overlay">
+  <div class="detail-box">
+    <button id="closeUser" class="close-btn">✕</button>
+
+    <div id="userContent">
+      <h3>ข้อมูลผู้ยืม</h3>
+      <p style="text-align:center; color:#6b7280;">
+        (รอเชื่อมข้อมูลผู้ยืม)
+      </p>
+    </div>
+  </div>
+</div>

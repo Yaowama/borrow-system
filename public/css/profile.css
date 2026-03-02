@@ -1,0 +1,275 @@
+.profile-container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* ===== HEADER ===== */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  background: linear-gradient(135deg,#ff944d,#ffa86b);
+  border-radius: 28px;
+  padding: 45px;
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,.18);
+}
+
+.avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  object-fit: cover;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.profile-header span {
+  opacity: .9;
+}
+
+.role {
+  margin-top: 12px;
+  padding: 6px 22px;
+  background: rgba(255,255,255,.25);
+  border-radius: 40px;
+  display: inline-block;
+  font-weight: 600;
+}
+
+/* ===== SUMMARY ===== */
+
+.summary-grid {
+  margin-top: 35px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 25px;
+}
+
+.summary-card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
+}
+
+.summary-card i {
+  font-size: 38px;
+  color: #ff7a2d;
+}
+
+.summary-card h3 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.summary-card p {
+  margin: 0;
+  color: #888;
+}
+
+.summary-card.warn i { color:#ff5252; }
+.summary-card.success i { color:#2ecc71; }
+
+/* ===== INFO ===== */
+
+.profile-title {
+  margin-top: 55px;
+  margin-bottom: 15px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ff7a2d;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+  gap: 25px;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  border-left: 6px solid #ff944d;
+  box-shadow: 0 8px 22px rgba(0,0,0,.08);
+  transition: .25s;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 35px rgba(0,0,0,.15);
+}
+
+.info-card i {
+  font-size: 28px;
+  color: #ff7a2d;
+}
+
+.info-card label {
+  font-size: 14px;
+  color: #888;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.info-card.full {
+  grid-column: span 2;
+}
+
+/* ===== ACTION ===== */
+
+.profile-actions {
+  margin-top: 45px;
+  display: flex;
+  gap: 20px;
+}
+
+.btn {
+  padding: 13px 35px;
+  border-radius: 40px;
+  background: #ff7a2d;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.btn.outline {
+  background: transparent;
+  border: 2px solid #ff7a2d;
+  color: #ff7a2d;
+}
+
+.profile-form {
+  margin-top: 30px;
+}
+
+.form-grid {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 25px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+}
+
+.form-group input:disabled {
+  background: #f3f3f3;
+}
+
+.avatar-edit {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.profile-avatar-lg {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 6px solid #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+
+
+
+/* ================= AVATAR EDIT ================= */
+
+.avatar-wrapper {
+  position: relative;
+  width: 180px;
+  margin-bottom: 30px;
+}
+
+.avatar-circle {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid #fff;
+  box-shadow: 0 12px 35px rgba(0,0,0,.18);
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ปุ่มดินสอ */
+.avatar-edit-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 45px;
+  height: 45px;
+  background: #ff7a2d;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  transition: .25s;
+}
+
+.avatar-edit-btn:hover {
+  background: #ff944d;
+  transform: scale(1.08);
+}
+
+/* ================= BUTTON ================= */
+
+.btn-save {
+  padding: 13px 36px;
+  border-radius: 40px;
+  background: #ff7a2d;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-save:hover {
+  background: #ff944d;
+}
+
+.btn-cancel {
+  padding: 13px 36px;
+  border-radius: 40px;
+  border: 2px solid #ff7a2d;
+  color: #ff7a2d;
+  text-decoration: none;
+  font-weight: 700;
+}

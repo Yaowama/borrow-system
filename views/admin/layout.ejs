@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        <%= typeof title !== 'undefined'
+            ? title
+            : 'Admin Dashboard' %>
+    </title>
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="container">
+
+    <%- include('./sidebar', { user }) %>
+
+    <main class="content">
+
+        <div class="content-scroll">
+            <%- include(page, locals) %>
+        </div>
+
+    </main>
+
+</div>
+
+<script src="/js/chart.min.js"></script>
+
+<script src="/js/admin-device.js"></script>
+<script src="/js/device-edit.js"></script>
+<script src="/js/device-upload.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/profile_edit.js"></script>
+<script src="/js/admin_borrow_detail.js"></script>
+<script src="/js/repair.js"></script>
+<script src="/js/employee.js"></script>
+
+<!-- Success Modal -->
+<div id="successModal" class="success-modal">
+  <div class="modal-box">
+    <div class="check-wrapper">
+      <svg class="checkmark" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="23" fill="none"/>
+        <path class="checkmark-check" fill="none"
+          d="M14 27 l7 7 l17 -17"/>
+      </svg>
+    </div>
+
+    <h2 id="successTitle"></h2>
+    <p id="successDesc"></p>
+  </div>
+</div>
+
+
+<div id="errorToast" class="toast error">
+  <i class="fa-solid fa-circle-xmark"></i>
+  <div>
+    <strong>ไม่สามารถลบได้</strong>
+    <p>เนื่องจากยังมีเครื่องอุปกรณ์อยู่ในระบบ</p>
+  </div>
+</div>
+
+</body>
+</html>
+

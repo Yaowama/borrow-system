@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Borrow System</title>
+
+  <link rel="stylesheet" href="/css/auth.css">
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LEFT -->
+  <div class="left">
+    <h1>เข้าสู่ระบบ</h1>
+    <% if (typeof error !== "undefined") { %>
+  <div class="error-box show">
+    <%= error %>
+  </div>
+<% } %>
+
+<script src="/js/login.js"></script>
+
+
+    <form method="POST" action="/login">
+
+      <div class="label">ชื่อผู้ใช้ (Username)</div>
+      <div class="input input-icon">
+        <i class="fa-solid fa-user"></i>
+        <input
+        type="text"
+        name="username"
+        placeholder="Username"
+        value="<%= typeof form !== 'undefined' ? form.username : '' %>"
+        required
+      >
+      </div>
+
+      <div class="label">รหัสผ่าน (Password)</div>
+      <div class="input input-icon">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" name="password" placeholder="Password" required>
+      </div>
+
+      <a href="/forgot" class="link">
+        <i class="fa-solid fa-unlock-keyhole"></i>
+        ลืมรหัสผ่าน?
+      </a>
+
+      <button class="btn">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        เข้าสู่ระบบ
+      </button>
+
+    </form>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+
+  <div class="logo-box">
+    <img src="/images/logo2.png" alt="logo">
+  </div>
+  
+    <h2>ลงทะเบียน</h2>
+    <p>กรุณาลงทะเบียนเพื่อเริ่มต้นใช้งานระบบยืม–คืนอุปกรณ์</p>
+
+    <a href="/register">
+      <button class="btn-center">
+        <i class="fa-solid fa-user-plus"></i>
+        สร้างบัญชีผู้ใช้
+      </button>
+    </a>
+  </div>
+
+
+</div>
+<script src="/js/login.js"></script>
+</body>
+</html>

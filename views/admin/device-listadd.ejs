@@ -1,0 +1,116 @@
+<link rel="stylesheet" href="/css/device_add.css">
+
+<div class="top-bar">
+  <h1>เพิ่มเครื่องอุปกรณ์</h1>
+
+  <div class="top-right">
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+</div>
+
+<div class="admin-card">
+
+  <div class="card-header">
+    <i class="fa-solid fa-desktop"></i>
+    <span>ข้อมูลเครื่อง (Asset)</span>
+  </div>
+
+  <form
+    action="/admin/device/<%= modelId %>/item/add"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+
+    <div class="form-grid">
+
+      <!-- รุ่นอุปกรณ์ (ดึงจาก Model และแก้ไม่ได้) -->
+      <div class="form-group">
+        <label>รุ่นอุปกรณ์</label>
+        <input
+          type="text"
+          class="form-control"
+          value="<%= model.ModelName %>"
+          readonly
+        >
+      </div>
+
+      <!-- Serial Number -->
+      <div class="form-group">
+        <label>Serial Number</label>
+        <input
+          type="text"
+          name="SerialNumber"
+          placeholder="SN-XXXXX"
+          required
+        >
+      </div>
+
+      <!-- Asset Code -->
+      <div class="form-group">
+        <label>Asset Code</label>
+        <input
+          type="text"
+          name="AssetCode"
+          placeholder="ASSET-001"
+        >
+      </div>
+
+      <!-- สถานะ -->
+      <div class="form-group">
+        <label>สถานะ</label>
+        <select name="DVStatusID" required>
+          <% status.forEach(s => { %>
+            <option value="<%= s.DVStatusID %>">
+              <%= s.StatusName %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group upload-box full">
+        <label>รูป Serial Number</label>
+
+        <input
+            type="file"
+            name="AssetImage"
+            id="asset_image"
+            accept="image/*"
+            hidden
+        >
+
+        <!-- กล่องอัปโหลด -->
+        <label for="asset_image" class="upload-btn">
+
+            <!-- ก่อนอัป -->
+            <div class="upload-placeholder">
+            <span>📷 อัปโหลดรูป</span>
+            <small>รองรับ jpg / png</small>
+            </div>
+
+            <!-- หลังอัป (preview อยู่ในกรอบเดียวกัน) -->
+            <img id="preview" class="preview-img" />
+
+        </label>
+        </div>
+
+    </div>
+
+    <div class="form-actions">
+      <a href="/admin/device/<%= modelId %>" class="btn-cancel">
+        ยกเลิก
+      </a>
+      <button type="submit" class="btn-save">
+        บันทึก
+      </button>
+    </div>
+
+  </form>
+</div>
+

@@ -1,0 +1,67 @@
+<div class="top-bar">
+
+        <h1>รายงานการยืม–คืนอุปกรณ์</h1>
+
+        <div class="top-right">
+            <div class="admin-box">
+                <span>Admin</span>
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div class="logo-box">
+                <img src="/images/logo.png">
+            </div>
+        </div>
+
+    </div>
+    
+<form method="GET" action="/admin/report" class="filter">
+
+  จาก:
+  <input type="date" name="start">
+
+  ถึง:
+  <input type="date" name="end">
+
+  <button class="btn blue">ค้นหา</button>
+
+  <a href="/admin/report/excel" class="btn green">
+    📥 Excel
+  </a>
+
+  <a href="/admin/report/pdf" class="btn red">
+    📄 PDF
+  </a>
+
+</form>
+
+<table class="table">
+
+<tr>
+  <th>เลขเอกสาร</th>
+  <th>ผู้ยืม</th>
+  <th>อุปกรณ์</th>
+  <th>วันยืม</th>
+  <th>กำหนดคืน</th>
+  <th>วันคืน</th>
+  <th>สถานะ</th>
+</tr>
+
+<% reports.forEach(r => { %>
+<tr>
+  <td><%= r.BorrowCode %></td>
+  <td><%= r.fname %> <%= r.lname %></td>
+  <td>
+    <%= r.DeviceCode %><br>
+    <small><%= r.DeviceName %></small>
+  </td>
+  <td><%= r.BorrowDate %></td>
+  <td><%= r.DueDate %></td>
+  <td><%= r.ReturnDate || "-" %></td>
+  <td>
+    <span class="badge"><%= r.StatusName %></span>
+  </td>
+</tr>
+<% }) %>
+
+</table>

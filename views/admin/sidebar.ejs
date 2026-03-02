@@ -1,0 +1,77 @@
+<aside class="sidebar" id="sidebar">
+
+    <div class="menu-btn" id="menuBtn">
+    <i class="fa-solid fa-bars"></i>
+    </div>
+
+
+    <ul class="menu">
+
+    <li>
+        <a href="/admin">
+            <i class="fa-solid fa-house"></i>
+            <span>หน้าหลัก</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/admin/device">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>อุปกรณ์</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/admin/borrow">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>ยืม–คืน</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/admin/repair">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            <span>แจ้งซ่อม</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/admin/employee">
+            <i class="fa-solid fa-users"></i>
+            <span>พนักงาน</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/admin/report">
+            <i class="fa-solid fa-chart-column"></i>
+            <span>รายงาน</span>
+        </a>
+    </li>
+
+</ul>
+
+
+    <!-- profile -->
+    <div class="profile-menu">
+
+    <img
+         src="<%= user.ProfileImage 
+        ? '/uploads/profile/' + user.ProfileImage 
+        : '/images/default-avatar.svg' %>"
+        id="profileBtn"
+        class="profile-img"
+    >
+
+    <div id="profileDropdown" class="dropdown">
+        <a href="/admin/profile">
+            <i class="fa-solid fa-user"></i> โปรไฟล์
+        </a>
+
+        <a href="/logout">
+            <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+        </a>
+    </div>
+
+</div>
+</aside>

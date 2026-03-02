@@ -1,0 +1,72 @@
+<link rel="stylesheet" href="/css/borrowing.css">
+
+<main class="main">
+
+  <div class="top-bar">
+    <div class="top-left">
+      <h1>อุปกรณ์ที่กำลังยืม</h1>
+    </div>
+
+    <div class="top-right">
+      <div class="logo-box">
+        <img src="/images/logo.png">
+      </div>
+    </div>
+  </div>
+
+
+  <% if (rows.length === 0) { %>
+    <div class="empty-box">
+      <i class="fa-solid fa-box-open"></i>
+      <p>ขณะนี้คุณไม่มีอุปกรณ์ที่กำลังยืม</p>
+    </div>
+  <% } else { %>
+
+    <div class="borrowing-grid">
+
+      <% rows.forEach(r => { %>
+        <div class="borrow-card">
+
+            <!-- STATUS (ขวาบน) -->
+            <div class="borrow-status">
+                <span class="status <%= r.statusClass %>">
+                <%= r.statusText %>
+                </span>
+            </div>
+
+            <!-- IMAGE -->
+            <div class="device-image">
+                <img src="/uploads/device/<%= r.DeviceImage %>"
+                    onerror="this.src='/images/no-image.png'">
+            </div>
+
+            <!-- CONTENT -->
+            <div class="borrow-content">
+                <h3 class="device-title"><%= r.DeviceName %></h3>
+                <p class="device-subtitle"><%= r.BrandName %> · <%= r.ModelName %></p>
+                <p class="device-category"><%= r.CategoryName %></p>
+
+                <div class="borrow-meta">
+                <p><span>รหัส:</span> <%= r.BorrowCode %></p>
+                <p><span>วันที่ยืม:</span> <%= r.BorrowDate %></p>
+                <p><span>ครบกำหนด:</span> <%= r.DueDate %></p>
+                </div>
+            </div>
+
+            </div>
+      <% }) %>
+
+    </div>
+
+  <% } %>
+
+</main>
+
+<div id="detailModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+

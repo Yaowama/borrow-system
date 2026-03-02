@@ -1,0 +1,108 @@
+<!-- ================= TOP BAR ================= -->
+<div class="topbar">
+
+    <!-- ซ้าย -->
+    <h2>ระบบการยืม–คืน</h2>
+
+    <!-- ขวา -->
+    <div class="top-right">
+
+        <div class="search">
+            <input type="text" placeholder="ค้นหาอุปกรณ์">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+
+        <div class="logo-box">
+            <img src="/images/logo.png">
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= CATEGORY ================= -->
+<div class="category">
+
+  <div class="card" data-type="1">
+      <img src="/images/iconuser.png">
+      <p>คอมพิวเตอร์และอุปกรณ์พกพา</p>
+  </div>
+
+  <div class="card" data-type="2">
+      <img src="/images/iconuser2.png">
+      <p>อุปกรณ์เสริม</p>
+  </div>
+
+  <div class="card" data-type="3">
+      <img src="/images/iconuser3.png">
+      <p>อุปกรณ์เครือข่าย</p>
+  </div>
+
+  <div class="card" data-type="4">
+      <img src="/images/iconuser4.png">
+      <p>อุปกรณ์จัดเก็บข้อมูล</p>
+  </div>
+
+  <div class="card" data-type="5">
+      <img src="/images/iconuser6.png">
+      <p>อุปกรณ์นำเสนอ</p>
+  </div>
+
+  <div class="card" data-type="6">
+      <img src="/images/iconuser7.png">
+      <p>อุปกรณ์พิมพ์และสแกน</p>
+  </div>
+
+</div>
+
+
+
+<div class="device-grid">
+
+  <% devices.forEach(d => { %>
+    <div class="device-card" data-type="<%= d.TypeID %>">
+
+      <!-- image -->
+      <div class="device-img-box">
+        <% if (d.DeviceImage) { %>
+          <img src="/uploads/device/<%= d.DeviceImage %>">
+        <% } else { %>
+          <div class="no-img">No Image</div>
+        <% } %>
+      </div>
+
+      <!-- info -->
+      <div class="device-info">
+        <h3><%= d.DeviceName %></h3>
+
+        <p class="meta">
+          <%= d.BrandName || "-" %> · <%= d.ModelName || "-" %>
+        </p>
+
+        <p class="category">
+          <%= d.CategoryName || "-" %>
+        </p>
+      </div>
+
+      <!-- footer -->
+      <div class="device-footer">
+
+        <span class="stock 
+          <%= d.Stock > 1 ? 'green' : d.Stock == 1 ? 'yellow' : 'red' %>">
+          <%= d.Stock > 0 ? `เหลือ ${d.Stock}` : 'หมด' %>
+        </span>
+
+        <% if (d.Stock > 0) { %>
+          <a href="/user/borrow/<%= d.DeviceID %>" class="btn blue">
+            ยืม
+          </a>
+        <% } else { %>
+          <span class="btn gray disabled">หมด</span>
+        <% } %>
+
+      </div>
+
+    </div>
+  <% }) %>
+
+</div>

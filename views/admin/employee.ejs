@@ -1,0 +1,231 @@
+<link rel="stylesheet" href="/css/employee.css">
+
+<div class="top-bar">
+  <h1>จัดการพนักงาน</h1>
+
+  <div class="top-right">
+    <div class="search">
+      <input
+        type="text"
+        class="admin-search"
+        placeholder="ค้นหาพนักงาน"
+      >
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>รหัสพนักงาน</th>
+      <th>ชื่อ</th>
+      <th>Email</th>
+      <th>แผนก</th>
+      <th>สิทธิ์</th>
+      <th>กำลังยืม</th>
+      <th>สถานะ</th>
+      <th>จัดการ</th>
+    </tr>
+  </thead>
+
+  <tbody>
+  <% employees.forEach(e => { %>
+    <tr>
+      <td><%= e.EMP_NUM || e.EMPID %></td>
+
+      <td><%= e.fname %> <%= e.lname %></td>
+
+      <td><%= e.email %></td>
+
+      <td><%= e.DepartmentName || '-' %></td>
+
+      <td>
+        <% if (e.RoleID == 2) { %>
+          <span class="badge red">Admin</span>
+        <% } else { %>
+          <span class="badge blue">User</span>
+        <% } %>
+      </td>
+
+      <td><%= e.activeBorrow %></td>
+
+      <td>
+        <% if (e.IsActive == 1) { %>
+          <span class="badge green">ใช้งาน</span>
+        <% } else { %>
+          <span class="badge red">ปิดใช้งาน</span>
+        <% } %>
+      </td>
+
+      <td>
+        <button class="btn-action btn-view" data-id="<%= e.EMPID %>">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+
+<!-- SUCCESS MODAL -->
+<div id="successModal" class="success-modal">
+
+  <div class="modal-box">
+
+    <div class="check-wrapper success">
+      <svg class="checkmark" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="23"/>
+        <path class="checkmark-check" d="M14 27 l7 7 l17 -17"/>
+      </svg>
+    </div>
+
+    <!-- ERROR ICON -->
+    <div class="check-wrapper danger" id="errorIcon">
+      <svg class="warningmark" viewBox="0 0 52 52">
+        <circle class="warning-circle" cx="26" cy="26" r="23"/>
+        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+        <circle class="warning-dot" cx="26" cy="36" r="2"/>
+      </svg>
+    </div>
+
+    <h3 id="successTitle">สำเร็จ</h3>
+    <p id="successDesc">บันทึกข้อมูลเรียบร้อย</p>
+
+  </div>
+
+</div>
+
+<!-- ================= EMPLOYEE EDIT MODAL ================= -->
+<div class="modal" id="employeeModal">
+
+  <div class="modal-box employee-modal">
+
+    <button class="close-btn" id="closeEmployeeModal">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <h2 class="modal-title">ข้อมูลพนักงาน</h2>
+    
+    <form id="employeeForm" enctype="multipart/form-data">
+
+      <!-- PROFILE IMAGE -->
+      <div class="profile-section">
+
+        <img id="profilePreview"
+             class="profile-image">
+
+        <label class="upload-btn">
+          เปลี่ยนรูป
+          <input type="file" name="profileImage" id="profileImageInput" hidden>
+        </label>
+
+      </div>
+
+      <!-- GRID FORM -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Username (เข้าสู่ระบบ)</label>
+          <input type="text" name="username" disabled>
+        </div>
+
+        <div class="form-group">
+          <label>รหัสพนักงาน</label>
+          <input type="text" name="EMP_NUM" disabled>
+        </div>
+
+        <div class="form-group">
+          <label>ชื่อจริง</label>
+          <input type="text" name="fname" required>
+        </div>
+        
+
+        <div class="form-group">
+          <label>นามสกุล</label>
+          <input type="text" name="lname" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label>โทรศัพท์</label>
+          <input type="text" name="phone">
+        </div>
+
+        <div class="form-group">
+          <label>Fax</label>
+          <input type="text" name="fax">
+        </div>
+
+          <div class="form-group">
+          <label>วันที่สมัครใช้งาน</label>
+          <input type="text" name="CreateDate" disabled>
+        </div>
+
+        <div class="form-group">
+          <label>แผนก</label>
+          <select name="DepartmentID">
+            <% departments.forEach(dep => { %>
+              <option value="<%= dep.DepartmentID %>">
+                <%= dep.DepartmentName %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>หน่วยงาน</label>
+          <select name="InstitutionID">
+            <% institutions.forEach(ins => { %>
+              <option value="<%= ins.InstitutionID %>">
+                <%= ins.InstitutionName %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+
+        <div class="form-group">
+          <label>สิทธิ์</label>
+          <select name="RoleID">
+            <option value="1">user</option>
+            <option value="2">Admin</option>
+          </select>
+        </div>
+
+
+        <div class="form-group">
+          <label>สถานะ</label>
+          <select name="IsActive">
+            <option value="1">ใช้งาน</option>
+            <option value="0">ปิดใช้งาน</option>
+          </select>
+        </div>
+      
+
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">
+          บันทึกการเปลี่ยนแปลง
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        <%= title || "User Dashboard" %>
+    </title>
+
+    <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body data-success="<%= typeof success !== 'undefined' ? success : '' %>">
+
+<div class="container">
+
+    <%- include("./sidebar", { user }) %>
+
+    <main class="content">
+        <div class="content-scroll">
+            <%- include(page) %>
+        </div>
+    </main>
+
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="success-modal">
+  <div class="modal-box">
+    <div class="check-wrapper">
+      <svg class="checkmark" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="23" fill="none"/>
+        <path class="checkmark-check" fill="none"
+              d="M14 27 l7 7 l17 -17"/>
+      </svg>
+    </div>
+    <h2></h2>
+    <p></p>
+  </div>
+</div>
+
+<!-- BARCODE OVERLAY -->
+<div id="barcodeOverlay" class="barcode-overlay">
+  <img id="barcodePreview" />
+</div>
+
+<script src="/js/borrow_status.js"></script>
+<script src="/js/user.js"></script>
+<script src="/js/borrow_status.js"></script>
+</body>
+</html>

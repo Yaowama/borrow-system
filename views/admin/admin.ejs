@@ -1,0 +1,139 @@
+<div class="top-bar">
+
+        <h1>ระบบการยืม-คืน</h1>
+
+        <div class="top-right">
+            <div class="admin-box">
+                <span>Admin</span>
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div class="logo-box">
+                <img src="/images/logo.png">
+            </div>
+        </div>
+
+    </div>
+
+<!-- dashboard -->
+<div class="dashboard">
+
+  <div class="card card-blue">
+    <h3>อุปกรณ์ทั้งหมด</h3>
+    <img src="/images/icon2.png">
+    <div class="num"><%= deviceTotal.total %></div>
+  </div>
+
+  <div class="card card-yellow">
+    <h3>รอตรวจสอบ</h3>
+    <img src="/images/icon1.png">
+    <div class="num"><%= pending.total %></div>
+  </div>
+
+  <div class="card card-red">
+    <h3>ไม่อนุมัติ</h3>
+    <img src="/images/icon3.png">
+    <div class="num"><%= rejected.total %></div>
+  </div>
+
+  <div class="card card-green">
+    <h3>อนุมัติ</h3>
+    <img src="/images/icon4.png">
+    <div class="num"><%= approved.total %></div>
+  </div>
+
+  <div class="card card-purple">
+    <h3>คืนแล้ว</h3>
+    <img src="/images/icon5.png">
+    <div class="num"><%= returned.total %></div>
+  </div>
+
+  <div class="card card-orange">
+    <h3>เกินกำหนดคืน</h3>
+    <img src="/images/icon6.png">
+    <div class="num text-red"><%= overdue.total %></div>
+  </div>
+
+  <div class="card card-teal">
+    <h3>ยอดอุปกรณ์คงเหลือ</h3>
+    <img src="/images/icon7.png">
+    <div class="num"><%= availableDevice.total %></div>
+  </div>
+
+  <div class="card card-gray">
+    <h3>พนักงาน</h3>
+    <img src="/images/icon8.png">
+    <div class="num"><%= employeeTotal.total %></div>
+  </div>
+
+</div>
+
+
+<!-- <div class="dashboard-card">
+  <h3>สถานะอุปกรณ์</h3>
+
+  <div class="donut"
+  style="
+    --a:<%= devicePercent.a %>;
+    --b:<%= devicePercent.b %>;
+    --c:<%= devicePercent.c %>;
+  ">
+  <span><%= deviceStatus.available + deviceStatus.borrowed + deviceStatus.repair %></span>
+</div>
+
+
+  <div class="legend">
+    <div><i class="dot green"></i> ว่าง</div>
+    <div><i class="dot yellow"></i> ถูกยืม</div>
+    <div><i class="dot red"></i> ซ่อม</div>
+  </div>
+</div> -->
+
+
+
+
+<!-- ===== Near Due ===== -->
+<!-- <div class="table-box">
+
+    <h2>⏰ อุปกรณ์ใกล้ครบกำหนดคืน (3 วัน)</h2>
+
+    <table class="table">
+        <tr>
+            <th>เลขเอกสาร</th>
+            <th>ผู้ยืม</th>
+            <th>อุปกรณ์</th>
+            <th>กำหนดคืน</th>
+            <th>เหลือ</th>
+        </tr>
+
+        <% if (nearDueList.length === 0) { %>
+            <tr>
+                <td colspan="5" style="text-align:center;color:#888;">
+                    🎉 ไม่มีรายการใกล้ครบกำหนด
+                </td>
+            </tr>
+        <% } %>
+
+        <% nearDueList.forEach(b => { %>
+            <tr>
+                <td><%= b.BorrowCode %></td>
+                <td><%= b.fname %> <%= b.lname %></td>
+                <td>
+                    <%= b.AssetCode %><br>
+                    <small><%= b.ModelName %></small>
+                </td>
+                <td><%= b.DueDate %></td>
+                <td>
+                    <% if (b.remain_day == 0) { %>
+                        <span class="badge red">วันนี้</span>
+                    <% } else { %>
+                        <span class="badge yellow">
+                            <%= b.remain_day %> วัน
+                        </span>
+                    <% } %>
+                </td>
+            </tr>
+        <% }) %>
+    </table>
+
+</div> -->

@@ -1,0 +1,69 @@
+<aside class="sidebar" id="sidebar">
+
+    <div class="menu-btn" id="menuBtn">
+        <i class="fa-solid fa-bars"></i>
+    </div>
+
+    <ul class="menu">
+
+        <!-- dashboard -->
+        <li>
+            <a href="/user/dashboard">
+                <i class="fa-solid fa-house"></i>
+                <span>หน้าหลัก</span>
+            </a>
+        </li>
+
+        <!-- borrow request status -->
+        <li>
+            <a href="/user/borrow_status">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>สถานะคำขอยืมอุปกรณ์</span>
+            </a>
+        </li>
+
+        <!-- currently borrowing -->
+        <li>
+            <a href="/user/borrowing">
+                <i class="fa-solid fa-laptop"></i>
+                <span>อุปกรณ์ที่กำลังยืม</span>
+            </a>
+        </li>
+
+        <!-- history -->
+        <li>
+            <a href="/user/history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>ประวัติการยืม</span>
+            </a>
+        </li>
+
+    </ul>
+
+
+  <div class="profile-menu">
+
+    <img
+    src="<%= user?.ProfileImage 
+        ? '/uploads/profile/' + user.ProfileImage 
+        : '/images/default-avatar.svg' %>"
+    id="sidebarAvatar"
+    class="profile-img"
+    >
+
+    <div id="profileDropdown" class="dropdown">
+
+        <a href="/user/profile">
+            <i class="fa-solid fa-user"></i>
+            โปรไฟล์
+        </a>
+
+        <a href="/logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            ออกจากระบบ
+        </a>
+
+    </div>
+
+</div>
+</aside>

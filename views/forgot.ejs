@@ -1,0 +1,57 @@
+<link rel="stylesheet" href="/css/auth.css">
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+
+<div class="container">
+
+  <div class="left">
+
+    <!-- ปุ่มย้อนกลับ -->
+    <a href="/login" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <h1 class="page-title">เปลี่ยนรหัสผ่าน</h1>
+    <div
+      class="error-box <%= typeof error !== 'undefined' ? 'show' : '' %>"
+    >
+      <%= typeof error !== 'undefined' ? error : '' %>
+    </div>
+
+    <form method="POST" action="/forgot">
+
+      <div class="label">อีเมล (Email)</div>
+      <div class="input">
+        <input
+        type="email"
+        name="email"
+        value="<%= typeof form !== 'undefined' ? form.email : '' %>"
+        required
+      >
+
+      </div>
+
+      <button class="btn">
+        ส่งรหัส OTP
+      </button>
+
+    </form>
+
+  </div>
+
+  <div class="right">
+    <div class="logo-box">
+      <img src="/images/logo2.png" alt="logo">
+    </div>
+
+    <h2>ยืนยันตัวตนผู้ใช้งาน</h2>
+    <p>
+      ระบบจะจัดส่งรหัสยืนยันจำนวน 6 หลัก <br>
+      ไปยังอีเมลที่ลงทะเบียนไว้
+    </p>
+  </div>
+
+</div>
+<script src="/js/login.js"></script>

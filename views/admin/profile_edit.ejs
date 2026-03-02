@@ -1,0 +1,118 @@
+<link rel="stylesheet" href="/css/profile_edit.css">
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+
+
+<div class="profile-container">
+
+  <div class="profile-title">
+    แก้ไขข้อมูลผู้ใช้งาน
+  </div>
+
+  <form
+    action="/admin/profile/edit"
+    method="POST"
+    enctype="multipart/form-data"
+    class="profile-form"
+  >
+
+    <div class="avatar-edit">
+
+  <div class="avatar-wrapper">
+
+    <div class="avatar-circle">
+      <img
+        id="previewImg"
+        src="<%= user.ProfileImage 
+        ? '/uploads/profile/' + user.ProfileImage 
+        : '/images/default-avatar.svg' %>"
+      >
+    </div>
+
+    <!-- ปุ่มดินสอ -->
+    <label for="profileUpload" class="avatar-edit-btn">
+      <i class="fa-solid fa-pen"></i>
+    </label>
+
+    <input
+      type="file"
+      id="profileUpload"
+      name="profile"
+      accept="image/*"
+      hidden
+    >
+
+  </div>
+
+</div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>ชื่อจริง</label>
+        <input type="text" value="<%= user.fname %>" disabled>
+      </div>
+
+      <div class="form-group">
+        <label>นามสกุล</label>
+        <input type="text" value="<%= user.lname %>" disabled>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input name="email" value="<%= user.email %>">
+      </div>
+
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์</label>
+        <input name="phone" value="<%= user.phone %>">
+      </div>
+
+      <div class="form-group">
+        <label>Fax</label>
+        <input name="fax" value="<%= user.fax %>">
+      </div>
+
+      <div class="form-group">
+  <label>แผนก</label>
+  <select name="DepartmentID" required>
+    <% departments.forEach(dep => { %>
+      <option value="<%= dep.DepartmentID %>"
+        <%= dep.DepartmentID == user.DepartmentID ? "selected" : "" %>>
+        <%= dep.DepartmentName %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+<div class="form-group">
+  <label>หน่วยงาน</label>
+  <select name="InstitutionID" required>
+    <% institutions.forEach(ins => { %>
+      <option value="<%= ins.InstitutionID %>"
+        <%= ins.InstitutionID == user.InstitutionID ? "selected" : "" %>>
+        <%= ins.InstitutionName %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+    </div>
+
+    <div class="profile-actions">
+    <button class="btn-save">
+        บันทึกข้อมูล
+    </button>
+
+    <a href="/admin/profile" class="btn-cancel">
+        ยกเลิก
+    </a>
+    </div>
+
+
+  </form>
+
+</div>
+

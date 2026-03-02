@@ -1,0 +1,670 @@
+/* ===============================
+   PAGE
+================================ */
+.main {
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ===============================
+   TOP BAR
+================================ */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-left h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+
+/* ===============================
+   TOP RIGHT
+================================ */
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ===============================
+   TABLE
+================================ */
+.status-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0,0,0,.08);
+}
+
+.status-table thead {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+}
+
+.status-table th {
+  padding: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+
+.status-table td {
+  padding: 16px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f1f1;
+  vertical-align: middle;
+  color: #374151;
+  text-align: center;
+}
+
+.status-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-table tbody tr {
+  transition: all .15s ease;
+}
+
+.status-table tbody tr:hover {
+  background: #f9fafb;
+  transform: scale(1.002);
+}
+
+/* ===============================
+   STATUS BADGE
+================================ */
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ปรับตาม BorrowStatusID */
+.status-1 { background:#ff9b4e; color:#ffffff; } /* รออนุมัติ */
+.status-2 { background:#167bff; color:#ffffff; } /* อนุมัติ */
+.status-3 { background:#ff2f2f; color:#ffffff; }/* ปฏิเสธ */
+.status-4 { background:#1ea84e; color:#ffffff; } /* คืนแล้ว */
+.status-5 { background:#fee2e2; color:#991b1b; } /* ยกเลิก */
+
+/* ===============================
+   DETAIL BUTTON
+================================ */
+.btn-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #52bc63;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+
+.btn-confirm:hover {
+  background: rgb(76, 156, 41);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(109, 233, 95, 0.25);
+}
+
+.btn-confirm:hover::after {
+  transform: translateX(3px);
+}
+.icon-action.view {
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  background: #ecfeff;
+  color: #0369a1;
+}
+
+
+.icon-action.view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.15);
+}
+
+/* ===============================
+   DETAIL MODAL
+================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.detail-modal {
+  background: linear-gradient(#ffffff, #f9fafb);
+  width: 400px;
+  max-width: 95%;
+  border-radius: 20px;
+  padding: 26px 30px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.3);
+  transform: translateY(10px) scale(.96);
+  transition: all .25s ease;
+}
+
+.overlay.show .detail-modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.close-modal {
+  font-size: 30px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: .2s;
+}
+
+.close-modal:hover {
+  color: #111827;
+}
+
+/* ===============================
+   DETAIL MODAL
+================================ */
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.close-btn:hover {
+  color: #111827;
+}
+
+/* ===============================
+   DETAIL CONTENT
+================================ */
+#detailContent h3 {
+  font-size: 18px;       /* จาก 18 */
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+#userContent h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+#detailContent p {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+#detailContent p:last-child {
+  border-bottom: none;
+}
+
+#detailContent b {
+  min-width: 120px;
+  color: #111827;
+}
+
+/* ===============================
+   ACTION COLUMN
+================================ */
+.action-box {
+  display: flex;
+  flex-direction: gride;
+  align-items: center;         /* จัดกลางแนวนอน */
+  justify-content: center; 
+  gap: 6px;
+  min-width: 120px;
+}
+
+
+.action-box form {
+  margin: 0;
+}
+
+.action-box .btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+.action-box .btn-detail {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* ===============================
+   DETAIL LAYOUT (IMAGE + INFO)
+================================ */
+.device-img {
+  width: 50px;        
+  height: 50px;
+  object-fit: cover;  
+  border-radius: 6px; 
+  display: block;
+  margin: auto;       
+}
+
+.detail-layout {
+  flex-direction: column; 
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+
+.detail-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.detail-image img {
+  width: 60%;
+  height: 60%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+
+.no-image {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;        
+  border-bottom: 1px dashed #e5e5e5;
+  font-size: 13px;       
+}
+
+.label {
+  width: 120px;          
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #374151;
+}
+
+
+.serial-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* ===============================
+   DETAIL TABLE
+================================ */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-table th {
+  background: #f3f4f6;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px;
+  text-align: left;
+}
+
+.detail-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.detail-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* ===============================
+   DELETE MODAL (CLEAN & SMOOTH)
+================================ */
+
+.delete-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.delete-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* modal box */
+.delete-modal .modal-box {
+  background: #ffffff;
+  width: 360px;
+  max-width: 90%;
+  padding: 28px 32px 26px;
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(0,0,0,.2);
+
+  transform: translateY(10px) scale(.96);
+  opacity: 0;
+  transition: all .25s ease;
+}
+
+.delete-modal.show .modal-box {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ===============================
+   ICON (INSIDE WHITE BOX)
+================================ */
+
+.check-wrapper {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warningmark {
+  width: 48px;
+  height: 48px;
+}
+
+.delete-modal.show .warning-circle {
+  stroke: #ef4444;
+  stroke-width: 4;
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: drawCircle .5s ease forwards;
+}
+
+.delete-modal.show .warning-line {
+  stroke: #ef4444;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: drawLine .3s ease forwards .4s;
+}
+
+.delete-modal.show .warning-dot {
+  fill: #ef4444;
+  opacity: 0;
+  animation: fadeDot .2s ease forwards .7s;
+}
+
+
+/* ===============================
+   TEXT
+================================ */
+
+.delete-modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.delete-modal p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-cancel-request {
+  background: #ffcfcf;
+  color: #a30000;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.btn-cancel-request:hover {
+  background: #ffdada;
+}
+
+
+.btn-cancel-modal {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.btn-cancel-modal:hover {
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 8px 4px 16px;
+  border-bottom: 1px solid #f1f1f1;
+  margin-bottom: 20px;
+}
+
+
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* back icon */
+.icon-back {
+  text-decoration: none;
+  background: #f3f4f6;
+  color: #4a4b4d;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s ease;
+}
+
+.icon-back:hover {
+  background: #e5e7eb;
+  transform: translateX(-2px);
+}
+
+
+
+/* ===============================
+   ICON ANIMATIONS
+================================ */
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeDot {
+  to { opacity: 1; }
+}
+
+/* จำกัดความกว้างคอลัมน์รูป */
+.status-table td:first-child {
+  width: 80px;
+}
+
+/* กล่องรูป */
+.device-image {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fafc;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ตัวรูป */
+.device-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.empty-box {
+  width: 100%;
+  max-width: 500px;
+  margin: 60px auto;
+  padding: 50px 30px;
+
+  background: #ffffff;
+  border-radius: 16px;
+
+
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.empty-box i {
+  font-size: 60px;
+  color: #c9c9c9;
+}
+
+.empty-box h3 {
+  font-size: 20px;
+  color: #444;
+  margin: 0;
+}
+
+.empty-box p {
+  color: #777;
+  margin: 0;
+  font-size: 14px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.remark-text {
+  color: #d93025;
+}
+

@@ -1,0 +1,182 @@
+<link rel="stylesheet" href="/css/admin-device.css">
+
+<div class="top-bar">
+
+  <!-- ซ้าย -->
+  <div class="top-left">
+    <a href="/admin/device" class="icon-back" title="กลับ">
+  <i class="fa-solid fa-arrow-left"></i>
+</a>
+    <h1>รายการเครื่องอุปกรณ์</h1>
+  </div>
+
+  <!-- ขวา -->
+  <div class="top-right">
+
+    <div class="search">
+            <input
+                type="text"
+                class="admin-search"
+                data-target=".device-list-row"
+                placeholder="ค้นหาอุปกรณ์"
+                >
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+
+</div>
+
+
+<a href="/admin/device/<%= modelId %>/item/add" class="btn-add">
+    <i class="fa-solid fa-plus"></i> เพิ่มเครื่อง
+</a>
+
+
+<br><br>
+
+<table class="table">
+
+    <thead>
+        <tr>
+            <th class="center">Barcode</th>
+            <th class="center">Serial</th>
+            <th class="center">Asset Code</th>
+            <th class="center">สถานะ</th>
+            <th class="center">เพิ่มเมื่อ</th>
+            <th class="center">แก้ไขล่าสุด</th>
+            <th class="center">เพิ่มโดย</th>
+            <th class="center">จัดการ</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    <% if (devices.length === 0) { %>
+        <tr>
+            <td colspan="8" class="center no-data">
+                — ยังไม่มีเครื่องอุปกรณ์ —
+            </td>
+        </tr>
+    <% } %>
+
+    <% devices.forEach(d => { %>
+        <tr class="device-list-row">
+
+            <!-- Barcode -->
+            <td class="center">
+            <% if (d.BarcodeImage) { %>
+                <img
+                    src="/uploads/asset/<%= d.BarcodeImage %>"
+                    class="device-img clickable"
+                    data-src="/uploads/asset/<%= d.BarcodeImage %>"
+                    >
+            <% } else { %>
+                <span class="no-img">—</span>
+            <% } %>
+            </td>
+
+            <!-- Serial -->
+            <td class="center">
+                <strong><%= d.SerialNumber %></strong>
+            </td>
+
+            <!-- Asset Code -->
+            <td class="center">
+                <%= d.AssetCode || "-" %>
+            </td>
+
+            <!-- Status -->
+            <td class="center">
+            <% if (d.StatusName === "พร้อมใช้งาน") { %>
+                <span class="badge green">พร้อมใช้งาน</span>
+
+            <% } else if (d.StatusName === "ถูกยืม") { %>
+                <span class="badge yellow">ถูกยืม</span>
+
+            <% } else if (d.StatusName === "ซ่อม") { %>
+                <span class="badge red">ซ่อม</span>
+
+            <% } else if (d.StatusName === "ปิดใช้งาน") { %>
+                <span class="badge gray">ปิดใช้งาน</span>
+
+            <% } %>
+            </td>
+
+            <!-- Created -->
+            <td class="center">
+            <%= d.CreatedDate || "-" %>
+            </td>
+
+            <!-- Updated -->
+            <td class="center">
+                <%= d.UpdatedDate || "-" %>
+            </td>
+
+            <!-- Created By -->
+            <td class="center">
+                <%= d.CreatedByName || "-" %>
+            </td>
+
+            <!-- Action -->
+            <td class="center">
+                <div class="action-box">
+                    <a href="/admin/device/item/<%= d.DVID %>/edit"
+                       class="btn-icon edit"
+                       title="แก้ไข">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+
+                    <a href="#"
+                    class="btn-icon del"
+                    data-id="<%= d.DVID %>"
+                    data-type="item"
+                    title="ลบ">
+                    <i class="fa-solid fa-trash"></i>
+                    </a>
+                </div>
+            </td>
+
+        </tr>
+    <% }) %>
+    </tbody>
+
+</table>
+
+
+<!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
+<div id="deleteModal" class="delete-modal">
+  <div class="modal-box">
+
+    <div class="check-wrapper danger">
+      <svg class="warningmark" viewBox="0 0 52 52">
+        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
+        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+        <circle class="warning-dot" cx="26" cy="36" r="2"/>
+      </svg>
+    </div>
+
+    <h3>ยืนยันการลบ</h3>
+    <p>คุณต้องการลบอุปกรณ์นี้ใช่หรือไม่ ?</p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel">ยกเลิก</button>
+      <button id="confirmDeleteBtn" class="btn-danger">ลบ</button>
+    </div>
+  </div>
+</div>
+
+<div id="imageModal" class="img-modal">
+  <span class="close" id="closeImageModal">&times;</span>
+  <img class="img-modal-content" id="modalImage">
+</div>
+
+
+

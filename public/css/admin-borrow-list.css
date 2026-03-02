@@ -1,0 +1,548 @@
+/* ===============================
+   PAGE
+================================ */
+.main {
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ===============================
+   TOP BAR
+================================ */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 16px;
+    border-bottom: 1px solid #f1f1f1;
+    margin-bottom: 20px;
+}
+.top-bar h1 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+}
+
+.logo-box img {
+  height: 36px;
+}
+
+/* ===============================
+   TABLE
+================================ */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0,0,0,.08);
+}
+
+.table thead {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+}
+
+.table th {
+  padding: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  /* text-align: left; */
+}
+
+.table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f1f1;
+  vertical-align: middle;
+  color: #374151;
+  text-align: center;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr {
+  height: auto;
+  transition: all .2s ease;
+}
+
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.table td:first-child {
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: .3px;
+}
+
+.table td small {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+
+.table td:nth-child(7) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+
+
+/* ===============================
+   BADGE (STATUS)
+================================ */
+.badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badge.gray  { background:#fde68a; color:#92400e; }
+.badge.blue  { background:#dbeafe; color:#1e40af; }
+.badge.green { background:#dcfce7; color:#166534; }
+.badge.red   { background:#fee2e2; color:#991b1b; }
+.badge.orange  { background:#fef6e2; color:#ff8c2d; }
+.badge.purple { background:#5188f7; color:#ffffff;}
+
+/* ===============================
+   BUTTON
+================================ */
+.btn {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+
+.btn.green { background:#38ac60; color:#ffffff; }
+.btn.red   { background:#ca3636; color:#ffffff; }
+.btn.blue  { background:#2967e3; color:#ffffff; }
+.btn.gray  { background:#373b44; color:#ffffff; }
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.15);
+}
+
+/* ===============================
+   DETAIL BUTTON
+================================ */
+.btn-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all .2s ease;
+  width: 34px;
+  height: 34px;
+  background: #ecfeff;
+  color: #0369a1;
+  
+}
+
+
+.btn-detail:hover {
+  background: #e1fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(95, 95, 95, 0.25);
+}
+
+
+/* ===============================
+   DETAIL MODAL
+================================ */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.detail-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.detail-box {
+  background: linear-gradient(#ffffff, #f9fafb);
+  width: 560px;          /* จาก 680 → 560 */
+  max-width: 92%;
+  border-radius: 16px;   /* โค้งน้อยลง */
+  padding: 20px 22px;    /* ลด padding */
+  box-shadow: 0 20px 50px rgba(0,0,0,.25);
+}
+
+
+.detail-overlay.show .detail-box {
+  transform: translateY(0) scale(1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.close-btn:hover {
+  color: #111827;
+}
+
+/* ===============================
+   DETAIL CONTENT
+================================ */
+#detailContent h3 {
+  font-size: 18px;       /* จาก 18 */
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+#userContent h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+#detailContent p {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+#detailContent p:last-child {
+  border-bottom: none;
+}
+
+#detailContent b {
+  min-width: 120px;
+  color: #111827;
+}
+
+/* ===============================
+   ACTION COLUMN
+================================ */
+.action-box {
+  display: flex;
+  flex-direction: gride;
+  align-items: center;         /* จัดกลางแนวนอน */
+  justify-content: center; 
+  gap: 6px;
+  min-width: 120px;
+}
+
+
+.action-box form {
+  margin: 0;
+}
+
+.action-box .btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+.action-box .btn-detail {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* ===============================
+   DETAIL LAYOUT (IMAGE + INFO)
+================================ */
+.device-img {
+  width: 50px;        
+  height: 50px;
+  object-fit: cover;  
+  border-radius: 6px; 
+  display: block;
+  margin: auto;       
+}
+
+.detail-layout {
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+/* ฝั่งซ้าย */
+.detail-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.detail-image img {
+  width: 60%;
+  height: 60%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* กรณีไม่มีรูป */
+.no-image {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;        
+  border-bottom: 1px dashed #e5e5e5;
+  font-size: 13px;       
+}
+
+.label {
+  width: 120px;          
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #374151;
+}
+
+
+.serial-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===============================
+   BORROW TABS
+================================ */
+.borrow-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 6px;
+  background: #f9fafb;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+
+.borrow-tabs .tab {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+}
+
+.borrow-tabs .tab:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.borrow-tabs .tab.active {
+  background: #111827;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+
+/* ===============================
+   REJECT MODAL (LARGE)
+================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75); 
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.reject-modal {
+  background: #ffffff;
+  width: 720px;
+  max-width: 94%;
+  padding: 36px 40px;
+  border-radius: 24px;
+  box-shadow: 0 40px 90px rgba(0,0,0,.45);
+}
+
+
+.modal-box h3 {
+  font-size: 26px;           
+  margin-bottom: 22px;
+  color: #111827;
+  text-align: center;
+}
+
+.modal-label {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 18px 0 8px;
+  color: #374151;
+  text-align: left;
+}
+
+.modal-select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #d1d5db;
+  font-size: 15px;
+  background: #f9fafb;
+}
+
+.modal-select:focus {
+  outline: none;
+  border-color: #111827;
+  background: #ffffff;
+}
+
+.modal-box textarea {
+  width: 100%;
+  min-height: 180px;         
+  padding: 18px 20px;
+  font-size: 15px;
+  border-radius: 16px;
+  border: 1.5px solid #d1d5db;
+  resize: none;
+  background: #f9fafb;
+}
+
+.modal-box textarea:focus {
+  outline: none;
+  border-color: #111827;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(17,24,39,.12);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.modal-actions .btn.gray {
+  padding: 12px 22px;
+  font-size: 15px;
+  border-radius: 14px;
+}
+
+.modal-actions .btn.red {
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 14px;
+}
+
+.icon-action,
+.icon-action button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.icon-action.success {
+  background: #9fefab;
+  color: #168940;
+}
+.icon-action.success:hover {
+  background: #d1fae5;
+}
+
+.icon-action.warning {
+  background: #ffd8a8;
+  color: #c2410c;
+}
+.icon-action.warning:hover {
+  background: #ffedd5;
+}
+
+
+/* ===============================
+   ICON ACTION - DISABLED (REPAIR)
+================================ */
+.icon-action.gray {
+  background: #e5e7eb;     /* เทาอ่อน */
+  color: #9ca3af;          /* ไอคอนเทา */
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.icon-action.gray:hover {
+  background: #e5e7eb;     /* ไม่ให้ hover เปลี่ยน */
+  box-shadow: none;
+  transform: none;
+}
+
+/* ป้องกัน hover ทุกกรณีที่ disabled */
+.icon-action:disabled,
+.icon-action[disabled] {
+  pointer-events: none;
+}
+
+/* ===============================
+   USER INFO BUTTON
+================================ */
+.icon-action.user {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.icon-action.user:hover {
+  background: #bae6fd;
+}

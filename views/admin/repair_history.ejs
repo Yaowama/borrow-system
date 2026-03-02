@@ -1,0 +1,81 @@
+<div class="top-bar">
+
+        <h1>ประวัติการซ่อมอุปกรณ์</h1>
+
+        <div class="top-right">
+            <div class="admin-box">
+                <span>Admin</span>
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div class="logo-box">
+                <img src="/images/logo.png">
+            </div>
+        </div>
+
+    </div>
+<h2>
+  📜 ประวัติการซ่อมอุปกรณ์<br>
+  <small>
+    <%= device.DeviceCode %> - <%= device.DeviceName %>
+  </small>
+</h2>
+
+<table class="table">
+
+<thead>
+<tr>
+  <th>เลขแจ้งซ่อม</th>
+  <th>ผู้แจ้ง</th>
+  <th>ปัญหา</th>
+  <th>วันที่แจ้ง</th>
+  <th>วันที่เริ่มซ่อม</th>
+  <th>วันที่ซ่อมเสร็จ</th>
+  <th>สถานะ</th>
+</tr>
+</thead>
+
+<tbody>
+
+<% repairs.forEach(r => { %>
+<tr>
+  <td><%= r.RepairCode %></td>
+
+  <td>
+    <%= r.fname %> <%= r.lname %>
+  </td>
+
+  <td><%= r.ProblemDetail %></td>
+
+  <td>
+    <%= r.CreateDate
+      ? new Date(r.CreateDate).toLocaleDateString("th-TH")
+      : "-" %>
+  </td>
+
+  <td>
+    <%= r.StartRepairDate
+      ? new Date(r.StartRepairDate).toLocaleDateString("th-TH")
+      : "-" %>
+  </td>
+
+  <td>
+    <%= r.FinishDate
+      ? new Date(r.FinishDate).toLocaleDateString("th-TH")
+      : "-" %>
+  </td>
+
+  <td>
+    <span class="badge">
+      <%= r.StatusName %>
+    </span>
+  </td>
+</tr>
+<% }) %>
+
+</tbody>
+</table>
+
+<a href="/admin/repair" class="btn gray">
+  ← กลับหน้ารายการซ่อม
+</a>

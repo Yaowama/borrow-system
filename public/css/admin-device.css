@@ -1,0 +1,388 @@
+/* ===============================
+   TABLE
+================================ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+.table th {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table td {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.table tr:hover {
+  background: #f9fafb;
+}
+
+.center {
+  text-align: center;
+}
+
+/* ===============================
+   DEVICE
+================================ */
+.device-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.no-img {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.device-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.device-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ===============================
+   BADGE
+================================ */
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gray   { background:#e5e7eb; color:#374151; }
+.green  { background:#dcfce7; color:#166534; }
+.yellow { background:#fef3c7; color:#92400e; }
+.red    { background:#fee2e2; color:#991b1b; }
+
+/* ===============================
+   ACTION
+================================ */
+.action-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all .2s ease;
+}
+
+.btn-icon.view {
+  background: #ecfeff;
+  color: #0369a1;
+}
+
+.btn-icon.edit {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.btn-icon.del {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.15);
+}
+
+/* ===============================
+   ADD BUTTON
+================================ */
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #4f46e5;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  /* box-shadow: 0 10px 22px rgba(79,70,229,.35); */
+}
+
+.btn-add:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+/* คลิกได้ */
+.device-img.clickable {
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+.device-img.clickable:hover {
+  transform: scale(1.05);
+}
+
+/* Modal */
+.img-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+}
+
+.img-modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  background: #fff;
+  padding: 2px;
+  border-radius: 12px;
+}
+
+.img-modal .close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: #fff;
+  font-size: 36px;
+  cursor: pointer;
+}
+
+/* overlay พื้นหลัง */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* ===============================
+   DELETE MODAL (CLEAN & SMOOTH)
+================================ */
+
+.delete-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.delete-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* modal box */
+.delete-modal .modal-box {
+  background: #ffffff;
+  width: 360px;
+  max-width: 90%;
+  padding: 28px 32px 26px;
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 24px 50px rgba(0,0,0,.2);
+
+  transform: translateY(10px) scale(.96);
+  opacity: 0;
+  transition: all .25s ease;
+}
+
+.delete-modal.show .modal-box {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ===============================
+   ICON (INSIDE WHITE BOX)
+================================ */
+
+.check-wrapper {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warningmark {
+  width: 48px;
+  height: 48px;
+}
+
+.delete-modal.show .warning-circle {
+  stroke: #ef4444;
+  stroke-width: 4;
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: drawCircle .5s ease forwards;
+}
+
+.delete-modal.show .warning-line {
+  stroke: #ef4444;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: drawLine .3s ease forwards .4s;
+}
+
+.delete-modal.show .warning-dot {
+  fill: #ef4444;
+  opacity: 0;
+  animation: fadeDot .2s ease forwards .7s;
+}
+
+
+/* ===============================
+   TEXT
+================================ */
+
+.delete-modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.delete-modal p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 8px 4px 16px;
+  border-bottom: 1px solid #f1f1f1;
+  margin-bottom: 20px;
+}
+
+
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* back icon */
+.icon-back {
+  text-decoration: none;
+  background: #f3f4f6;
+  color: #4a4b4d;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s ease;
+}
+
+.icon-back:hover {
+  background: #e5e7eb;
+  transform: translateX(-2px);
+}
+
+
+
+/* ===============================
+   ICON ANIMATIONS
+================================ */
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeDot {
+  to { opacity: 1; }
+}

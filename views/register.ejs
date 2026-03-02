@@ -1,0 +1,213 @@
+<link rel="stylesheet" href="/css/auth.css">
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+
+<div class="container">
+
+  <!-- LEFT -->
+  <div class="left">
+
+    <h1 id="stepTitle">
+      <i class="fa-solid fa-user-plus"></i>
+      สร้างบัญชีผู้ใช้
+    </h1>
+
+    <div class="error-box register" id="registerError"></div>
+    <div id="errorBox" class="error-box"></div>
+
+    <div
+      id="backendError"
+      class="error-box <%= typeof error !== 'undefined' ? 'show' : '' %>"
+    >
+      <%= typeof error !== 'undefined' ? error : '' %>
+    </div>
+
+    <form method="POST" action="/register" enctype="multipart/form-data">
+
+      <!-- ================= STEP 1 ================= -->
+      <div class="step active">
+
+        <div class="label">
+          ชื่อผู้ใช้ (Username) <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-user"></i>
+          <input
+            name="username"
+            required
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="label">
+          รหัสผ่าน (Password) <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-lock"></i>
+          <input
+            type="password"
+            name="password"
+            required
+          >
+        </div>
+
+        <div class="label">
+          ยืนยันรหัสผ่าน <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-lock"></i>
+          <input
+            type="password"
+            name="confirm"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- ================= STEP 2 ================= -->
+      <div class="step">
+
+        <div class="label">
+          ชื่อจริง <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-id-card"></i>
+          <input name="fname" required>
+        </div>
+
+        <div class="label">
+          นามสกุล <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-id-card"></i>
+          <input name="lname" required>
+        </div>
+
+        <div class="label">
+          รหัสพนักงาน <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-briefcase"></i>
+          <input name="EMP_NUM" required>
+        </div>
+      </div>
+
+      <!-- ================= STEP 3 ================= -->
+      <div class="step">
+
+        <div class="label">
+          Email <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" name="email" required>
+        </div>
+
+        <div class="label">
+          เบอร์โทร (Phone) <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-phone"></i>
+          <input name="phone" required>
+        </div>
+
+        <div class="label">
+          โทรสาร (Fax) <span class="required">*</span>
+        </div>
+        <div class="input input-icon">
+          <i class="fa-solid fa-fax"></i>
+          <input name="fax" required>
+        </div>
+      </div>
+
+      <!-- ================= STEP 4 ================= -->
+      <div class="step">
+
+        <div class="label">
+          สำนัก <span class="required">*</span>
+        </div>
+        <div class="input input-icon select-box">
+          <i class="fa-solid fa-building"></i>
+          <select name="InstitutionID" id="institution" required>
+            <option value="">-- เลือกสำนัก --</option>
+          </select>
+        </div>
+
+        <div class="label">
+          ฝ่าย <span class="required">*</span>
+        </div>
+        <div class="input input-icon select-box">
+          <i class="fa-solid fa-sitemap"></i>
+          <select name="DepartmentID" id="department" required>
+            <option value="">-- เลือกฝ่าย --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ================= STEP 5 ================= -->
+      <div class="step">
+        <div class="profile-upload">
+          <label for="imageInput" class="avatar-upload">
+            <img
+              id="preview"
+              src="/images/default-avatar.svg"
+              alt="profile"
+            >
+          </label>
+
+          <input
+            type="file"
+            id="imageInput"
+            name="image"
+            accept="image/*"
+            hidden
+          >
+
+          <p class="upload-text">
+            <i class="fa-solid fa-camera"></i>
+            คลิกเพื่อเลือกรูปโปรไฟล์ 
+          </p>
+        </div>
+      </div>
+
+      <!-- BUTTON -->
+      <div class="btn-group">
+        <button type="button" id="prevBtn" class="btn">
+          ย้อนกลับ
+        </button>
+
+        <button type="button" id="nextBtn" class="btn">
+          ถัดไป
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+
+    <div class="logo-box">
+      <img src="/images/logo2.png" alt="logo">
+    </div>
+
+    <h2>ยินดีต้อนรับ</h2>
+    <p>กรุณาเข้าสู่ระบบเพื่อใช้งานระบบยืม–คืนอุปกรณ์</p>
+
+    <a href="/login">
+      <button class="btn-center">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        เข้าสู่ระบบ
+      </button>
+    </a>
+
+  </div>
+
+</div>
+
+<script src="/js/register-step.js"></script>
+<script src="/js/image-preview.js"></script>

@@ -1,0 +1,100 @@
+<link rel="stylesheet" href="/css/borrow_from.css">
+<!-- ========== MAIN ========== -->
+<main class="main">
+<div class="top-bar">
+
+  <div class="top-left">
+    <a href="/user/dashboard" class="icon-back">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>ยืมอุปกรณ์</h1>
+  </div>
+
+  <div class="top-right">
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+
+</div>
+
+
+  <!-- CONTENT -->
+  <div class="borrow-page">
+
+    <!-- DEVICE INFO -->
+    <div class="device-info">
+      <% if (device.DeviceImage) { %>
+        <img src="/uploads/device/<%= device.DeviceImage %>" alt="device">
+      <% } else { %>
+        <div class="no-img">No Image</div>
+      <% } %>
+
+      <div class="device-detail">
+        <h2><%= device.DeviceName %></h2>
+
+        <% if (device.BrandName) { %>
+          <p>ยี่ห้อ: <%= device.BrandName %></p>
+        <% } %>
+
+        <% if (device.ModelName) { %>
+          <p>รุ่น: <%= device.ModelName %></p>
+        <% } %>
+
+        <% if (device.CategoryName) { %>
+          <p>ประเภท: <%= device.CategoryName %></p>
+        <% } %>
+
+        <p class="remain">
+          จำนวนคงเหลือ:
+          <strong><%= device.RemainQty || 0 %></strong> ชิ้น
+        </p>
+      </div>
+    </div>
+
+    <!-- BORROW FORM -->
+<div class="borrow-card">
+  <form action="/user/borrow/<%= device.DeviceID %>" method="POST">
+
+    <div class="form-group">
+      <label>จำนวนที่ต้องการยืม</label>
+      <input type="number" name="qty"
+        min="1"
+        max="<%= device.RemainQty || 0 %>" required>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>วันที่ยืม</label>
+        <input type="date" name="BorrowDate" required>
+      </div>
+
+      <div class="form-group">
+        <label>วันที่คืน</label>
+        <input type="date" name="DueDate" required>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>วัตถุประสงค์ในการยืม</label>
+      <textarea name="purpose" rows="3" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>สถานที่ใช้งาน</label>
+      <input type="text" name="location" required>
+    </div>
+
+    <div class="form-group">
+      <label>หมายเหตุ</label>
+      <textarea name="note" rows="2"></textarea>
+    </div>
+
+    <button class="btn-confirm"
+      <%= device.RemainQty === 0 ? 'disabled' : '' %>>
+      ยืนยันการยืม
+    </button>
+
+  </form>
+</div>
+</main>

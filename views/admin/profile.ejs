@@ -1,0 +1,132 @@
+<link rel="stylesheet" href="/css/profile.css">
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+
+<div class="profile-container">
+
+  <!-- ================= HEADER ================= -->
+  <div class="profile-header">
+
+    <img
+      src="<%= user.ProfileImage
+      ? '/uploads/profile/' + user.ProfileImage
+      : '/images/default-avatar.svg'%>"
+      class="avatar"
+    >
+
+    <div>
+      <h1><%= user.fname %> <%= user.lname %></h1>
+      <span class="username">@<%= user.username %></span>
+    </div>
+
+  </div>
+
+
+  <!-- ================= USER INFO ================= -->
+  <div class="profile-title">ข้อมูลผู้ใช้งาน</div>
+
+  <div class="profile-grid">
+
+    <!-- EMAIL -->
+    <div class="info-card">
+      <i class="fa-solid fa-envelope"></i>
+      <div>
+        <label>Email</label>
+        <p><%= user.email %></p>
+      </div>
+    </div>
+
+    <!-- EMPLOYEE CODE -->
+    <div class="info-card">
+      <i class="fa-solid fa-id-badge"></i>
+      <div>
+        <label>รหัสพนักงาน</label>
+        <p><%= user.EMP_NUM || user.EMPID %></p>
+      </div>
+    </div>
+
+    <!-- PHONE -->
+    <div class="info-card">
+      <i class="fa-solid fa-phone"></i>
+      <div>
+        <label>เบอร์โทรศัพท์</label>
+        <p><%= user.phone || "-" %></p>
+      </div>
+    </div>
+
+    <!-- FAX -->
+    <div class="info-card">
+      <i class="fa-solid fa-fax"></i>
+      <div>
+        <label>Fax</label>
+        <p><%= user.fax || "-" %></p>
+      </div>
+    </div>
+
+    <!-- DEPARTMENT -->
+    <div class="info-card">
+      <i class="fa-solid fa-building"></i>
+      <div>
+        <label>แผนก</label>
+        <p><%= user.DepartmentName || "-" %></p>
+      </div>
+    </div>
+
+    <!-- ORGANIZATION -->
+    <div class="info-card">
+      <i class="fa-solid fa-city"></i>
+      <div>
+        <label>หน่วยงาน</label>
+        <p><%= user.InstitutionName || "-" %></p>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ================= SYSTEM INFO ================= -->
+  <div class="profile-title">ข้อมูลระบบ</div>
+
+  <div class="profile-grid">
+
+    <!-- ROLE -->
+    <div class="info-card">
+      <i class="fa-solid fa-user-shield"></i>
+      <div>
+        <label>ประเภทผู้ใช้งาน</label>
+        <p><%= user.RoleName || "-" %></p>
+      </div>
+    </div>
+
+    <!-- CREATE DATE -->
+    <div class="info-card">
+      <i class="fa-solid fa-calendar-check"></i>
+      <div>
+        <label>วันที่สมัครใช้งาน</label>
+        <p>
+          <%= new Date(user.CreateDate).toLocaleDateString("th-TH") %>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= ACTION ================= -->
+  <div class="profile-actions">
+
+    <a href="/admin/profile/edit" class="btn primary">
+      <i class="fa-solid fa-pen-to-square"></i>
+      แก้ไขข้อมูลผู้ใช้งาน
+    </a>
+
+    <a href="/admin/change_password" class="btn outline">
+      <i class="fa-solid fa-lock"></i>
+      เปลี่ยนรหัสผ่าน
+    </a>
+
+
+  </div>
+
+</div>
