@@ -38,35 +38,43 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="row"><span class="label">Serial Number:</span> ${h.SerialNumber || "-"}</div>
     <div class="row"><span class="label">ยี่ห้อ:</span> ${h.BrandName || "-"}</div>
     <div class="row"><span class="label">รุ่น:</span> ${h.ModelName || "-"}</div>
-    <div class="row"><span class="label">วันที่ยืม:</span> ${h.BorrowDate}</div>
-    <div class="row"><span class="label">กำหนดคืน:</span> ${h.DueDate}</div>
     <div class="row"><span class="label">สถานที่:</span> ${h.Location || "-"}</div>
     <div class="row"><span class="label">วัตถุประสงค์:</span> ${h.Purpose || "-"}</div>
-    <div class="row"><span class="label">หมายเหตุ:</span> ${h.Remark || "-"}</div>
-
-    <div class="row"><span class="label">สถานะ:</span> ${h.StatusName}</div>
-    
-    ${h.OverdueText ? `
-      <div class="row">
-        <span class="label">แจ้งเตือน:</span>
-        <span class="text-danger">${h.OverdueText}</span>
-      </div>
-    ` : ``}
-
-    <div class="row">
-      <span class="label">ดำเนินการโดย:</span> ${h.ActionBy || "-"}
-    </div>
-
+    <div class="row"><span class="label">วันที่ยืม:</span> ${h.BorrowDate}</div>
+    <div class="row"><span class="label">กำหนดคืน:</span> ${h.DueDate}</div>
     <div class="row">
       <span class="label">
         ${h.ActionType === 'approve'
           ? 'อนุมัติเมื่อ'
           : h.ActionType === 'reject'
           ? 'ปฏิเสธเมื่อ'
-          : 'ดำเนินการเมื่อ'}
+          : 'วันที่คืน'}
       :</span>
       ${h.ActionDate || "-"}
     </div>
+
+    <div class="row">
+  <span class="label">สถานะ:</span> 
+  ${
+    h.BorrowStatusID == 1 ? `<span class="badge gray">รออนุมัติ</span>` :
+    h.BorrowStatusID == 3 ? `<span class="badge red">ปฏิเสธ</span>` :
+    h.BorrowStatusID == 4 ? `<span class="badge green">คืนแล้ว</span>` :
+    h.BorrowStatusID == 5 ? `<span class="badge orange">ยกเลิก</span>` :
+    h.BorrowStatusID == 2 || h.BorrowStatusID == 6 ? `<span class="badge blue">อนุมัติแล้ว</span>` :
+    `<span class="badge gray">${h.StatusName}</span>`
+  }
+</div>
+    
+  
+    ${h.OverdueText ? `
+      <div class="row">
+        <span class="label">แจ้งเตือน:</span>
+        <span class="overdue-text">${h.OverdueText}</span>
+      </div>
+    ` : ``}
+
+    <div class="row"><span class="label">หมายเหตุ:</span> ${h.Remark || "-"}</div>
+    <div class="row"><span class="label">ดำเนินการโดย:</span> ${h.ActionBy || "-"}</div>
 
     ${h.RejectRemark ? `
       <div class="row">

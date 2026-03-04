@@ -1270,10 +1270,18 @@ router.get("/borrow/detail/data/:code", async (req, res) => {
       s.StatusName,
 
       CASE
-        WHEN bt.ReturnDate IS NULL
-            AND bt.BorrowStatusID NOT IN (4,5) -- ยังไม่คืน และไม่ยกเลิก
+        -- คืนแล้ว และคืนเกินกำหนด
+        WHEN bt.BorrowStatusID = 4
+            AND bt.ReturnDate IS NOT NULL
+            AND bt.ReturnDate > bt.DueDate
+        THEN CONCAT('เกินกำหนด ', DATEDIFF(bt.ReturnDate, bt.DueDate), ' วัน')
+
+        -- ยังไม่คืน และกำลังยืมอยู่
+        WHEN bt.BorrowStatusID IN (2,6)
+            AND bt.ReturnDate IS NULL
             AND CURDATE() > bt.DueDate
         THEN CONCAT('เกินกำหนด ', DATEDIFF(CURDATE(), bt.DueDate), ' วัน')
+
         ELSE NULL
       END AS OverdueText,
 
