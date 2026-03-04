@@ -607,5 +607,26 @@ body {
   display: none;
 }
 
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
 
+.status-badge.green {
+  background: #e6f6ed;
+  color: #1e8e3e;
+}
+
+.status-badge.yellow {
+  background: #fff4e5;
+  color: #e67e00;
+}
+
+.status-badge.red {
+  background: #fdeaea;
+  color: #c0392b;
+}
 

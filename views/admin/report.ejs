@@ -1,66 +1,150 @@
+<link rel="stylesheet" href="/css/report.css">
+
 <div class="top-bar">
+  <h1>รายงานการยืม–คืนอุปกรณ์</h1>
+<div class="top-right">
 
-        <h1>รายงานการยืม–คืนอุปกรณ์</h1>
 
-        <div class="top-right">
-            <div class="admin-box">
-                <span>Admin</span>
-                <i class="fa-solid fa-user"></i>
-            </div>
-
-            <div class="logo-box">
-                <img src="/images/logo.png">
-            </div>
-        </div>
-
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
     </div>
-    
+
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+</div>
+
 <form method="GET" action="/admin/report" class="filter">
 
   จาก:
-  <input type="date" name="start">
+  <input type="date" name="start" value="<%= query.start || '' %>">
 
   ถึง:
-  <input type="date" name="end">
+  <input type="date" name="end" value="<%= query.end || '' %>">
+
+  รหัสพนักงาน:
+<input type="text" name="empid" value="<%= query.empid || '' %>">
+
+สถานะ:
+<select name="status">
+  <option value="">ทั้งหมด</option>
+  <option value="pending" <%= query.status=='pending'?'selected':'' %>>รออนุมัติ</option>
+  <option value="borrowing" <%= query.status=='borrowing'?'selected':'' %>>กำลังยืม</option>
+  <option value="returned" <%= query.status=='returned'?'selected':'' %>>คืนแล้ว</option>
+  <option value="overdue" <%= query.status=='overdue'?'selected':'' %>>เกินกำหนด</option>
+</select>
+  หน่วยงาน:
+  <select name="Institution">
+    <option value="">ทั้งหมด</option>
+    <% institutions.forEach(d => { %>
+      <option value="<%= d.InstitutionID %>"
+        <%= query.Institution==d.InstitutionID?'selected':'' %>>
+        <%= d.InstitutionName %>
+      </option>
+    <% }) %>
+  </select>
+  
+  แผนก:
+  <select name="department">
+    <option value="">ทั้งหมด</option>
+    <% departments.forEach(d => { %>
+      <option value="<%= d.DepartmentID %>"
+        <%= query.department==d.DepartmentID?'selected':'' %>>
+        <%= d.DepartmentName %>
+      </option>
+    <% }) %>
+  </select>
+
 
   <button class="btn blue">ค้นหา</button>
 
-  <a href="/admin/report/excel" class="btn green">
-    📥 Excel
-  </a>
-
-  <a href="/admin/report/pdf" class="btn red">
-    📄 PDF
-  </a>
+<a href="/admin/report/excel?start=<%= query.start || '' %>&end=<%= query.end || '' %>&status=<%= query.status || '' %>&department=<%= query.department || '' %>&empid=<%= query.empid || '' %>&Institution=<%= query.Institution || '' %>" 
+class="btn green">
+📥 Excel
+</a>
 
 </form>
+
+
+<!-- SUMMARY -->
+<div class="summary-box">
+  <div>ทั้งหมด: <b><%= summary.total %></b></div>
+  <div>กำลังยืม: <b><%= summary.borrowing %></b></div>
+  <div>คืนแล้ว: <b><%= summary.returned %></b></div>
+  <div>เกินกำหนด: <b><%= summary.late %></b></div>
+</div>
+
 
 <table class="table">
 
 <tr>
+  <th>#</th>
   <th>เลขเอกสาร</th>
   <th>ผู้ยืม</th>
+  <th>สังกัด</th>
   <th>อุปกรณ์</th>
   <th>วันยืม</th>
   <th>กำหนดคืน</th>
   <th>วันคืน</th>
+  <th>เกิน</th>
   <th>สถานะ</th>
 </tr>
 
-<% reports.forEach(r => { %>
+<% reports.forEach((r, index) => { %>
 <tr>
+
+  <td class="col-no"><%= index + 1 %></td>
+
   <td><%= r.BorrowCode %></td>
-  <td><%= r.fname %> <%= r.lname %></td>
+
   <td>
-    <%= r.DeviceCode %><br>
-    <small><%= r.DeviceName %></small>
+    <strong><%= r.fname %> <%= r.lname %></strong><br>
+    <small>รหัสพนักงาน: <%= r.EMP_NUM %></small>
   </td>
+
+  <td>
+    <%= r.InstitutionName || '-' %><br>
+    <small><%= r.DepartmentName || '-' %></small>
+  </td>
+
+<td class="device-col">
+  <strong><%= r.DeviceCode %></strong><br>
+
+  <%= r.DeviceName %><br>
+
+  <small>
+    <%= r.SerialNumber || '-' %> |
+    <%= r.Brand || '-' %>
+    <%= r.Model || '' %>
+  </small>
+</td>
+
   <td><%= r.BorrowDate %></td>
   <td><%= r.DueDate %></td>
   <td><%= r.ReturnDate || "-" %></td>
+
   <td>
-    <span class="badge"><%= r.StatusName %></span>
+    <% if (r.LateDays > 0) { %>
+      <span class="badge red"><%= r.LateDays %> วัน</span>
+    <% } else { %>
+      - 
+    <% } %>
   </td>
+
+  <td>
+    <% 
+      let statusClass = 'gray';
+      if (r.StatusLabel === 'กำลังยืม') statusClass = 'blue';
+      if (r.StatusLabel === 'คืนแล้ว') statusClass = 'green';
+      if (r.StatusLabel === 'เกินกำหนด') statusClass = 'red';
+      if (r.StatusLabel === 'ปฏิเสธ') statusClass = 'red';
+      if (r.StatusLabel === 'ยกเลิก') statusClass = 'orange';
+    %>
+    <span class="badge <%= statusClass %>"><%= r.StatusLabel %></span>
+  </td>
+
 </tr>
 <% }) %>
 

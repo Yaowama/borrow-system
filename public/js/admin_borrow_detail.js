@@ -173,7 +173,8 @@ if (userOverlay && userContent) {
       <div class="detail-info">
         <h3>ข้อมูลผู้ยืม</h3>
         <div class="row"><span class="label">ชื่อ:</span> ${data.fname} ${data.lname}</div>
-        <div class="row"><span class="label">อีเมล:</span> ${data.email || "-"}</div>
+        <div class="row"><span class="label">รหัสพนักงาน:</span> ${data.EMP_NUM || "-"}</div>
+        <div class="row"><span class="label">อีเมล:</span> ${data.email || "-"}</div> 
         <div class="row"><span class="label">เบอร์โทร:</span> ${data.phone || "-"}</div>
         <div class="row"><span class="label">Fax:</span> ${data.fax || "-"}</div>
         <div class="row"><span class="label">แผนก:</span> ${data.DepartmentName || "-"}</div>

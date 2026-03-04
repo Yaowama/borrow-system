@@ -168,7 +168,6 @@ router.get("/employee", isAdmin, async (req, res) => {
         e.CreateDate,
         e.RoleID,
         e.IsActive,
-
         e.InstitutionID,
         e.DepartmentID,
 
@@ -176,40 +175,47 @@ router.get("/employee", isAdmin, async (req, res) => {
         i.InstitutionName,
         d.DepartmentName,
 
-        COUNT(b.BorrowID) AS activeBorrow
+        IFNULL(ab.activeBorrow, 0) AS activeBorrow,
+        IFNULL(tb.totalBorrow, 0) AS totalBorrow,
+        IFNULL(lb.lateCount, 0) AS lateCount
 
       FROM TB_T_Employee e
 
-      LEFT JOIN roles r ON e.RoleID = r.RoleID
+      LEFT JOIN roles r 
+        ON e.RoleID = r.RoleID
 
-
-      LEFT JOIN TB_M_Institution i
+      LEFT JOIN TB_M_Institution i 
         ON e.InstitutionID = i.InstitutionID
 
-      LEFT JOIN TB_M_Department d
+      LEFT JOIN TB_M_Department d 
         ON e.DepartmentID = d.DepartmentID
 
-      LEFT JOIN TB_T_BorrowTransaction b
-        ON e.EMPID = b.EMPID
-        AND b.BorrowStatusID IN (1,2)
+      -- 🔹 กำลังยืม
+      LEFT JOIN (
+        SELECT EMPID, COUNT(*) AS activeBorrow
+        FROM TB_T_BorrowTransaction
+        WHERE BorrowStatusID IN (1,2,6)
+        GROUP BY EMPID
+      ) ab 
+        ON e.EMPID = ab.EMPID
 
-      GROUP BY 
-        e.EMPID,
-        e.EMP_NUM,
-        e.fname,
-        e.lname,
-        e.username,
-        e.email,
-        e.phone,
-        e.fax,
-        e.CreateDate,
-        e.RoleID,
-        e.IsActive,
-        e.InstitutionID,
-        e.DepartmentID,
-        r.RoleName,
-        i.InstitutionName,
-        d.DepartmentName
+      -- 🔹 ยืมทั้งหมด
+      LEFT JOIN (
+        SELECT EMPID, COUNT(*) AS totalBorrow
+        FROM TB_T_BorrowTransaction
+        GROUP BY EMPID
+      ) tb 
+        ON e.EMPID = tb.EMPID
+
+      -- 🔹 คืนเกินกำหนด
+      LEFT JOIN (
+        SELECT EMPID, COUNT(*) AS lateCount
+        FROM TB_T_BorrowTransaction
+        WHERE ReturnDate IS NOT NULL
+          AND DATE(ReturnDate) > DATE(DueDate)
+        GROUP BY EMPID
+      ) lb 
+        ON e.EMPID = lb.EMPID
 
       ORDER BY e.EMPID DESC
     `);
@@ -232,23 +238,18 @@ router.get("/employee", isAdmin, async (req, res) => {
     res.render("admin/layout", {
       page: "employee",
       active: "employee",
-
       employees,
       departments,
       institutions
-
     });
 
   } catch (err) {
 
     console.error("EMPLOYEE PAGE ERROR:", err);
-
     res.status(500).send(err.message);
 
   }
 });
-
-
 
 router.get("/employee/detail/:id", isAdmin, async (req, res) => {
   try {
@@ -1273,7 +1274,7 @@ router.get("/borrow/detail/data/:code", async (req, res) => {
         -- คืนแล้ว และคืนเกินกำหนด
         WHEN bt.BorrowStatusID = 4
             AND bt.ReturnDate IS NOT NULL
-            AND bt.ReturnDate > bt.DueDate
+            AND DATE(bt.ReturnDate) > DATE(bt.DueDate)
         THEN CONCAT('เกินกำหนด ', DATEDIFF(bt.ReturnDate, bt.DueDate), ' วัน')
 
         -- ยังไม่คืน และกำลังยืมอยู่
@@ -1444,6 +1445,43 @@ router.post("/borrow/reject/:id", async (req, res) => {
   } catch (err) {
     console.error("REJECT ERROR:", err);
     res.redirect("/admin/borrow?error=reject");
+  }
+});
+
+router.get("/user/data/:id", async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const [[user]] = await db.query(`
+      SELECT
+        e.EMPID,
+        e.EMP_NUM,
+        e.fname,
+        e.lname,
+        e.email,
+        e.phone,
+        e.fax,
+        d.DepartmentName,
+        i.InstitutionName,
+
+        (
+          SELECT COUNT(*)
+          FROM TB_T_BorrowTransaction b
+          WHERE b.EMPID = e.EMPID
+          AND b.BorrowStatusID IN (1,2,6)
+        ) AS activeBorrow
+
+      FROM TB_T_Employee e
+      LEFT JOIN TB_M_Department d ON e.DepartmentID = d.DepartmentID
+      LEFT JOIN TB_M_Institution i ON e.InstitutionID = i.InstitutionID
+      WHERE e.EMPID = ?
+    `, [userId]);
+
+    res.json(user);
+
+  } catch (err) {
+    console.error("USER DATA ERROR:", err);
+    res.status(500).json({ error: "user_data_error" });
   }
 });
 
@@ -1737,69 +1775,329 @@ router.get('/repair/cancel/:id', async (req, res) => {
   }
 });
 
-
-router.get("/user/data/:id", async (req, res) => {
-  const userId = req.params.id;
-
-  try {
-    const [[user]] = await db.query(`
-      SELECT
-        e.EMPID,
-        e.fname,
-        e.lname,
-        e.email,
-        e.phone,
-        e.fax,
-        d.DepartmentName,
-        i.InstitutionName,
-
-        (
-          SELECT COUNT(*)
-          FROM TB_T_BorrowTransaction b
-          WHERE b.EMPID = e.EMPID
-          AND b.BorrowStatusID IN (1,2,6)
-        ) AS activeBorrow
-
-      FROM TB_T_Employee e
-      LEFT JOIN TB_M_Department d ON e.DepartmentID = d.DepartmentID
-      LEFT JOIN TB_M_Institution i ON e.InstitutionID = i.InstitutionID
-      WHERE e.EMPID = ?
-    `, [userId]);
-
-    res.json(user);
-
-  } catch (err) {
-    console.error("USER DATA ERROR:", err);
-    res.status(500).json({ error: "user_data_error" });
-  }
-});
-
 /* ===============================
    REPORT
 ================================ */
-router.get("/report", async (req, res) => {
+router.get("/report", isAdmin, async (req, res) => {
+  try {
 
-  const [reports] = await db.query(`
-    SELECT
-      bt.BorrowCode,
-      e.fname,
-      e.lname,
-      d.DeviceName,
-      bt.BorrowDate,
-      bt.ReturnDate
-    FROM TB_T_BorrowTransaction bt
-    JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-    JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-  `);
+    const query = req.query;  
+    const { start, end, status, department, empid, Institution } = query;
 
-  res.render("admin/layout", {
-    page: "report",
-    active: "report",
-    reports
-  });
+    let where = [];
+    let params = [];
+
+    // ช่วงวันที่
+    if (start && end) {
+      where.push("DATE(bt.BorrowDate) BETWEEN ? AND ?");
+      params.push(start, end);
+    }
+
+    // filter รหัสพนักงาน
+    if (empid) {
+      where.push("e.EMPID LIKE ?");
+      params.push(`%${empid}%`);
+    }
+
+    // filter สถานะ
+    if (status === "pending") {
+      where.push("bt.BorrowStatusID = 1");
+    }
+
+    else if (status === "borrowing") {
+      where.push(`
+        bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate >= CURDATE()
+      `);
+    }
+
+    else if (status === "returned") {
+      where.push("bt.BorrowStatusID = 4");
+    }
+
+    else if (status === "overdue") {
+      where.push(`
+        bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate < CURDATE()
+      `);
+    }
+
+    // filter แผนก
+    if (department) {
+      where.push("e.DepartmentID = ?");
+      params.push(department);
+    }
+
+    // filter หน่วยงาน
+    if (Institution) {
+      where.push("e.InstitutionID = ?");
+      params.push(Institution);
+    }
+    const whereSQL = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    const [reports] = await db.query(`
+      SELECT
+        bt.BorrowCode,
+        DATE_FORMAT(bt.BorrowDate, '%d/%m/%Y') AS BorrowDate,
+        DATE_FORMAT(bt.DueDate, '%d/%m/%Y') AS DueDate,
+        DATE_FORMAT(bt.ReturnDate, '%d/%m/%Y') AS ReturnDate,
+
+        e.fname,
+        e.lname,
+        e.EMP_NUM,
+        ins.InstitutionName,
+        dep.DepartmentName,
+        da.AssetCode AS DeviceCode,
+        d.DeviceName,
+        IFNULL(NULLIF(da.SerialNumber, ''), '-') AS SerialNumber,
+        IFNULL(NULLIF(b.BrandName, ''), '-') AS Brand,
+        IFNULL(NULLIF(m.ModelName, ''), '-') AS Model,
+
+        -- คำนวณวันเกิน
+        CASE
+          WHEN bt.BorrowStatusID = 4
+              AND bt.ReturnDate IS NOT NULL
+            THEN GREATEST(DATEDIFF(bt.ReturnDate, bt.DueDate), 0)
+          WHEN bt.BorrowStatusID = 6
+              AND bt.ReturnDate IS NULL
+            THEN GREATEST(DATEDIFF(CURDATE(), bt.DueDate), 0)
+          ELSE 0
+        END AS LateDays,
+
+        -- สถานะแสดงผล (ผูกกับ BorrowStatusID เท่านั้น)
+        CASE
+          WHEN bt.BorrowStatusID = 3 THEN 'ปฏิเสธ'
+          WHEN bt.BorrowStatusID = 5 THEN 'ยกเลิก'
+          WHEN bt.BorrowStatusID = 4 THEN 'คืนแล้ว'
+          WHEN bt.BorrowStatusID = 6
+              AND bt.ReturnDate IS NULL
+              AND bt.DueDate < CURDATE()
+            THEN 'เกินกำหนด'
+          WHEN bt.BorrowStatusID = 6
+              AND bt.ReturnDate IS NULL
+            THEN 'กำลังยืม'
+          WHEN bt.BorrowStatusID = 2 THEN 'อนุมัติแล้ว'
+          ELSE 'รออนุมัติ'
+        END AS StatusLabel
+
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN TB_M_Department dep ON e.DepartmentID = dep.DepartmentID
+      LEFT JOIN TB_M_Institution ins ON e.InstitutionID = ins.InstitutionID
+      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
+      LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+
+      ${whereSQL}
+      ORDER BY bt.BorrowDate DESC
+    `, params);
+
+    // 🔹 ดึงแผนกไว้ใช้ใน dropdown
+    const [departments] = await db.query(`
+      SELECT DepartmentID, DepartmentName
+      FROM TB_M_Department
+      ORDER BY DepartmentName
+    `);
+
+    const [institutions] = await db.query(`
+      SELECT InstitutionID, InstitutionName
+      FROM TB_M_Institution
+      ORDER BY InstitutionName
+    `);
+
+    // 🔹 สรุปตัวเลข
+    const summary = {
+      total: reports.length,
+      borrowing: reports.filter(r => r.StatusLabel === "กำลังยืม").length,
+      returned: reports.filter(r => r.StatusLabel === "คืนแล้ว").length,
+      late: reports.filter(r => r.StatusLabel === "เกินกำหนด").length
+    };
+
+    res.render("admin/layout", {
+      page: "report",
+      active: "report",
+      reports,
+      departments,
+      institutions,  // เพิ่ม
+      summary,
+      query
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Report error");
+  }
 });
 
+router.get("/report/excel", isAdmin, async (req, res) => {
+  try {
+    const { start, end, status, department, empid, Institution } = req.query;
 
+    let where = [];
+    let params = [];
+
+    if (empid) {
+      where.push("e.EMPID LIKE ?");
+      params.push(`%${empid}%`);
+    }
+
+    if (Institution) {
+      where.push("e.InstitutionID = ?");
+      params.push(Institution);
+    }
+    if (start && end) {
+      where.push("DATE(bt.BorrowDate) BETWEEN ? AND ?");
+      params.push(start, end);
+    }
+
+    if (status === "pending") {
+      where.push("bt.BorrowStatusID = 1");
+    }
+
+    else if (status === "borrowing") {
+      where.push(`
+        bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate >= CURDATE()
+      `);
+    }
+
+    else if (status === "returned") {
+      where.push("bt.BorrowStatusID = 4");
+    }
+
+    else if (status === "overdue") {
+      where.push(`
+        bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate < CURDATE()
+      `);
+    }
+
+    if (department) {
+      where.push("e.DepartmentID = ?");
+      params.push(department);
+    }
+
+    const whereSQL = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    const [rows] = await db.query(`
+      SELECT
+        bt.BorrowCode,
+        e.EMP_NUM,
+        e.fname,
+        e.lname,
+        ins.InstitutionName,
+        dep.DepartmentName,
+        da.AssetCode,
+        d.DeviceName,
+        da.SerialNumber,
+        b.BrandName AS Brand,
+        m.ModelName AS Model,
+
+        DATE_FORMAT(bt.BorrowDate, '%d/%m/%Y') AS BorrowDate,
+        DATE_FORMAT(bt.DueDate, '%d/%m/%Y') AS DueDate,
+        DATE_FORMAT(bt.ReturnDate, '%d/%m/%Y') AS ReturnDate,
+
+        CASE
+          WHEN bt.BorrowStatusID = 4
+            AND bt.ReturnDate IS NOT NULL
+            THEN GREATEST(DATEDIFF(bt.ReturnDate, bt.DueDate), 0)
+          WHEN bt.BorrowStatusID = 6
+            AND bt.ReturnDate IS NULL
+            THEN GREATEST(DATEDIFF(CURDATE(), bt.DueDate), 0)
+          ELSE 0
+        END AS LateDays,
+
+        CASE
+          WHEN bt.BorrowStatusID = 3 THEN 'ปฏิเสธ'
+          WHEN bt.BorrowStatusID = 5 THEN 'ยกเลิก'
+          WHEN bt.BorrowStatusID = 4 THEN 'คืนแล้ว'
+          WHEN bt.BorrowStatusID = 6
+            AND bt.ReturnDate IS NULL
+            AND bt.DueDate < CURDATE()
+            THEN 'เกินกำหนด'
+          WHEN bt.BorrowStatusID = 6
+            AND bt.ReturnDate IS NULL
+            THEN 'กำลังยืม'
+          WHEN bt.BorrowStatusID = 2 THEN 'อนุมัติแล้ว'
+          ELSE 'รออนุมัติ'
+        END AS StatusLabel
+
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
+      LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+      LEFT JOIN TB_M_Department dep ON e.DepartmentID = dep.DepartmentID
+      LEFT JOIN TB_M_Institution ins ON e.InstitutionID = ins.InstitutionID
+      
+      ${whereSQL}
+      ORDER BY bt.BorrowDate DESC
+    `, params);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Report");
+
+    sheet.columns = [
+    { header: "เลขเอกสาร", key: "BorrowCode", width: 20 },
+    { header: "รหัสพนักงาน", key: "EMP_NUM", width: 15 },
+    { header: "ผู้ยืม", key: "Borrower", width: 25 },
+    { header: "หน่วยงาน", key: "InstitutionName", width: 20 },
+    { header: "แผนก", key: "DepartmentName", width: 20 },
+    { header: "รหัสครุภัณฑ์", key: "AssetCode", width: 20 },
+    { header: "ชื่ออุปกรณ์", key: "DeviceName", width: 25 },
+    { header: "Serial Number", key: "SerialNumber", width: 20 },
+    { header: "ยี่ห้อ", key: "Brand", width: 20 },
+    { header: "รุ่น", key: "Model", width: 20 },
+    { header: "วันยืม", key: "BorrowDate", width: 15 },
+    { header: "กำหนดคืน", key: "DueDate", width: 15 },
+    { header: "วันคืน", key: "ReturnDate", width: 15 },
+    { header: "วันเกิน", key: "LateDays", width: 10 },
+    { header: "สถานะ", key: "StatusLabel", width: 15 },
+  ];
+
+    rows.forEach(r => {
+      sheet.addRow({
+        BorrowCode: r.BorrowCode,
+        EMP_NUM: r.EMP_NUM,
+        Borrower: r.fname + " " + r.lname,
+        InstitutionName: r.InstitutionName,
+        DepartmentName: r.DepartmentName,
+        AssetCode: r.AssetCode,
+        DeviceName: r.DeviceName,
+        SerialNumber: r.SerialNumber,
+        Brand: r.Brand,
+        Model: r.Model,
+        BorrowDate: r.BorrowDate,
+        DueDate: r.DueDate,
+        ReturnDate: r.ReturnDate || "-",
+        LateDays: r.LateDays > 0 ? r.LateDays : "-",
+        StatusLabel: r.StatusLabel
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Borrow_Report.xlsx"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (err) {
+    console.error("EXCEL ERROR:", err);
+    res.status(500).send("Excel error");
+  }
+});
 
 module.exports = router;

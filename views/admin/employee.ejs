@@ -32,7 +32,7 @@
       <th>Email</th>
       <th>แผนก</th>
       <th>สิทธิ์</th>
-      <th>กำลังยืม</th>
+      <th>พฤติกรรม</th>
       <th>สถานะ</th>
       <th>จัดการ</th>
     </tr>
@@ -57,7 +57,24 @@
         <% } %>
       </td>
 
-      <td><%= e.activeBorrow %></td>
+      <td>
+        <% let late = e.lateCount || 0; %>
+        <% let total = e.totalBorrow || 0; %>
+
+        <% if (late >= 5) { %>
+          <span class="status-badge red">
+            🔴 ระงับ (<%= late %>/<%= total %>)
+          </span>
+        <% } else if (late == 3) { %>
+          <span class="status-badge yellow">
+            🟡 เสี่ยง (<%= late %>/<%= total %>)
+          </span>
+        <% } else { %>
+          <span class="status-badge green">
+            🟢 ปกติ (<%= late %>/<%= total %>)
+          </span>
+        <% } %>
+      </td>
 
       <td>
         <% if (e.IsActive == 1) { %>
