@@ -639,13 +639,33 @@ router.get("/profile/edit", isLogin, checkActive, async (req, res) => {
   }
 });
 
-router.post("/profile/edit",isLogin, checkActive, upload.single("profile"),async (req, res) => {
+router.post("/profile/edit",isLogin,checkActive,upload.single("profile"),
+  async (req, res) => {
     try {
       const empId = req.session.user.EMPID;
-      const { email, phone, fax, DepartmentID, InstitutionID } = req.body;
+
+      const {
+        EMP_NUM,
+        fname,
+        lname,
+        email,
+        phone,
+        fax,
+        DepartmentID,
+        InstitutionID
+      } = req.body;
 
       let imageSql = "";
-      let params = [email, phone, fax, DepartmentID, InstitutionID];
+      let params = [
+        EMP_NUM,
+        fname,
+        lname,
+        email,
+        phone,
+        fax,
+        DepartmentID,
+        InstitutionID
+      ];
 
       if (req.file) {
         imageSql = ", ProfileImage = ?";
@@ -654,9 +674,13 @@ router.post("/profile/edit",isLogin, checkActive, upload.single("profile"),async
 
       params.push(empId);
 
-      await db.query(`
+      await db.query(
+        `
         UPDATE TB_T_Employee
         SET
+          EMP_NUM = ?,
+          fname = ?,
+          lname = ?,
           email = ?,
           phone = ?,
           fax = ?,
@@ -664,9 +688,11 @@ router.post("/profile/edit",isLogin, checkActive, upload.single("profile"),async
           InstitutionID = ?
           ${imageSql}
         WHERE EMPID = ?
-      `, params);
+        `,
+        params
+      );
 
-      // อัปเดต session ให้รูปใหม่ขึ้นทันที
+      // อัปเดต session ถ้ามีรูปใหม่
       if (req.file) {
         req.session.user.ProfileImage = req.file.filename;
       }
@@ -680,6 +706,74 @@ router.post("/profile/edit",isLogin, checkActive, upload.single("profile"),async
   }
 );
 
+router.get("/change_password", (req, res) => {
+  res.render("user/layout", {
+    title: "เปลี่ยนรหัสผ่าน",
+    page: "change_password",
+    active: "change_password",
+    error: null,
+    success: null
+  });
+});
+
+router.post("/change_password", async (req, res) => {
+  try {
+
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // 1. ตรวจรหัสใหม่
+    if (newPassword !== confirmPassword) {
+      return res.render("user/layout", {
+        page: "change_password",
+        active: "change_password",
+        error: "รหัสผ่านใหม่ไม่ตรงกัน",
+        success: null
+      });
+    }
+
+    // 2. ดึง user
+    const [[user]] = await db.query(
+      "SELECT password FROM TB_T_Employee WHERE EMPID = ?",
+      [req.session.user.EMPID]
+    );
+
+    const bcrypt = require("bcrypt");
+
+    // 3. ตรวจรหัสเดิม
+    const match = await bcrypt.compare(oldPassword, user.password);
+
+    if (!match) {
+      return res.render("user/layout", {
+        page: "change_password",
+        active: "change_password",
+        error: "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+        success: null
+      });
+    }
+
+    // 4. hash password ใหม่
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // 5. update
+    await db.query(
+      "UPDATE TB_T_Employee SET password = ? WHERE EMPID = ?",
+      [hashed, req.session.user.EMPID]
+    );
+
+    // 6. success
+    res.render("user/layout", {
+      title: "เปลี่ยนรหัสผ่าน",
+      page: "change_password",
+      active: "change_password",
+      error: null,
+      success: "เปลี่ยนรหัสผ่านสำเร็จ 🎉"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.send("Server error");
+  }
+});
 
 /* ===============================
    EXPORT

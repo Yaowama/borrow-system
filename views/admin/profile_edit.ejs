@@ -4,12 +4,14 @@
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 />
 
-
-<div class="profile-container">
-
-  <div class="profile-title">
-    แก้ไขข้อมูลผู้ใช้งาน
+  <!-- ปุ่มย้อนกลับ -->
+  <div class="back-btn">
+      <a href="/admin/profile" class="icon-back">
+    <i class="fa-solid fa-arrow-left"></i>
+  </a>
   </div>
+  
+<div class="profile-container">
 
   <form
     action="/admin/profile/edit"
@@ -17,7 +19,9 @@
     enctype="multipart/form-data"
     class="profile-form"
   >
-
+<div class="profile-title">
+    แก้ไขข้อมูลผู้ใช้งาน
+  </div>
     <div class="avatar-edit">
 
   <div class="avatar-wrapper">

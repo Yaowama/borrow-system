@@ -557,7 +557,6 @@ router.post(
         SET
           fname = ?,
           lname = ?,
-          fax = ?,
           email = ?,
           phone = ?,
           fax = ?,

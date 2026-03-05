@@ -2,26 +2,27 @@
 
 .profile-container {
   padding: 40px;
-  max-width: 1200px;
+  max-width: 1000px;
   margin: auto;
 }
 
 /* ================= TITLE ================= */
 
 .profile-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #ff7a2d;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
   margin-bottom: 25px;
+      text-align: center;
 }
 
 /* ================= FORM ================= */
 
 .profile-form {
-  background: #fff;
-  padding: 45px;
-  border-radius: 30px;
-  box-shadow: 0 20px 45px rgba(0,0,0,.08);
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
 }
 
 /* ================= AVATAR ================= */
@@ -34,19 +35,17 @@
 
 .avatar-wrapper {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 150px;
+  height: 150px;
 }
 
-/* วงกลมจริง */
 .avatar-circle {
-  width: 180px;
-  height: 180px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   overflow: hidden;
 
-  border: 6px solid #fff;
-  box-shadow: 0 15px 40px rgba(0,0,0,.25);
+  border: 3px solid #e5e7eb;
   background: #f5f5f5;
 }
 
@@ -56,14 +55,15 @@
   object-fit: cover;
 }
 
-/* ปุ่มดินสอ */
+/* ปุ่มแก้ไข */
+
 .avatar-edit-btn {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
+  right: 0;
+  bottom: 0;
 
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
 
   background: #ff7a2d;
@@ -74,10 +74,10 @@
   justify-content: center;
 
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
 
-  box-shadow: 0 8px 20px rgba(0,0,0,.35);
-  transition: .25s;
+  border: 2px solid #fff;
+  transition: 0.2s;
 }
 
 .avatar-edit-btn:hover {
@@ -91,12 +91,13 @@
   margin-top: 30px;
   display: grid;
   grid-template-columns: repeat(2,1fr);
-  gap: 25px;
+  gap: 22px;
 }
 
 .form-group label {
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
   margin-bottom: 6px;
   display: block;
 }
@@ -104,54 +105,56 @@
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 14px 18px;
-  border-radius: 14px;
-  border: 1.5px solid #ddd;
-  font-size: 15px;
-  background: #fafafa;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #fff;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #ff7a2d;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(255,122,45,.18);
 }
 
 .form-group input:disabled {
-  background: #f1f1f1;
+  background: #f3f4f6;
 }
 
 /* ================= BUTTON ================= */
 
 .profile-actions {
-  margin-top: 40px;
+  margin-top: 35px;
   display: flex;
-  gap: 20px;
+  gap: 14px;
 }
 
+/* save */
+
 .btn-save {
-  padding: 14px 45px;
-  border-radius: 40px;
-  background: linear-gradient(135deg,#ff944d,#ff7a2d);
+  padding: 10px 28px;
+  border-radius: 8px;
+  background: #ff7a2d;
   color: #fff;
   border: none;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .btn-save:hover {
-  transform: translateY(-2px);
+  background:#e86921;
 }
 
+/* cancel */
+
 .btn-cancel {
-  padding: 14px 40px;
-  border-radius: 40px;
-  border: 2px solid #ddd;
-  background: transparent;
-  color: #666;
+  padding: 10px 26px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #555;
   font-weight: 600;
   text-decoration: none;
 }
@@ -161,73 +164,33 @@
   color: #ff7a2d;
 }
 
-/* ===== FIX ADMIN CSS OVERRIDE ===== */
+/* ================= RESPONSIVE ================= */
 
-.avatar-circle img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 50% !important;
-  display: block;
+@media (max-width:768px){
+
+  .form-grid{
+    grid-template-columns: 1fr;
+  }
+
 }
 
-.upload-box {
-  grid-column: span 2;
+.icon-back {
+    text-decoration: none;
+    background: #f3f4f6;
+    color: #4a4b4d;
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+    position: fixed;
+    top: 60px;
+    left: 140px;
 }
 
-.upload-btn {
-  border: 2px dashed #c7c7c7;
-  border-radius: 12px;
-  padding: 26px;
-  text-align: center;
-  cursor: pointer;
-  color: #666;
-  transition: .25s;
-  background: #fafafa;
+.icon-back:hover {
+  background: #e5e7eb;
+  transform: translateX(-2px);
 }
-
-.upload-btn i {
-  font-size: 34px;
-  margin-bottom: 10px;
-  color: #777;
-}
-
-.upload-btn span {
-  display: block;
-  font-size: 15px;
-  margin-top: 6px;
-}
-
-.upload-btn small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #999;
-}
-
-.upload-btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
-}
-
-/* ✅ หลังเลือกไฟล์แล้ว */
-.upload-btn.active {
-  border-color: #22c55e;
-  background: #f0fdf4;
-  color: #15803d;
-}
-
-.upload-btn.active i {
-  color: #22c55e;
-}
-
-/* preview image */
-#preview {
-  display: none;
-  margin-top: 16px;
-  max-height: 220px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-}
-
-
