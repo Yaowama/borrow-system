@@ -61,8 +61,8 @@
   padding: 16px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
-  /* text-align: left; */
+  background: #e9e9e9;
+  text-align: center;
 }
 
 .table td {
@@ -85,12 +85,6 @@
 
 .table tbody tr:hover {
   background: #f9fafb;
-}
-
-.table td:first-child {
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: .3px;
 }
 
 .table td small {
@@ -188,6 +182,7 @@
   height: 34px;
   background: #ecfeff;
   color: #0369a1;
+  
   
 }
 
@@ -322,15 +317,29 @@
   flex-shrink: 0;
 }
 
+/* CLOSE BUTTON */
 .close-btn {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    font-size: 26px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: #9ca3af;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: none;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .2s;
+}
+
+.close-btn:hover {
+  background: #ef4444;
+  color: white;
+  transform: rotate(90deg);
 }
 /* ===============================
    DELETE MODAL (CLEAN & SMOOTH)

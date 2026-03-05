@@ -207,5 +207,34 @@ form.addEventListener("submit", async (e) => {
     if (e.target === modal) hideModal();
   });
 
-});
+  
+/* ================= SEARCH ================= */
 
+const searchInput = document.querySelector(".admin-search");
+const table = document.getElementById("employeeTable");
+
+if (searchInput && table) {
+
+  const rows = table.querySelectorAll("tbody tr");
+
+  searchInput.addEventListener("keyup", () => {
+
+    const keyword = searchInput.value.toLowerCase();
+
+    rows.forEach(row => {
+
+      const text = row.innerText.toLowerCase();
+
+      if (text.includes(keyword)) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+
+    });
+
+  });
+
+}
+
+});

@@ -1090,8 +1090,7 @@ router.get("/device/item/:id/edit", async (req, res) => {
   });
 });
 
-router.post(
-  "/device/item/:id/edit",
+router.post("/device/item/:id/edit",
   uploadAsset.single("AssetImage"),
   async (req, res) => {
 
@@ -1136,6 +1135,21 @@ router.post(
 );
 
 router.get("/borrow", async (req, res) => {
+
+  let { status } = req.query;
+
+  if (!status) {
+    status = "all";
+  }
+
+  let where = "";
+  let params = [];
+
+  if (status !== "all") {
+    where = "WHERE bt.BorrowStatusID = ?";
+    params.push(status);
+  }
+
   const [borrows] = await db.query(`
     SELECT
       bt.BorrowID,
@@ -1165,39 +1179,24 @@ router.get("/borrow", async (req, res) => {
 
       CONCAT(a.fname, ' ', a.lname) AS ActionBy,
       DATE_FORMAT(bt.ApproveDate, '%Y-%m-%d %H:%i') AS ActionDate,
-     
-      r.RepairID,
-
-      (
-        SELECT COUNT(*)
-        FROM TB_T_BorrowTransaction x
-        WHERE x.EMPID = bt.EMPID
-          AND x.BorrowStatusID IN (1,2,6)
-      ) AS activeBorrow,
-
-      CASE
-        WHEN bt.ReturnDate IS NULL
-            AND bt.BorrowStatusID IN (2,6)
-            AND bt.DueDate < CURDATE()
-        THEN DATEDIFF(CURDATE(), bt.DueDate)
-        ELSE 0
-      END AS overdue_day
-
+    
+      r.RepairID
 
     FROM TB_T_BorrowTransaction bt
     JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
     JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
     JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
     JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
-
     LEFT JOIN TB_T_Employee a ON bt.ApproveBy = a.EMPID
-    --  JOIN repair ที่ยังไม่จบ
     LEFT JOIN TB_T_Repair r
       ON da.DVID = r.DVID
       AND r.RepairStatusID IN (1,2)
 
+    ${where}
+
     ORDER BY bt.BorrowDate DESC
-  `);
+    `, params);
+
   const today = new Date();
     today.setHours(0,0,0,0);
 
@@ -1235,6 +1234,7 @@ router.get("/borrow", async (req, res) => {
     page: "borrow_list",
     active: "borrow",
     borrows,
+    status,
     success: req.query.success || null
   });
 });
@@ -1493,7 +1493,7 @@ router.get("/repair", async (req, res) => {
 
 
 if (status === undefined) {
-  status = "1";
+  status = "all";
 }
   let where = "";
   let params = [];

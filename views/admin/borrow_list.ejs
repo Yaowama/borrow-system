@@ -24,19 +24,42 @@
         </div>
 
     </div>
-      <div class="borrow-tabs">
-        <button class="tab active" data-status="1">รออนุมัติ</button>
-        <button class="tab" data-status="2">อนุมัติแล้ว</button>
-        <button class="tab" data-status="6">กำลังยืม</button>
-        <button class="tab" data-status="3">ปฏิเสธ</button>
-        <button class="tab" data-status="4">คืนแล้ว</button>
-        <button class="tab" data-status="5">ยกเลิก</button>
-        <button class="tab" data-status="all">ทั้งหมด</button>
-      </div>
+  
+    <div class="borrow-tabs">
+      <a href="/admin/borrow?status=all"
+        class="tab <%= status === 'all' ? 'active' : '' %>">
+        ทั้งหมด
+      </a>
+      <a href="/admin/borrow?status=1" class="tab <%= status == '1' ? 'active' : '' %>">
+        รออนุมัติ
+      </a>
+
+      <a href="/admin/borrow?status=2" class="tab <%= status == '2' ? 'active' : '' %>">
+        อนุมัติแล้ว
+      </a>
+
+      <a href="/admin/borrow?status=6" class="tab <%= status == '6' ? 'active' : '' %>">
+        กำลังยืม
+      </a>
+
+      <a href="/admin/borrow?status=3" class="tab <%= status == '3' ? 'active' : '' %>">
+        ปฏิเสธ
+      </a>
+
+      <a href="/admin/borrow?status=4" class="tab <%= status == '4' ? 'active' : '' %>">
+        คืนแล้ว
+      </a>
+     
+      <a href="/admin/borrow?status=5" class="tab <%= status == '5' ? 'active' : '' %>">
+        ยกเลิก
+      </a>
+
+    </div>
 
 <table class="table">
 
 <tr>
+  <th>No.</th>
   <th>รูป</th>
   <th>เลขเอกสาร</th>
   <th>ผู้ยืม</th>
@@ -49,8 +72,11 @@
   <th></th>
 </tr>
 
-<% borrows.forEach(b => { %>
+<% borrows.forEach((b, index) => { %>
 <tr class="borrow_list-row" data-status="<%= b.BorrowStatusID %>">
+
+  <td class="col-no"><%= index + 1 %></td>
+
   <td class="center">
     <% if (b.DeviceImage) { %>
       <img src="/uploads/device/<%= b.DeviceImage %>" class="device-img">
@@ -178,7 +204,9 @@
 
 <div id="detailOverlay" class="detail-overlay">
   <div class="detail-box">
-    <button id="closeDetail" class="close-btn">✕</button>
+    <button id="closeDetail" class="close-btn">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
     <div id="detailContent"></div>
   </div>
 </div>
@@ -217,7 +245,9 @@
 
 <div id="userOverlay" class="detail-overlay">
   <div class="detail-box">
-    <button id="closeUser" class="close-btn">✕</button>
+    <button id="closeUser" class="close-btn">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
 
     <div id="userContent">
       <h3>ข้อมูลผู้ยืม</h3>

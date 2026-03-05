@@ -24,13 +24,15 @@
   </div>
 </div>
 
-<table class="table">
+<table class="table" id="employeeTable">
   <thead>
     <tr>
+      <th>No.</th>
       <th>รหัสพนักงาน</th>
       <th>ชื่อ</th>
       <th>Email</th>
-      <th>แผนก</th>
+      <th>โทรสาร</th>
+      <th>สังกัด</th>
       <th>สิทธิ์</th>
       <th>พฤติกรรม</th>
       <th>สถานะ</th>
@@ -39,15 +41,22 @@
   </thead>
 
   <tbody>
-  <% employees.forEach(e => { %>
+  <% employees.forEach((e, index) => { %>
     <tr>
+      <td class="col-no"><%= index + 1 %></td>
+
       <td><%= e.EMP_NUM || e.EMPID %></td>
 
       <td><%= e.fname %> <%= e.lname %></td>
 
       <td><%= e.email %></td>
 
-      <td><%= e.DepartmentName || '-' %></td>
+      <td><%= e.fax %></td>
+
+      <td>
+        <%= e.InstitutionName || '-' %><br>
+        <small><%= e.DepartmentName || '-' %></small>
+      </td>
 
       <td>
         <% if (e.RoleID == 2) { %>
@@ -183,7 +192,7 @@
         </div>
 
         <div class="form-group">
-          <label>Fax</label>
+          <label>โทรสาร</label>
           <input type="text" name="fax">
         </div>
 

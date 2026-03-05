@@ -61,8 +61,7 @@
   padding: 16px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
-  /* text-align: left; */
+  background: #e9e9e9;
 }
 
 .table td {
@@ -85,12 +84,6 @@
 
 .table tbody tr:hover {
   background: #f9fafb;
-}
-
-.table td:first-child {
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: .3px;
 }
 
 .table td small {
@@ -178,7 +171,6 @@
   box-shadow: 0 8px 20px rgba(95, 95, 95, 0.25);
 }
 
-
 /* ===============================
    DETAIL MODAL
 ================================ */
@@ -214,20 +206,31 @@
   transform: translateY(0) scale(1);
 }
 
+/* CLOSE BUTTON */
 .close-btn {
   position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 28px;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   border: none;
-  background: none;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 18px;
   cursor: pointer;
-  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .2s;
 }
 
 .close-btn:hover {
-  color: #111827;
+  background: #ef4444;
+  color: white;
+  transform: rotate(90deg);
 }
+
 
 /* ===============================
    DETAIL CONTENT
@@ -265,7 +268,7 @@
 ================================ */
 .action-box {
   display: flex;
-  flex-direction: gride;
+  flex-direction: row;
   align-items: center;         /* จัดกลางแนวนอน */
   justify-content: center; 
   gap: 6px;
@@ -376,6 +379,8 @@
   cursor: pointer;
   transition: all .2s ease;
   white-space: nowrap;
+  text-align: center;
+  text-decoration: none;
 }
 
 .borrow-tabs .tab:hover {
@@ -511,41 +516,38 @@
   background: #ffd8a8;
   color: #c2410c;
 }
-.icon-action.warning:hover {
-  background: #ffedd5;
+.icon-action.warning:hover  {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(95, 95, 95, 0.25);
 }
 
-
-/* ===============================
-   ICON ACTION - DISABLED (REPAIR)
-================================ */
-.icon-action.gray {
-  background: #e5e7eb;     /* เทาอ่อน */
-  color: #9ca3af;          /* ไอคอนเทา */
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.icon-action.gray:hover {
-  background: #e5e7eb;     /* ไม่ให้ hover เปลี่ยน */
-  box-shadow: none;
-  transform: none;
-}
-
-/* ป้องกัน hover ทุกกรณีที่ disabled */
-.icon-action:disabled,
-.icon-action[disabled] {
-  pointer-events: none;
-}
-
-/* ===============================
-   USER INFO BUTTON
-================================ */
 .icon-action.user {
   background: #e0f2fe;
   color: #0369a1;
 }
 
 .icon-action.user:hover {
-  background: #bae6fd;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(95, 95, 95, 0.25);
 }
+/* ===============================
+   ICON ACTION - DISABLED (REPAIR)
+================================ */
+.icon-action.gray {
+  background: #e5e7eb;     
+  color: #9ca3af;          
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.icon-action.gray:hover {
+  background: #e5e7eb;     
+  box-shadow: none;
+  transform: none;
+}
+
+.icon-action:disabled,
+.icon-action[disabled] {
+  pointer-events: none;
+}
+

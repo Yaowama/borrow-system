@@ -26,6 +26,10 @@
     </div>
 
     <div class="repair-tabs">
+      <a href="/admin/repair?status=all"
+        class="tab <%= status === 'all' ? 'active' : '' %>">
+        ทั้งหมด
+      </a>
       <a href="/admin/repair?status=1" class="tab <%= status == '1' ? 'active' : '' %>">
         รอรับงาน
       </a>
@@ -42,15 +46,13 @@
         ยกเลิก
       </a>
 
-      <a href="/admin/repair?status=all"
-        class="tab <%= status === 'all' ? 'active' : '' %>">
-        ทั้งหมด
-      </a>
+     
     </div>
 
 <table class="table">
   <thead>
     <tr>
+    <th>No.</th>
     <th>รูป</th>
     <th>เลขใบซ่อม</th>
     <th>อุปกรณ์</th>
@@ -64,8 +66,11 @@
   </thead>
 
   <tbody>
-  <% repairs.forEach(r => { %>
+  <% repairs.forEach((r, index) => { %>
   <tr class="repair-row">
+
+    <td><%= index + 1 %></td>
+
     <td>
       <img src="/uploads/device/<%= r.DeviceImage %>" class="table-img">
     </td>
@@ -90,21 +95,34 @@
     <td><%= r.Technician || '-' %></td>
 
     <td>
-      <% if (r.RepairStatusID === 1) { %>
-        <form action="/admin/repair/start/<%= r.RepairID %>" method="POST">
-          <button class="btn blue">รับงาน</button>
-        </form>
 
-      <% } else if (r.RepairStatusID === 2) { %>
+  <% if (!r.RepairStatusID || r.RepairStatusID === 0) { %>
 
-        <form action="/admin/repair/process/<%= r.RepairID %>" method="POST">
-          <button class="btn green">ซ่อมเสร็จ</button>
-        </form>
+    <span>-</span>
 
-      <% } else if (r.RepairStatusID === 3) { %>
-        <span class="done">เสร็จแล้ว</span>
-      <% } %>
-    </td>
+  <% } else if (r.RepairStatusID === 1) { %>
+
+    <form action="/admin/repair/start/<%= r.RepairID %>" method="POST">
+      <button class="btn blue">รับงาน</button>
+    </form>
+
+  <% } else if (r.RepairStatusID === 2) { %>
+
+    <form action="/admin/repair/process/<%= r.RepairID %>" method="POST">
+      <button class="btn green">ซ่อมเสร็จ</button>
+    </form>
+
+  <% } else if (r.RepairStatusID === 3) { %>
+
+    <span class="done">เสร็จแล้ว</span>
+
+  <% } else { %>
+
+    <span>-</span>
+
+  <% } %>
+
+</td>
 
     <td>
   <button class="btn-detail" data-id="<%= r.RepairID %>">
@@ -130,7 +148,7 @@
 
 <div class="modal" id="repairDetailModal">
   <div class="modal-box-detail-modal">
-    <button id="closeDetail" class="close-btn">✕</button>
+    <button id="closeDetail" class="close-btn"> <i class="fa-solid fa-xmark"></i></button>
     <div class="modal-body" id="detailContent"></div>
   </div>
 </div>

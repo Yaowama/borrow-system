@@ -47,6 +47,7 @@
 
     <thead>
         <tr>
+            <th class="center">No.</th>
             <th class="center">Barcode</th>
             <th class="center">Serial</th>
             <th class="center">Asset Code</th>
@@ -67,9 +68,9 @@
         </tr>
     <% } %>
 
-    <% devices.forEach(d => { %>
+    <% devices.forEach((d, index) => { %>
         <tr class="device-list-row">
-
+            <td class="center"><%= index + 1 %></td>
             <!-- Barcode -->
             <td class="center">
             <% if (d.BarcodeImage) { %>

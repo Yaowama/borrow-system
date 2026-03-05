@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const remarkTextarea = document.getElementById("rejectRemark");
 
   if (rejectModal && rejectForm) {
-
+ 
     document.querySelectorAll(".btn-reject").forEach(btn => {
       btn.addEventListener("click", e => {
         e.preventDefault();
@@ -176,7 +176,7 @@ if (userOverlay && userContent) {
         <div class="row"><span class="label">รหัสพนักงาน:</span> ${data.EMP_NUM || "-"}</div>
         <div class="row"><span class="label">อีเมล:</span> ${data.email || "-"}</div> 
         <div class="row"><span class="label">เบอร์โทร:</span> ${data.phone || "-"}</div>
-        <div class="row"><span class="label">Fax:</span> ${data.fax || "-"}</div>
+        <div class="row"><span class="label">โทรสาร:</span> ${data.fax || "-"}</div>
         <div class="row"><span class="label">แผนก:</span> ${data.DepartmentName || "-"}</div>
         <div class="row"><span class="label">หน่วยงาน:</span> ${data.InstitutionName || "-"}</div>
         <div class="row"><span class="label">กำลังยืมอยู่:</span> ${data.activeBorrow} รายการ</div>
