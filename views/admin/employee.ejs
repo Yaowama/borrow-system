@@ -202,18 +202,7 @@
         </div>
 
         <div class="form-group">
-          <label>แผนก</label>
-          <select name="DepartmentID">
-            <% departments.forEach(dep => { %>
-              <option value="<%= dep.DepartmentID %>">
-                <%= dep.DepartmentName %>
-              </option>
-            <% }) %>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>หน่วยงาน</label>
+          <label>สำนัก</label>
           <select name="InstitutionID">
             <% institutions.forEach(ins => { %>
               <option value="<%= ins.InstitutionID %>">
@@ -223,6 +212,16 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label>ฝ่าย</label>
+          <select name="DepartmentID">
+            <% departments.forEach(dep => { %>
+              <option value="<%= dep.DepartmentID %>">
+                <%= dep.DepartmentName %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
 
         <div class="form-group">
           <label>สิทธิ์</label>

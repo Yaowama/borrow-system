@@ -35,7 +35,7 @@
   <option value="returned" <%= query.status=='returned'?'selected':'' %>>คืนแล้ว</option>
   <option value="overdue" <%= query.status=='overdue'?'selected':'' %>>เกินกำหนด</option>
 </select>
-  หน่วยงาน:
+  สำนัก:
   <select name="Institution">
     <option value="">ทั้งหมด</option>
     <% institutions.forEach(d => { %>
@@ -46,7 +46,7 @@
     <% }) %>
   </select>
   
-  แผนก:
+  ฝ่าย:
   <select name="department">
     <option value="">ทั้งหมด</option>
     <% departments.forEach(d => { %>

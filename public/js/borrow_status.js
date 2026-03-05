@@ -1,5 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+function formatThaiDate(dateStr) {
+  if (!dateStr) return "-";
+
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear() + 543;
+
+  return `${day}/${month}/${year}`;
+}
   /* ===============================
      DETAIL MODAL
   ============================== */
@@ -68,17 +78,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
               <div class="row">
                 <div class="label">วันที่ยืม:</div>
-                <div>${h.BorrowDate}</div>
+                <div>${formatThaiDate(h.BorrowDate)}</div>
               </div>
 
               <div class="row">
                 <div class="label">กำหนดคืน:</div>
-                <div>${h.DueDate}</div>
+                <div>${formatThaiDate(h.DueDate)}</div>
               </div>
-              
+
               <div class="row">
                 <div class="label">วันที่คืน:</div>
-                <div>${h.ReturnDate || '-'}</div>
+                <div>${h.ReturnDate ? formatThaiDate(h.ReturnDate) : '-'}</div>
               </div>
 
               <div class="row">
@@ -174,5 +184,51 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   }
+/* ===============================
+     DEFAULT BORROW DATE
+  ============================== */
+const borrowInput = document.querySelector('[name="BorrowDate"]');
+const dueInput = document.querySelector('[name="DueDate"]');
 
+if (borrowInput && dueInput) {
+
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  borrowInput.value = formatDate(today);
+  borrowInput.min = formatDate(today);
+
+  dueInput.value = formatDate(tomorrow);
+  dueInput.min = formatDate(today);
+
+  // ⭐ ป้องกันคืนก่อนยืม
+  borrowInput.addEventListener("change", () => {
+    dueInput.min = borrowInput.value;
+
+    if (dueInput.value < borrowInput.value) {
+      dueInput.value = borrowInput.value;
+    }
+  });
+
+}
+function convertDate(inputId){
+  const input = document.getElementById(inputId);
+
+  input.addEventListener("change", function(){
+
+    let parts = this.value.split("-");
+    let formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+    console.log("วันที่เลือก:", formatted);
+
+  });
+}
+
+convertDate("borrowDate");
+convertDate("dueDate");
 });

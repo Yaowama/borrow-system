@@ -52,12 +52,17 @@
 
       <div class="form-group">
         <label>ชื่อจริง</label>
-        <input type="text" value="<%= user.fname %>" disabled>
+        <input type="text" name="fname" value="<%= user.fname %>">
       </div>
 
       <div class="form-group">
         <label>นามสกุล</label>
-        <input type="text" value="<%= user.lname %>" disabled>
+        <input type="text" name="lname" value="<%= user.lname %>">
+      </div>
+
+      <div class="form-group">
+        <label>รหัสพนักงาน</label>
+        <input type="text" value="<%= user.EMP_NUM %>" >
       </div>
 
       <div class="form-group">
@@ -76,28 +81,30 @@
       </div>
 
       <div class="form-group">
-  <label>แผนก</label>
-  <select name="DepartmentID" required>
-    <% departments.forEach(dep => { %>
-      <option value="<%= dep.DepartmentID %>"
-        <%= dep.DepartmentID == user.DepartmentID ? "selected" : "" %>>
-        <%= dep.DepartmentName %>
-      </option>
-    <% }) %>
-  </select>
-</div>
+            <label>สำนัก</label>
+            <select name="InstitutionID" required>
+              <% institutions.forEach(ins => { %>
+                <option value="<%= ins.InstitutionID %>"
+                  <%= ins.InstitutionID == user.InstitutionID ? "selected" : "" %>>
+                  <%= ins.InstitutionName %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
 
-<div class="form-group">
-  <label>หน่วยงาน</label>
-  <select name="InstitutionID" required>
-    <% institutions.forEach(ins => { %>
-      <option value="<%= ins.InstitutionID %>"
-        <%= ins.InstitutionID == user.InstitutionID ? "selected" : "" %>>
-        <%= ins.InstitutionName %>
-      </option>
-    <% }) %>
-  </select>
-</div>
+      <div class="form-group">
+      <label>ฝ่าย</label>
+      <select name="DepartmentID" required>
+        <% departments.forEach(dep => { %>
+          <option value="<%= dep.DepartmentID %>"
+            <%= dep.DepartmentID == user.DepartmentID ? "selected" : "" %>>
+            <%= dep.DepartmentName %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+   
 
     </div>
 

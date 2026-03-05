@@ -60,17 +60,8 @@
     <div class="info-card">
       <i class="fa-solid fa-fax"></i>
       <div>
-        <label>Fax</label>
+        <label>โทรสาร</label>
         <p><%= user.fax || "-" %></p>
-      </div>
-    </div>
-
-    <!-- DEPARTMENT -->
-    <div class="info-card">
-      <i class="fa-solid fa-building"></i>
-      <div>
-        <label>แผนก</label>
-        <p><%= user.DepartmentName || "-" %></p>
       </div>
     </div>
 
@@ -78,8 +69,17 @@
     <div class="info-card">
       <i class="fa-solid fa-city"></i>
       <div>
-        <label>หน่วยงาน</label>
+        <label>สำนัก</label>
         <p><%= user.InstitutionName || "-" %></p>
+      </div>
+    </div>
+
+    <!-- DEPARTMENT -->
+    <div class="info-card">
+      <i class="fa-solid fa-building"></i>
+      <div>
+        <label>ฝ่าย</label>
+        <p><%= user.DepartmentName || "-" %></p>
       </div>
     </div>
 

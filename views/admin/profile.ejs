@@ -64,24 +64,26 @@
         <p><%= user.fax || "-" %></p>
       </div>
     </div>
+    
+<!-- ORGANIZATION -->
+    <div class="info-card">
+      <i class="fa-solid fa-city"></i>
+      <div>
+        <label>สำนัก</label>
+        <p><%= user.InstitutionName || "-" %></p>
+      </div>
+    </div>
 
     <!-- DEPARTMENT -->
     <div class="info-card">
       <i class="fa-solid fa-building"></i>
       <div>
-        <label>แผนก</label>
+        <label>ฝ่าย</label>
         <p><%= user.DepartmentName || "-" %></p>
       </div>
     </div>
 
-    <!-- ORGANIZATION -->
-    <div class="info-card">
-      <i class="fa-solid fa-city"></i>
-      <div>
-        <label>หน่วยงาน</label>
-        <p><%= user.InstitutionName || "-" %></p>
-      </div>
-    </div>
+    
 
   </div>
 

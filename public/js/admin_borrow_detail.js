@@ -177,8 +177,8 @@ if (userOverlay && userContent) {
         <div class="row"><span class="label">อีเมล:</span> ${data.email || "-"}</div> 
         <div class="row"><span class="label">เบอร์โทร:</span> ${data.phone || "-"}</div>
         <div class="row"><span class="label">โทรสาร:</span> ${data.fax || "-"}</div>
-        <div class="row"><span class="label">แผนก:</span> ${data.DepartmentName || "-"}</div>
-        <div class="row"><span class="label">หน่วยงาน:</span> ${data.InstitutionName || "-"}</div>
+        <div class="row"><span class="label">สำนัก:</span> ${data.InstitutionName || "-"}</div>
+        <div class="row"><span class="label">ฝ่าย:</span> ${data.DepartmentName || "-"}</div>
         <div class="row"><span class="label">กำลังยืมอยู่:</span> ${data.activeBorrow} รายการ</div>
       </div>
     `;

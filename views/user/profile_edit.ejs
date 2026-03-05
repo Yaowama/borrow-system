@@ -68,29 +68,29 @@
       </div>
 
       <div class="form-group">
-        <label>Fax</label>
+        <label>โทรสาร</label>
         <input name="fax" value="<%= user.fax %>">
       </div>
 
       <div class="form-group">
-        <label>แผนก</label>
-        <select name="DepartmentID">
-          <% departments.forEach(dep => { %>
-            <option value="<%= dep.DepartmentID %>"
-              <%= dep.DepartmentID == user.DepartmentID ? "selected" : "" %>>
-              <%= dep.DepartmentName %>
+        <label>สำนัก</label>
+        <select name="InstitutionID">
+          <% institutions.forEach(ins => { %>
+            <option value="<%= ins.InstitutionID %>"
+              <%= ins.InstitutionID == user.InstitutionID ? "selected" : "" %>>
+              <%= ins.InstitutionName %>
             </option>
           <% }) %>
         </select>
       </div>
 
       <div class="form-group">
-        <label>หน่วยงาน</label>
-        <select name="InstitutionID">
-          <% institutions.forEach(ins => { %>
-            <option value="<%= ins.InstitutionID %>"
-              <%= ins.InstitutionID == user.InstitutionID ? "selected" : "" %>>
-              <%= ins.InstitutionName %>
+        <label>ฝ่าย</label>
+        <select name="DepartmentID">
+          <% departments.forEach(dep => { %>
+            <option value="<%= dep.DepartmentID %>"
+              <%= dep.DepartmentID == user.DepartmentID ? "selected" : "" %>>
+              <%= dep.DepartmentName %>
             </option>
           <% }) %>
         </select>

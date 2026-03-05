@@ -540,10 +540,10 @@ router.post(
   async (req, res) => {
     try {
       const empId = req.session.user.EMPID;
-      const { email, phone, fax, DepartmentID, InstitutionID } = req.body;
+      const { fname, lname, email, phone, fax, DepartmentID, InstitutionID } = req.body;
 
       let imageSql = "";
-      let params = [email, phone, fax, DepartmentID, InstitutionID];
+      let params = [fname, lname, email, phone, fax, DepartmentID, InstitutionID];
 
       if (req.file) {
         imageSql = ", ProfileImage = ?";
@@ -553,16 +553,19 @@ router.post(
       params.push(empId);
 
       await db.query(`
-      UPDATE TB_T_Employee
-      SET
-        email = ?,
-        phone = ?,
-        fax = ?,
-        DepartmentID = ?,
-        InstitutionID = ?
-        ${imageSql}
-      WHERE EMPID = ?
-    `, params);
+        UPDATE TB_T_Employee
+        SET
+          fname = ?,
+          lname = ?,
+          fax = ?,
+          email = ?,
+          phone = ?,
+          fax = ?,
+          DepartmentID = ?,
+          InstitutionID = ?
+          ${imageSql}
+        WHERE EMPID = ?
+        `, params);
 
     // ✅ ถ้ามีอัปโหลดรูป → อัปเดต session
     if (req.file) {
