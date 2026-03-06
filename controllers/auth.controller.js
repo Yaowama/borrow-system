@@ -46,12 +46,15 @@ exports.register = async (req, res) => {
       return res.send("รหัสผ่านไม่ตรงกัน");
     }
     
-    if (password.length < 8) {
+    const passwordRule =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRule.test(password)) {
       return res.render("register", {
-        error: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+        error: "รหัสผ่านต้องมี 8 ตัวขึ้นไป และต้องมี A-Z a-z 0-9 และอักขระพิเศษ",
         form: req.body
       });
-    }
+}
 
     /* ===============================
        3. ตรวจ username / email ซ้ำ
@@ -349,9 +352,12 @@ exports.resetPassword = async (req, res) => {
     }
 
     // ❌ รหัสผ่านสั้น
-    if (password.length < 8) {
+    const passwordRule =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRule.test(password)) {
       return res.render("reset-password", {
-        error: "❌ รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"
+        error: "รหัสผ่านต้องมี 8 ตัวขึ้นไป และต้องมี A-Z a-z 0-9 และอักขระพิเศษ"
       });
     }
 

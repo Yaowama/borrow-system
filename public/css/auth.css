@@ -206,7 +206,7 @@ body {
   padding: 12px;
   border-radius: 8px;
 
-  font-size: 14px;
+  font-size: 12px;
   text-align: center;
 
   display: none;
@@ -389,11 +389,6 @@ button i {
   box-shadow: 0 15px 35px rgba(0,0,0,.25);
 }
 
-/* ---------- ERROR ---------- */
-
-.error-box {
-  animation: shake .25s ease;
-}
 
 @keyframes shake {
   0% { transform: translateX(0); }

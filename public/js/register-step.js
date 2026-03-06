@@ -161,13 +161,18 @@ if (currentStep === 0) {
   const password = document.querySelector('input[name="password"]');
   const confirm  = document.querySelector('input[name="confirm"]');
 
-  // 🔴 ความยาวรหัสผ่าน
-  if (password.value.length < 8) {
-    showRegisterError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+  const passwordRule =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+  // 🔴 ตรวจ password rule
+  if (!passwordRule.test(password.value)) {
+    showRegisterError(
+      "รหัสผ่านต้องมี 8 ตัวขึ้นไป และต้องมี A-Z a-z 0-9 และอักขระพิเศษ"
+    );
     return false;
   }
 
-  // 🔴 ยืนยันรหัสผ่าน
+  // 🔴 confirm password
   if (password.value !== confirm.value) {
     showRegisterError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
     return false;

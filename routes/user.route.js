@@ -711,8 +711,8 @@ router.get("/change_password", (req, res) => {
     title: "เปลี่ยนรหัสผ่าน",
     page: "change_password",
     active: "change_password",
-    error: null,
-    success: null
+    error: req.query.error || null,
+    success: req.query.success || null
   });
 });
 
@@ -721,17 +721,20 @@ router.post("/change_password", async (req, res) => {
 
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
-    // 1. ตรวจรหัสใหม่
+    // 1 confirm password
     if (newPassword !== confirmPassword) {
-      return res.render("user/layout", {
-        page: "change_password",
-        active: "change_password",
-        error: "รหัสผ่านใหม่ไม่ตรงกัน",
-        success: null
-      });
+      return res.redirect("/user/change_password?error=notmatch");
     }
 
-    // 2. ดึง user
+    // 2 password rule
+    const passwordRule =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRule.test(newPassword)) {
+      return res.redirect("/user/change_password?error=passwordrule");
+    }
+
+    // 3 get password
     const [[user]] = await db.query(
       "SELECT password FROM TB_T_Employee WHERE EMPID = ?",
       [req.session.user.EMPID]
@@ -739,42 +742,29 @@ router.post("/change_password", async (req, res) => {
 
     const bcrypt = require("bcrypt");
 
-    // 3. ตรวจรหัสเดิม
+    // 4 check old password
     const match = await bcrypt.compare(oldPassword, user.password);
 
     if (!match) {
-      return res.render("user/layout", {
-        page: "change_password",
-        active: "change_password",
-        error: "รหัสผ่านปัจจุบันไม่ถูกต้อง",
-        success: null
-      });
+      return res.redirect("/user/change_password?error=wrongold");
     }
 
-    // 4. hash password ใหม่
+    // 5 hash new password
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    // 5. update
     await db.query(
       "UPDATE TB_T_Employee SET password = ? WHERE EMPID = ?",
       [hashed, req.session.user.EMPID]
     );
 
-    // 6. success
-    res.render("user/layout", {
-      title: "เปลี่ยนรหัสผ่าน",
-      page: "change_password",
-      active: "change_password",
-      error: null,
-      success: "เปลี่ยนรหัสผ่านสำเร็จ 🎉"
-    });
+    // 6 success
+    return res.redirect("/user/profile?success=password");
 
   } catch (err) {
     console.error(err);
-    res.send("Server error");
+    return res.redirect("/user/change_password?error=server");
   }
 });
-
 /* ===============================
    EXPORT
 ================================ */

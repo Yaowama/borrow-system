@@ -66,6 +66,10 @@ if (success === "success") {
 if (success === "cancel") {
   showSuccessModal("cancel");
 }
+
+if (success === "password") {
+  showSuccessModal("password");
+}
   /* ===============================
      PROFILE DROPDOWN
   =============================== */
@@ -125,6 +129,12 @@ function showSuccessModal(type = "edit") {
     title.textContent = "ยกเลิกสำเร็จ";
     desc.textContent = "คำขอถูกยกเลิกเรียบร้อยแล้ว";
   }
+
+  if (type === "password") {
+  title.textContent = "เปลี่ยนรหัสผ่านสำเร็จ";
+  desc.textContent = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+  }
+
   modal.classList.add("show");
   setTimeout(() => modal.classList.remove("show"), 2000);
 }
