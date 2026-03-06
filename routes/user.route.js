@@ -109,7 +109,8 @@ router.get("/dashboard", isLogin, checkActive, async (req, res) => {
     user: req.session.user,
     types,
     devices,
-    success: req.query.success   
+    success: req.query.success,
+    active: "dashboard"
   });
 });
 
@@ -151,7 +152,8 @@ router.get("/borrow/:id", isLogin, checkActive, async (req, res) => {
     title: "ยืมอุปกรณ์",
     page: "borrow_form",
     user: req.session.user,
-    device
+    device,
+    active: "borrow_form"
   });
 });
 
@@ -266,7 +268,8 @@ router.get("/borrow/history", isLogin, checkActive, async (req, res) => {
     page: "borrow_history",
     user: req.session.user,
     rows,
-    success: req.query.success
+    success: req.query.success,
+    active: "borrow_history"
   });
 });
 
@@ -311,7 +314,8 @@ router.get("/borrow_status", isLogin, checkActive, async (req, res) => {
       page: "borrow_status",
       user: req.session.user,
       rows,
-      success: req.query.success
+      success: req.query.success,
+      active: "borrow_status"
     });
 
   } catch (err) {
@@ -537,7 +541,8 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
     page: "borrowing",
     user: req.session.user,
     rows,
-    success: req.query.success 
+    success: req.query.success ,
+    active: "borrowing"
   });
 
 });
@@ -576,7 +581,8 @@ router.get("/history", isLogin, checkActive, async (req, res) => {
     page: "history",
     user: req.session.user,
     rows,
-    success: req.query.success 
+    success: req.query.success,
+    active: "history"
   });
 
 });
@@ -605,7 +611,8 @@ router.get("/profile", isLogin, checkActive, async (req, res) => {
     title: "โปรไฟล์ของฉัน",
     page: "profile",
     user,
-    success: req.query.success
+    success: req.query.success,
+    active: "profile"
   });
 });
 
@@ -630,7 +637,8 @@ router.get("/profile/edit", isLogin, checkActive, async (req, res) => {
       page: "profile_edit",
       user,
       departments,
-      institutions
+      institutions,
+      active: "profile_edit"
     });
 
   } catch (err) {
@@ -712,7 +720,8 @@ router.get("/change_password", (req, res) => {
     page: "change_password",
     active: "change_password",
     error: req.query.error || null,
-    success: req.query.success || null
+    success: req.query.success || null,
+    active: "change_password"
   });
 });
 

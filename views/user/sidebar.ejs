@@ -8,7 +8,7 @@
 
         <!-- dashboard -->
         <li>
-            <a href="/user/dashboard">
+            <a href="/user/dashboard" class="<%= active === 'dashboard' ? 'active' : '' %>">
                 <i class="fa-solid fa-house"></i>
                 <span>หน้าหลัก</span>
             </a>
@@ -16,7 +16,7 @@
 
         <!-- borrow request status -->
         <li>
-            <a href="/user/borrow_status">
+            <a href="/user/borrow_status" class="<%= active === 'borrow_status' ? 'active' : '' %>">
                 <i class="fa-solid fa-clipboard-list"></i>
                 <span>สถานะคำขอยืมอุปกรณ์</span>
             </a>
@@ -24,7 +24,7 @@
 
         <!-- currently borrowing -->
         <li>
-            <a href="/user/borrowing">
+            <a href="/user/borrowing" class="<%= active === 'borrowing' ? 'active' : '' %>">
                 <i class="fa-solid fa-laptop"></i>
                 <span>อุปกรณ์ที่กำลังยืม</span>
             </a>
@@ -32,7 +32,7 @@
 
         <!-- history -->
         <li>
-            <a href="/user/history">
+            <a href="/user/history" class="<%= active === 'history' ? 'active' : '' %>">
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span>ประวัติการยืม</span>
             </a>

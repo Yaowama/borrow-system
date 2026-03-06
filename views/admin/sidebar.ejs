@@ -8,42 +8,42 @@
     <ul class="menu">
 
     <li>
-        <a href="/admin">
+        <a href="/admin" class="<%= active === 'dashboard' ? 'active' : '' %>">
             <i class="fa-solid fa-house"></i>
             <span>หน้าหลัก</span>
         </a>
     </li>
 
     <li>
-        <a href="/admin/device">
+        <a href="/admin/device" class="<%= active === 'device' ? 'active' : '' %>">
             <i class="fa-solid fa-layer-group"></i>
             <span>อุปกรณ์</span>
         </a>
     </li>
 
     <li>
-        <a href="/admin/borrow">
+        <a href="/admin/borrow"class="<%= active === 'borrow' ? 'active' : '' %>">
             <i class="fa-solid fa-arrows-rotate"></i>
             <span>ยืม–คืน</span>
         </a>
     </li>
 
     <li>
-        <a href="/admin/repair">
+        <a href="/admin/repair"class="<%= active === 'repair' ? 'active' : '' %>">
             <i class="fa-solid fa-screwdriver-wrench"></i>
             <span>แจ้งซ่อม</span>
         </a>
     </li>
 
     <li>
-        <a href="/admin/employee">
+        <a href="/admin/employee" class="<%= active === 'employee' ? 'active' : '' %>">
             <i class="fa-solid fa-users"></i>
             <span>พนักงาน</span>
         </a>
     </li>
 
     <li>
-        <a href="/admin/report">
+        <a href="/admin/report"class="<%= active === 'report' ? 'active' : '' %>">
             <i class="fa-solid fa-chart-column"></i>
             <span>รายงาน</span>
         </a>
