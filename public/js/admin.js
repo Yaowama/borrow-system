@@ -1,3 +1,5 @@
+let borrowChart;
+let deviceChart;
 /* ===============================
    LOAD PAGE (AJAX)
 ================================ */
@@ -7,8 +9,8 @@ function loadPage(page) {
     .then(html => {
       document.getElementById("content").innerHTML = html;
 
-      // 🔥 ต้องเรียกทุกครั้งหลังโหลดหน้าใหม่
       initAdminSearch();
+      initDashboardChart();
     });
 }
 
@@ -106,7 +108,10 @@ function initAdminSearch() {
 ================================ */
 document.addEventListener("DOMContentLoaded", () => {
   initAdminSearch();
+  initDashboardChart(); // เพิ่มบรรทัดนี้
+  
 });
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = document.querySelectorAll(".borrow-tabs .tab");
@@ -136,3 +141,121 @@ tabs.forEach(tab => {
   // default = รออนุมัติ
   document.querySelector('.tab[data-status="1"]')?.click();
 });
+
+/* ===============================
+   ADMIN DASHBOARD CHART
+================================ */
+
+function initDashboardChart(){
+
+  const borrowCanvas = document.getElementById("borrowChart");
+  const deviceCanvas = document.getElementById("deviceChart");
+
+  if(!borrowCanvas || !deviceCanvas) return;
+
+  const approved = borrowCanvas.dataset.approved;
+  const pending = borrowCanvas.dataset.pending;
+  const rejected = borrowCanvas.dataset.rejected;
+  const returned = borrowCanvas.dataset.returned;
+  const overdue = borrowCanvas.dataset.overdue;
+
+  const available = deviceCanvas.dataset.available;
+  const borrowed = deviceCanvas.dataset.borrowed;
+  const repair = deviceCanvas.dataset.repair;
+
+
+borrowChart = new Chart(borrowCanvas,{
+  type:'doughnut',
+  data:{
+    labels:['อนุมัติ','รอตรวจสอบ','ไม่อนุมัติ','คืนแล้ว','เกินกำหนดคืน'],
+    datasets:[{
+      data:[approved,pending,rejected,returned,overdue],
+      backgroundColor:[
+        '#98ecae',
+        '#F4B400',
+        '#EA4335',
+        '#76a8ff',
+        '#9B59B6' 
+      ],
+      borderWidth:0
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    cutout:'65%',
+    plugins:{
+      legend:{
+        position:'bottom',
+        labels:{
+          padding:20,
+          usePointStyle:true
+        }
+      }
+    }
+  }
+});
+
+
+deviceChart = new Chart(deviceCanvas,{
+  type:'bar',
+  data:{
+    labels:['คงเหลือ','ถูกยืม','ซ่อม'],
+    datasets:[{
+      label:'จำนวนอุปกรณ์',
+      data:[available,borrowed,repair],
+      backgroundColor:[
+        '#7c8ef7',
+        '#F59E0B',
+        '#EF4444'
+      ],
+      borderRadius:8
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{
+        display:false
+      }
+    }
+  }
+});
+}
+
+async function loadDashboard() {
+
+  const res = await fetch("/admin/dashboard-data");
+  const data = await res.json();
+
+  console.log(data);
+
+  // update chart
+if (!borrowChart || !deviceChart) return;
+
+borrowChart.data.datasets[0].data = [
+  data.approved,
+  data.pending,
+  data.rejected,
+  data.returned,
+  data.overdue
+];
+
+  borrowChart.update();
+
+  deviceChart.data.datasets[0].data = [
+    data.deviceStatus.available,
+    data.deviceStatus.borrowed,
+    data.deviceStatus.repair
+  ];
+
+  deviceChart.update();
+
+}
+
+// โหลดครั้งแรก
+setTimeout(loadDashboard,1000);
+
+// รีเฟรชทุก 5 วิ
+setInterval(loadDashboard,5000);

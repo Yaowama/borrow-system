@@ -17,8 +17,6 @@ exports.deviceListAdd = (req, res) => {
       return res.send("Database error");
     }
 
-    // ❌ ไม่ต้องแปลงวันที่ตรงนี้แล้ว
-
     res.render("admin/device-listadd", {
       devices: results,
       modelId

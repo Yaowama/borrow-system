@@ -42,8 +42,9 @@ function isAdmin(req, res, next) {
 router.get("/", isAdmin, async (req, res) => {
 
   const [[deviceTotal]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_Device
-  `);
+  SELECT COUNT(*) total 
+  FROM TB_T_DeviceAdd
+`);
 
   const [[availableDevice]] = await db.query(`
     SELECT COUNT(*) total
@@ -150,6 +151,45 @@ router.get("/", isAdmin, async (req, res) => {
     deviceStatus,
     devicePercent
   });
+});
+
+router.get("/dashboard-data", async (req, res) => {
+  try {
+
+    const [[borrowStatus]] = await db.query(`
+      SELECT
+        SUM(CASE WHEN BorrowStatusID = 2 THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN BorrowStatusID = 3 THEN 1 ELSE 0 END) AS rejected,
+        SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned
+      FROM TB_T_BorrowTransaction
+    `);
+
+    const [[deviceStatus]] = await db.query(`
+      SELECT
+        SUM(CASE WHEN DVStatusID = 1 THEN 1 ELSE 0 END) AS available,
+        SUM(CASE WHEN DVStatusID = 2 THEN 1 ELSE 0 END) AS borrowed,
+        SUM(CASE WHEN DVStatusID = 3 THEN 1 ELSE 0 END) AS repair
+      FROM TB_T_DeviceAdd
+    `);
+
+    res.json({
+      approved: borrowStatus.approved || 0,
+      pending: borrowStatus.pending || 0,
+      rejected: borrowStatus.rejected || 0,
+      returned: borrowStatus.returned || 0,
+      deviceStatus
+    });
+
+  } catch (err) {
+
+    console.error("DASHBOARD API ERROR:", err);
+
+    res.status(500).json({
+      error: "dashboard error"
+    });
+
+  }
 });
 
 router.get("/employee", isAdmin, async (req, res) => {
@@ -1162,6 +1202,13 @@ router.get("/borrow", async (req, res) => {
       da.AssetCode,
       da.DVID,
       da.DVStatusID,
+
+      EXISTS (
+      SELECT 1
+      FROM TB_T_BorrowTransaction bt2
+      WHERE bt2.DVID = da.DVID
+      AND bt2.BorrowStatusID = 6
+    ) AS IsBorrowing,
 
       CASE
         WHEN bt.ReturnDate IS NULL 

@@ -68,72 +68,27 @@
 
 </div>
 
+<!-- graph section -->
+<div class="dashboard-graphs">
 
-<!-- <div class="dashboard-card">
-  <h3>สถานะอุปกรณ์</h3>
-
-  <div class="donut"
-  style="
-    --a:<%= devicePercent.a %>;
-    --b:<%= devicePercent.b %>;
-    --c:<%= devicePercent.c %>;
-  ">
-  <span><%= deviceStatus.available + deviceStatus.borrowed + deviceStatus.repair %></span>
-</div>
-
-
-  <div class="legend">
-    <div><i class="dot green"></i> ว่าง</div>
-    <div><i class="dot yellow"></i> ถูกยืม</div>
-    <div><i class="dot red"></i> ซ่อม</div>
+  <div class="graph-box">
+    <h3>สรุปสถานะการยืม</h3>
+    <canvas id="borrowChart"
+    data-approved="<%= approved.total %>"
+    data-pending="<%= pending.total %>"
+    data-rejected="<%= rejected.total %>"
+    data-returned="<%= returned.total %>">
+    data-overdue="<%= overdue.total %>">
+    </canvas>
   </div>
-</div> -->
 
+  <div class="graph-box">
+    <h3>สถานะอุปกรณ์</h3>
+    <canvas id="deviceChart"
+      data-available="<%= availableDevice.total %>"
+      data-borrowed="<%= approved.total %>"
+      data-repair="0">
+      </canvas>
+  </div>
 
-
-
-<!-- ===== Near Due ===== -->
-<!-- <div class="table-box">
-
-    <h2>⏰ อุปกรณ์ใกล้ครบกำหนดคืน (3 วัน)</h2>
-
-    <table class="table">
-        <tr>
-            <th>เลขเอกสาร</th>
-            <th>ผู้ยืม</th>
-            <th>อุปกรณ์</th>
-            <th>กำหนดคืน</th>
-            <th>เหลือ</th>
-        </tr>
-
-        <% if (nearDueList.length === 0) { %>
-            <tr>
-                <td colspan="5" style="text-align:center;color:#888;">
-                    🎉 ไม่มีรายการใกล้ครบกำหนด
-                </td>
-            </tr>
-        <% } %>
-
-        <% nearDueList.forEach(b => { %>
-            <tr>
-                <td><%= b.BorrowCode %></td>
-                <td><%= b.fname %> <%= b.lname %></td>
-                <td>
-                    <%= b.AssetCode %><br>
-                    <small><%= b.ModelName %></small>
-                </td>
-                <td><%= b.DueDate %></td>
-                <td>
-                    <% if (b.remain_day == 0) { %>
-                        <span class="badge red">วันนี้</span>
-                    <% } else { %>
-                        <span class="badge yellow">
-                            <%= b.remain_day %> วัน
-                        </span>
-                    <% } %>
-                </td>
-            </tr>
-        <% }) %>
-    </table>
-
-</div> -->
+</div>

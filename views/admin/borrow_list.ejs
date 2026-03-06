@@ -140,38 +140,68 @@
       </button>
     <% } %>
 
-    <% if (b.BorrowStatusID == 6 ) { %>
-      <form action="/admin/borrow/return/<%= b.BorrowID %>" method="POST">
-        <button class="btn blue">คืนอุปกรณ์</button>
-      </form>
-    <% } %>
+    <div class="action-box">
 
-    <% if (
-      (b.BorrowStatusID == 3 || b.BorrowStatusID == 4)
-      && !b.RepairID
-    ) { %>
+<% if (b.BorrowStatusID == 1) { %>
 
-      <!-- ยังไม่เคยส่งซ่อม -->
-      <form
-        action="/admin/repair/create/<%= b.DVID %>"
-        method="POST"
-        class="repair-form"
-        style="display:inline;"
-      >
-        <button type="submit" class="icon-action warning" title="ส่งซ่อม">
-          <i class="fa-solid fa-screwdriver-wrench"></i>
-        </button>
-      </form>
+<form action="/admin/borrow/approve/<%= b.BorrowID %>" method="POST">
+  <button class="btn green">อนุมัติ</button>
+</form>
 
-    <% } else if (b.RepairID) { %>
+<button
+  type="button"
+  class="btn red btn-reject"
+  data-id="<%= b.BorrowID %>">
+  ไม่อนุมัติ
+</button>
 
-      <!-- กำลังซ่อม -->
-      <button class="icon-action gray" disabled title="อยู่ระหว่างซ่อม">
-        <i class="fa-solid fa-screwdriver-wrench"></i>
-      </button>
+<% } %>
 
-    <% } %>
-  </div>
+
+<% if (b.BorrowStatusID == 6) { %>
+
+<!-- คืนอุปกรณ์ -->
+<form action="/admin/borrow/return/<%= b.BorrowID %>" method="POST">
+  <button type="submit" class="btn blue">
+    คืนอุปกรณ์
+  </button>
+</form>
+
+<% } %>
+
+
+<% if (
+  (b.BorrowStatusID == 3 || b.BorrowStatusID == 4)
+) { %>
+
+  <% if (b.RepairID) { %>
+
+  <!-- กำลังซ่อม -->
+  <button class="icon-action gray" disabled title="อยู่ระหว่างซ่อม">
+    <i class="fa-solid fa-screwdriver-wrench"></i>
+  </button>
+
+  <% } else if (b.IsBorrowing) { %>
+
+  <!-- ยังมีคนยืมอยู่ -->
+  <button class="icon-action gray" disabled title="อุปกรณ์ยังมีการยืมอยู่">
+    <i class="fa-solid fa-screwdriver-wrench"></i>
+  </button>
+
+  <% } else { %>
+
+  <!-- ส่งซ่อมได้ -->
+  <form action="/admin/repair/create/<%= b.DVID %>" method="POST">
+    <button type="submit" class="icon-action warning" title="ส่งซ่อม">
+      <i class="fa-solid fa-screwdriver-wrench"></i>
+    </button>
+  </form>
+
+  <% } %>
+
+<% } %>
+
+</div>
 </td>
 
 <td class="center">
