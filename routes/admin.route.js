@@ -994,6 +994,8 @@ router.get("/device/:modelId", async (req, res) => {
 
     res.render("admin/layout", {
     page: "device-list",
+    active: "device",
+    user: req.session.user,
     devices,
     modelId,
     error: req.query.error || null,

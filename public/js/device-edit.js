@@ -85,3 +85,100 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+document.addEventListener("DOMContentLoaded", () => {
+
+const rows = document.querySelectorAll(".device-row");
+const categoryFilter = document.getElementById("categoryFilter");
+const typeFilter = document.getElementById("typeFilter");
+
+let categories = new Set();
+let types = new Set();
+
+rows.forEach(row=>{
+    categories.add(row.dataset.category);
+    types.add(row.dataset.type);
+});
+
+
+/* ====== ALL CATEGORY ====== */
+
+let allCategory = document.createElement("div");
+allCategory.innerText = "ทั้งหมด";
+
+allCategory.onclick = ()=>{
+    rows.forEach(r=>{
+        r.style.display = "";
+    });
+};
+
+categoryFilter.appendChild(allCategory);
+
+
+/* ====== CATEGORY LIST ====== */
+
+categories.forEach(c=>{
+    let div = document.createElement("div");
+    div.innerText = c;
+
+    div.onclick = ()=>{
+        rows.forEach(r=>{
+            r.style.display =
+            r.dataset.category === c ? "" : "none";
+        });
+    };
+
+    categoryFilter.appendChild(div);
+});
+
+
+/* ====== ALL TYPE ====== */
+
+let allType = document.createElement("div");
+allType.innerText = "ทั้งหมด";
+
+allType.onclick = ()=>{
+    rows.forEach(r=>{
+        r.style.display = "";
+    });
+};
+
+typeFilter.appendChild(allType);
+
+
+/* ====== TYPE LIST ====== */
+
+types.forEach(t=>{
+    let div = document.createElement("div");
+    div.innerText = t;
+
+    div.onclick = ()=>{
+        rows.forEach(r=>{
+            r.style.display =
+            r.dataset.type === t ? "" : "none";
+        });
+    };
+
+    typeFilter.appendChild(div);
+});
+
+
+/* ====== DROPDOWN TOGGLE ====== */
+
+document.querySelectorAll(".filter-head").forEach(head=>{
+
+    head.addEventListener("click",()=>{
+
+        let drop = head.querySelector(".filter-dropdown");
+
+        document.querySelectorAll(".filter-dropdown").forEach(d=>{
+            if(d!==drop) d.style.display="none";
+        });
+
+        drop.style.display =
+        drop.style.display==="block" ? "none":"block";
+
+    });
+
+});
+
+});

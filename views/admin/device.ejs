@@ -30,7 +30,7 @@
 </a>
 
 <br><br>
-
+<div class="table-box">
 <table class="table">
 
     <thead>
@@ -38,8 +38,8 @@
             <th>No.</th>
             <th>รูป</th>
             <th>อุปกรณ์</th>
-            <th>หมวด</th>
-            <th>ประเภท</th>
+            <th class="filter-head">หมวด <i class="fa-solid fa-caret-down"></i><div class="filter-dropdown" id="categoryFilter"></div></th>
+            <th class="filter-head"> ประเภท<i class="fa-solid fa-caret-down"></i><div class="filter-dropdown" id="typeFilter"></div></th>
             <th>ยี่ห้อ</th>
             <th>รุ่น</th>
             <th>ทั้งหมด</th>
@@ -52,7 +52,9 @@
 
     <tbody>
     <% models.forEach((m, index) => { %>
-        <tr class="device-row">
+        <tr class="device-row"
+            data-category="<%= m.CategoryName %>"
+            data-type="<%= m.TypeName %>">
 
             <td class="center"><%= index + 1 %></td>
 
@@ -108,7 +110,7 @@
     <% }) %>
     </tbody>
 </table>
-
+</div>
 <!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
 <div id="deleteModal" class="delete-modal">
   <div class="modal-box">

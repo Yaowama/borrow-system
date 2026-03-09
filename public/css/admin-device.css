@@ -1,14 +1,17 @@
 /* ===============================
    TABLE
 ================================ */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+/* FIX TABLE FOR DROPDOWN */
+.table{
+  border-radius: 0 !important;
+  overflow: visible !important;
 }
+
+.table-box{
+overflow: visible;
+}
+thead th:first-child{border-top-left-radius:12px;}
+thead th:last-child{border-top-right-radius:12px;}
 
 .table th {
   background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
@@ -385,4 +388,32 @@
 
 @keyframes fadeDot {
   to { opacity: 1; }
+}
+
+.filter-head{
+    position: relative;
+}
+
+.filter-dropdown{
+    position: absolute;
+    top: 100%;         
+    left: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    min-width: 180px;
+    padding: 6px 0;
+
+    display: none;
+    z-index: 9999;      
+}
+
+.filter-dropdown div{
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.filter-dropdown div:hover{
+    background: #f1f5f9;
 }
