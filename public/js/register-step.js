@@ -51,7 +51,9 @@ const titles = [
    INIT
 ================================ */
 
-showStep();
+if (steps.length > 0) {
+  showStep();
+}
 
 
 /* ===============================
@@ -102,7 +104,9 @@ function showStep() {
    BUTTON EVENTS
 ================================ */
 
-document.getElementById("nextBtn").onclick = () => {
+const nextBtn = document.getElementById("nextBtn");
+if(nextBtn){
+nextBtn.onclick = () => {
 
   if (!validateStep()) return;
 
@@ -119,6 +123,7 @@ document.getElementById("prevBtn").onclick = () => {
   showStep();
 };
 
+};
 
 /* ===============================
    VALIDATION + REQUIRED *
@@ -220,5 +225,4 @@ fetch("/api/departments")
         </option>`;
     });
   });
-
 
