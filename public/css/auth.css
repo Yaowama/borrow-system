@@ -8,7 +8,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background:linear-gradient(135deg,#28292a,#1f2123);
+  background:linear-gradient(135deg,#e3e3e3,#f9f9f9);
 }
 
 body::before,
@@ -23,13 +23,13 @@ body::after {
 }
 
 body::before {
-  background: rgba(134, 133, 132, 0.25);
+  background: rgba(255, 255, 255, 0.25);
   top: -200px;
   left: -200px;
 }
 
 body::after {
-  background: rgba(161, 165, 169, 0.25);
+  background: rgba(237, 237, 237, 0.25);
   bottom: -200px;
   right: -200px;
 }
