@@ -200,5 +200,28 @@ if (userOverlay && userContent) {
     }
   });
 }
+const repairModal = document.getElementById("repairModal");
+const repairForm = document.getElementById("repairForm");
+const closeRepair = document.getElementById("closeRepair");
 
+  document.querySelectorAll(".btn-repair").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const dvid = btn.dataset.dvid;
+
+      repairForm.action = "/admin/repair/create/" + dvid;
+
+      repairModal.style.display = "flex";
+
+    });
+
+  });
+
+  if (closeRepair) {
+  closeRepair.addEventListener("click", () => {
+    repairModal.style.display = "none";
+    repairForm.reset();
+  });
+}
 });

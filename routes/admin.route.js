@@ -1586,7 +1586,7 @@ if (status === undefined) {
 router.post("/repair/create/:dvid", async (req, res) => {
   const { dvid } = req.params;
   const adminId = req.session.user.EMPID;
-
+  const { repair_remark } = req.body; 
   try {
     // 1️⃣ เช็กงานซ่อมค้าง
     const [[exists]] = await db.query(`
@@ -1601,30 +1601,39 @@ router.post("/repair/create/:dvid", async (req, res) => {
       return res.redirect("/admin/borrow?error=repair_exists");
     }
 
-    // 2️⃣ INSERT (ยังไม่ใส่ RepairCode)
+    // 2️⃣ กันกรอกว่าง
+    if (!repair_remark || repair_remark.trim() === "") {
+      return res.redirect("/admin/borrow?error=empty_remark");
+    }
+
+    // 3️⃣ INSERT (ใช้ข้อความจาก user)
     const [result] = await db.query(`
       INSERT INTO TB_T_Repair
         (DVID, EMPID, ProblemDetail, RepairStatusID, CreateDate)
       VALUES
-        (?, ?, 'ส่งซ่อมโดยผู้ดูแลระบบ', 1, NOW())
-    `, [dvid, adminId]);
+        (?, ?, ?, 1, NOW())
+    `, [
+      dvid,
+      adminId,
+      repair_remark.trim() 
+    ]);
 
     const repairID = result.insertId;
 
-    // 3️⃣ สร้าง RepairCode
+    // 4️⃣ สร้าง RepairCode
     const now = new Date();
     const repairCode =
-      `RP-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}` +
-      `-${String(repairID).padStart(4,'0')}`;
+      `RP-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}` +
+      `-${String(repairID).padStart(4, '0')}`;
 
-    // 4️⃣ UPDATE RepairCode
+    // 5️⃣ UPDATE RepairCode
     await db.query(`
       UPDATE TB_T_Repair
       SET RepairCode = ?
       WHERE RepairID = ?
     `, [repairCode, repairID]);
 
-    // 5️⃣ เปลี่ยนสถานะอุปกรณ์ → ซ่อม
+    // 6️⃣ เปลี่ยนสถานะอุปกรณ์ → ซ่อม
     await db.query(`
       UPDATE TB_T_DeviceAdd
       SET
@@ -1633,8 +1642,9 @@ router.post("/repair/create/:dvid", async (req, res) => {
       WHERE DVID = ?
     `, [dvid]);
 
-   res.redirect("/admin/repair?success=create");
-      
+    // 7️⃣ redirect
+    res.redirect("/admin/repair?success=create");
+
   } catch (err) {
     console.error("CREATE REPAIR ERROR:", err);
     res.redirect("/admin/borrow?error=repair");

@@ -173,11 +173,14 @@
   <% } else { %>
 
   <!-- ส่งซ่อมได้ -->
-  <form action="/admin/repair/create/<%= b.DVID %>" method="POST">
-    <button type="submit" class="icon-action warning" title="ส่งซ่อม">
-      <i class="fa-solid fa-screwdriver-wrench"></i>
-    </button>
-  </form>
+<button
+  type="button"
+  class="icon-action warning btn-repair"
+  data-dvid="<%= b.DVID %>"
+  title="ส่งซ่อม"
+>
+  <i class="fa-solid fa-screwdriver-wrench"></i>
+</button>
 
   <% } %>
 
@@ -267,5 +270,37 @@
         (รอเชื่อมข้อมูลผู้ยืม)
       </p>
     </div>
+  </div>
+</div>
+
+<div id="repairModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+
+    <h3>แจ้งซ่อมอุปกรณ์</h3>
+
+    <form id="repairForm" method="POST">
+
+      <label class="modal-label">อาการเสีย</label>
+      <textarea
+        name="repair_remark"
+        id="repairRemark"
+        required
+        placeholder="กรุณาระบุอาการเสีย เช่น เปิดไม่ติด / หน้าจอแตก / อื่นๆ"></textarea>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn orange">
+          ยืนยันส่งซ่อม
+        </button>
+
+        <button
+          type="button"
+          id="closeRepair"
+          class="btn gray">
+          ยกเลิก
+        </button>
+      </div>
+
+    </form>
+
   </div>
 </div>
