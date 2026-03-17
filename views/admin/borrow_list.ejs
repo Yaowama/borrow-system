@@ -140,24 +140,6 @@
       </button>
     <% } %>
 
-    <div class="action-box">
-
-<% if (b.BorrowStatusID == 1) { %>
-
-<form action="/admin/borrow/approve/<%= b.BorrowID %>" method="POST">
-  <button class="btn green">อนุมัติ</button>
-</form>
-
-<button
-  type="button"
-  class="btn red btn-reject"
-  data-id="<%= b.BorrowID %>">
-  ไม่อนุมัติ
-</button>
-
-<% } %>
-
-
 <% if (b.BorrowStatusID == 6) { %>
 
 <!-- คืนอุปกรณ์ -->
