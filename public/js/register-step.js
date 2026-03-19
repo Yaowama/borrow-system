@@ -6,6 +6,8 @@ const errorBox = document.getElementById("errorBox");
 let errorTimeout = null;
 
 function showRegisterError(message) {
+  if (!errorBox) return;
+
   errorBox.innerText = message;
   errorBox.classList.add("show");
 
@@ -17,6 +19,8 @@ function showRegisterError(message) {
 }
 
 function clearRegisterError() {
+  if (!errorBox) return;
+
   errorBox.innerText = "";
   errorBox.classList.remove("show");
 }
@@ -46,12 +50,37 @@ const titles = [
   "อัปโหลดรูปโปรไฟล์"
 ];
 
+const usernameInput = document.querySelector("input[name='username']");
 
+// กันพิมพ์อักขระอื่น
+if (usernameInput) {
+  usernameInput.addEventListener("input", () => {
+    usernameInput.value = usernameInput.value.replace(/[^A-Za-z0-9]/g, "");
+  });
+}
+
+const phoneInput = document.querySelector("input[name='phone']");
+const faxInput = document.querySelector("input[name='fax']");
+
+// 📱 phone → ตัวเลขเท่านั้น
+if (phoneInput) {
+  phoneInput.addEventListener("input", () => {
+    phoneInput.value = phoneInput.value.replace(/[^0-9]/g, "");
+  });
+}
+
+// 📠 fax → ตัวเลขเท่านั้น
+if (faxInput) {
+  faxInput.addEventListener("input", () => {
+    faxInput.value = faxInput.value.replace(/[^0-9]/g, "");
+  });
+}
 /* ===============================
    INIT
 ================================ */
 
 if (steps.length > 0) {
+
   showStep();
 }
 
@@ -118,10 +147,14 @@ nextBtn.onclick = () => {
   }
 };
 
-document.getElementById("prevBtn").onclick = () => {
-  currentStep--;
-  showStep();
-};
+const prevBtn = document.getElementById("prevBtn");
+
+if (prevBtn) {
+  prevBtn.onclick = () => {
+    currentStep--;
+    showStep();
+  };
+}
 
 };
 
@@ -165,11 +198,17 @@ if (currentStep === 0) {
 
   const password = document.querySelector('input[name="password"]');
   const confirm  = document.querySelector('input[name="confirm"]');
+  const username = document.querySelector('input[name="username"]').value;
 
+  const usernameRule = /^[A-Za-z0-9]{4,20}$/;
   const passwordRule =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
-  // 🔴 ตรวจ password rule
+  if (!usernameRule.test(username)) {
+    showRegisterError("Username ต้องเป็นอังกฤษ/ตัวเลข และยาว 4-20 ตัว");
+    return false;
+  }
+
   if (!passwordRule.test(password.value)) {
     showRegisterError(
       "รหัสผ่านต้องมี 8 ตัวขึ้นไป และต้องมี A-Z a-z 0-9 และอักขระพิเศษ"
@@ -177,14 +216,38 @@ if (currentStep === 0) {
     return false;
   }
 
-  // 🔴 confirm password
   if (password.value !== confirm.value) {
     showRegisterError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
     return false;
   }
 }
 
-// 🖼️ STEP 5
+if (currentStep === 2) {
+
+  const email = document.querySelector('input[name="email"]').value.trim();
+  const phone = document.querySelector('input[name="phone"]').value.trim();
+  const fax   = document.querySelector('input[name="fax"]').value.trim();
+
+  const emailRule = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRule = /^[0-9]{10}$/;
+  const faxRule   = /^[0-9]+$/;
+
+  if (!emailRule.test(email)) {
+    showRegisterError("รูปแบบ Email ไม่ถูกต้อง");
+    return false;
+  }
+
+  if (!phoneRule.test(phone)) {
+    showRegisterError("เบอร์โทรต้องเป็นตัวเลข 10 หลัก");
+    return false;
+  }
+
+  if (!faxRule.test(fax)) {
+    showRegisterError("โทรสารต้องเป็นตัวเลขเท่านั้น");
+    return false;
+  }
+}
+
   if (currentStep === 4) {
     const imageInput = document.getElementById("imageInput");
 
