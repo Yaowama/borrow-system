@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
     (
       fname,lname,username,
       EMP_NUM,email,password,
-      phone,fax,
+      phone,fax,ProfileImage,
       InstitutionID,DepartmentID,
       RoleID,EMPStatusID,
       CreateDate,CreateBy
@@ -58,7 +58,7 @@ exports.register = async (req, res) => {
     fname, lname, username,
     EMP_NUM, email, hash,
     phone, fax,
-    InstitutionID, DepartmentID
+    InstitutionID, DepartmentID,image 
   ]);
 
   res.redirect("/login");

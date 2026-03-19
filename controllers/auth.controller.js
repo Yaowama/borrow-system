@@ -80,9 +80,8 @@ exports.register = async (req, res) => {
        5. จัดการรูปโปรไฟล์
     ================================ */
     const profileImage = req.file
-      ? "/uploads/" + req.file.filename
-      : "/images/default-avatar.svg";
-
+      ? req.file.filename
+      : "default-avatar.svg";
     /* ===============================
        6. บันทึกลงฐานข้อมูล
     ================================ */
