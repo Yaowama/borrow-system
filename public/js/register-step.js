@@ -61,18 +61,23 @@ if (usernameInput) {
 
 const phoneInput = document.querySelector("input[name='phone']");
 const faxInput = document.querySelector("input[name='fax']");
+const empInput = document.querySelector("input[name='EMP_NUM']");
 
-// 📱 phone → ตัวเลขเท่านั้น
 if (phoneInput) {
   phoneInput.addEventListener("input", () => {
     phoneInput.value = phoneInput.value.replace(/[^0-9]/g, "");
   });
 }
 
-// 📠 fax → ตัวเลขเท่านั้น
 if (faxInput) {
   faxInput.addEventListener("input", () => {
     faxInput.value = faxInput.value.replace(/[^0-9]/g, "");
+  });
+}
+
+if (empInput) {
+  empInput.addEventListener("input", () => {
+    empInput.value = empInput.value.replace(/[^0-9]/g, "");
   });
 }
 /* ===============================
@@ -218,6 +223,17 @@ if (currentStep === 0) {
 
   if (password.value !== confirm.value) {
     showRegisterError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
+    return false;
+  }
+}
+if (currentStep === 1) {
+
+  const emp = document.querySelector('input[name="EMP_NUM"]').value.trim();
+
+  const empRule = /^[0-9]{4,10}$/; // กำหนด 4-10 หลัก (ปรับได้)
+
+  if (!empRule.test(emp)) {
+    showRegisterError("รหัสพนักงานต้องเป็นตัวเลขเท่านั้น");
     return false;
   }
 }
