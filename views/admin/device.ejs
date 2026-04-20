@@ -1,45 +1,91 @@
 <link rel="stylesheet" href="/css/admin-device.css">
 
 <div class="top-bar">
-    <h1>คลังอุปกรณ์</h1>
-
-    <div class="top-right">
-        <div class="search">
-            <input
-                type="text"
-                class="admin-search"
-                data-target=".device-row"
-                placeholder="ค้นหาอุปกรณ์"
-                >
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </div>
-
-        <div class="admin-box">
-            <span>Admin</span>
-            <i class="fa-solid fa-user"></i>
-        </div>
-
-        <div class="logo-box">
-            <img src="/images/logo.png">
-        </div>
+  <h1>คลังอุปกรณ์</h1>
+  <div class="top-right">
+    <div class="search">
+      <input type="text" id="searchInput" class="admin-search" placeholder="ค้นหาอุปกรณ์">
+      <i class="fa-solid fa-magnifying-glass"></i>
     </div>
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+<div class="noti-wrap" id="notiWrap">
+  <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+    <i class="fa-solid fa-bell"></i>
+    <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+  </button>
+
+  <div class="noti-dropdown" id="notiDropdown">
+    <div class="noti-header">
+      <span>การแจ้งเตือน</span>
+      <span class="noti-count-label" id="notiCountLabel"></span>
+    </div>
+    <div class="noti-list" id="notiList">
+      <div class="noti-empty">
+        <i class="fa-solid fa-bell-slash"></i>
+        <p>ไม่มีการแจ้งเตือน</p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<a href="/admin/device/add" class="btn-add">
-    <i class="fa-solid fa-plus"></i> เพิ่มอุปกรณ์
-</a>
+    <div class="logo-box">
+      <img src="/images/logo.png">
+    </div>
+  </div>
+</div>
 
-<br><br>
-<div class="table-box">
-<table class="table">
 
-    <thead>
-        <tr>
-            <th>No.</th>
+<!-- TAB -->
+<div class="tab-header">
+  <div class="tab-switch">
+    <button class="tab-btn active" data-tab="device">
+      <i class="fa-solid fa-box"></i> คลังอุปกรณ์
+    </button>
+    <button class="tab-btn" data-tab="type">
+      <i class="fa-solid fa-tags"></i> ประเภทอุปกรณ์
+    </button>
+  </div>
+    <button class="btn-export" id="btnExportDevice">
+      <i class="fa-solid fa-file-excel"></i> Export Excel
+    </button>
+  </div>
+
+
+
+
+<!-- ================= DEVICE SECTION ================= -->
+<div id="device-section" class="tab-content active">
+  <div class="page-card">
+
+    <div class="section-header">
+      <div class="header-left">
+        <h2>รายการอุปกรณ์</h2>
+        <div class="active-filters" id="activeFilters"></div>
+      </div>
+      <a href="/admin/device/add" class="btn-add">
+        <i class="fa-solid fa-plus"></i> เพิ่มอุปกรณ์
+      </a>
+    </div>
+
+    <div class="table-box">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
             <th>รูป</th>
             <th>อุปกรณ์</th>
-            <th class="filter-head">หมวด <i class="fa-solid fa-caret-down"></i><div class="filter-dropdown" id="categoryFilter"></div></th>
-            <th class="filter-head"> ประเภท<i class="fa-solid fa-caret-down"></i><div class="filter-dropdown" id="typeFilter"></div></th>
+            <th class="filter-head" id="catHead">
+              หมวด <i class="fa-solid fa-caret-down filter-caret"></i>
+              <div class="filter-dropdown" id="categoryFilter"></div>
+            </th>
+            <th class="filter-head" id="typeHead">
+              ประเภท <i class="fa-solid fa-caret-down filter-caret"></i>
+              <div class="filter-dropdown" id="typeFilter"></div>
+            </th>
             <th>ยี่ห้อ</th>
             <th>รุ่น</th>
             <th>ทั้งหมด</th>
@@ -47,28 +93,33 @@
             <th>ยืม</th>
             <th>ซ่อม</th>
             <th>จัดการ</th>
-        </tr>
-    </thead>
+          </tr>
+        </thead>
+        <tbody id="deviceTableBody">
+          <% models.forEach((m, index) => { %>
+          <tr class="device-row"
+              data-category="<%= m.CategoryName %>"
+              data-type="<%= m.TypeName %>"
+              data-name="<%= m.DeviceName %>"
+              data-brand="<%= m.BrandName %>"
+              data-model="<%= m.ModelName %>">
 
-    <tbody>
-    <% models.forEach((m, index) => { %>
-        <tr class="device-row"
-            data-category="<%= m.CategoryName %>"
-            data-type="<%= m.TypeName %>">
-
-            <td class="center"><%= index + 1 %></td>
+            <td class="center row-num"></td>
 
             <td class="center">
-                <% if (m.DeviceImage) { %>
-                    <img src="/uploads/device/<%= m.DeviceImage %>" class="device-img">
-                <% } else { %>
-                    <span class="no-img">—</span>
-                <% } %>
+              <% if (m.DeviceImage) { %>
+              <img src="/uploads/device/<%= m.DeviceImage %>"
+                   class="device-img clickable"
+                   data-src="/uploads/device/<%= m.DeviceImage %>"
+                   title="คลิกเพื่อดูรูปขนาดใหญ่">
+              <% } else { %>
+              <span class="no-img">—</span>
+              <% } %>
             </td>
 
             <td>
-                <div class="device-name"><%= m.DeviceName %></div>
-                <div class="device-sub"><%= m.TypeName %> • <%= m.BrandName %></div>
+              <div class="device-name"><%= m.DeviceName %></div>
+              <div class="device-sub"><%= m.TypeName %> • <%= m.BrandName %></div>
             </td>
 
             <td><%= m.CategoryName %></td>
@@ -82,54 +133,230 @@
             <td class="center"><span class="badge red"><%= m.RepairQty %></span></td>
 
             <td class="center">
-            <div class="action-box">
-
-                <a href="/admin/device/<%= m.ModelID %>"
-                class="btn-icon view"
-                title="ดูเครื่อง">
-                <i class="fa-solid fa-eye"></i>
+              <div class="action-box">
+                <a href="/admin/device/<%= m.ModelID %>" class="btn-icon view" title="ดูรายละเอียด">
+                  <i class="fa-solid fa-eye"></i>
                 </a>
-
-                <a href="/admin/device/edit/<%= m.DeviceID %>"
-                class="btn-icon edit"
-                title="แก้ไข">
-                <i class="fa-solid fa-pen"></i>
+                <a href="/admin/device/edit/<%= m.DeviceID %>" class="btn-icon edit" title="แก้ไข">
+                  <i class="fa-solid fa-pen"></i>
                 </a>
-
-                <a href="#"
-                class="btn-icon del"
-                data-id="<%= m.ModelID %>"
-                data-type="model"
-                title="ลบ">
-                <i class="fa-solid fa-trash"></i>
+                <a href="#" class="btn-icon del"
+                   data-id="<%= m.ModelID %>"
+                   data-type="model"
+                   data-name="<%= m.DeviceName %>"
+                   title="ลบ">
+                  <i class="fa-solid fa-trash"></i>
                 </a>
-            </div>
+              </div>
             </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
 
-        </tr>
-    <% }) %>
-    </tbody>
-</table>
-</div>
-<!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
-<div id="deleteModal" class="delete-modal">
-  <div class="modal-box">
-
-    <div class="check-wrapper danger">
-      <svg class="warningmark" viewBox="0 0 52 52">
-        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
-        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
-        <circle class="warning-dot" cx="26" cy="36" r="2"/>
-      </svg>
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <i class="fa-solid fa-box-open"></i>
+        <p>ไม่พบอุปกรณ์ที่ค้นหา</p>
+      </div>
     </div>
 
-    <h3>ยืนยันการลบ</h3>
-    <p>คุณต้องการลบอุปกรณ์นี้ใช่หรือไม่ ?</p>
+  </div>
+</div>
 
+
+<!-- ================= TYPE SECTION ================= -->
+<div id="type-section" class="tab-content">
+  <div class="page-card">
+
+    <div class="section-header">
+      <h2>ประเภทอุปกรณ์</h2>
+      <button class="btn-add" id="btnAddType">
+        <i class="fa-solid fa-plus"></i> เพิ่มประเภท
+      </button>
+    </div>
+
+    <div class="type-grid">
+      <% types.forEach(t => { %>
+      <div class="type-card">
+        <div class="type-img">
+          <% if (t.TypeImage) { %>
+          <img src="/uploads/type/<%= t.TypeImage %>">
+          <% } else { %>
+          <div class="no-img-icon">
+            <i class="fa-solid fa-tag"></i>
+          </div>
+          <% } %>
+        </div>
+        <div class="type-name"><%= t.TypeName %></div>
+        <div class="type-actions">
+          <button class="btn-type-edit"
+                  data-id="<%= t.TypeID %>"
+                  data-name="<%= t.TypeName %>"
+                  title="แก้ไข">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn-type-del"
+                  data-id="<%= t.TypeID %>"
+                  data-name="<%= t.TypeName %>"
+                  title="ลบ">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= IMAGE MODAL ================= -->
+<div id="imageModal" class="img-modal" role="dialog" aria-label="ดูรูปขนาดใหญ่">
+  <span class="close" id="closeImageModal" aria-label="ปิด">&times;</span>
+  <img class="img-modal-content" id="modalImage" src="" alt="device image">
+</div>
+
+
+<!-- ================= DELETE MODAL ================= -->
+<div id="deleteModal" class="delete-modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="check-wrapper">
+      <svg class="warningmark" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
+        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+        <circle class="warning-dot" cx="26" cy="38" r="2.5"/>
+      </svg>
+    </div>
+    <h3>ยืนยันการลบ</h3>
+    <p id="deleteModalDesc">คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
     <div class="modal-actions">
-      <button class="btn-cancel">ยกเลิก</button>
-      <button id="confirmDeleteBtn" class="btn-danger">ลบ</button>
+      <button class="btn-cancel" id="cancelDeleteBtn">ยกเลิก</button>
+      <button id="confirmDeleteBtn" class="btn-danger">
+        <i class="fa-solid fa-trash"></i> ลบ
+      </button>
     </div>
   </div>
 </div>
 
+
+<!-- ================= TYPE MODAL ================= -->
+<div id="typeModal" class="modal-overlay" role="dialog" aria-modal="true">
+  <form id="typeForm" method="POST" action="/admin/type/add" enctype="multipart/form-data" class="modal-box">
+
+    <div class="modal-header">
+      <h3 id="modalTitle">เพิ่มประเภท</h3>
+      <button type="button" class="modal-close-btn" id="closeTypeModal" aria-label="ปิด">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <input type="hidden" name="TypeID" id="typeId">
+
+    <div class="form-group">
+      <label>ชื่อประเภท <span class="required">*</span></label>
+      <input name="TypeName" id="typeName" placeholder="กรอกชื่อประเภทอุปกรณ์" required>
+    </div>
+
+    <div class="form-group">
+      <label>รูปภาพ (ถ้ามี)</label>
+      <input type="file" name="TypeImage" id="typeImageInput" accept="image/*">
+      <div class="img-preview" id="typeImgPreview" style="display:none;">
+        <img id="typeImgPreviewImg" src="" alt="preview">
+        <button type="button" class="remove-img" id="removeTypeImg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" id="cancelTypeBtn" class="btn-cancel">ยกเลิก</button>
+      <button type="submit" class="btn-primary">
+        <i class="fa-solid fa-check"></i>
+        <span id="modalSubmitLabel">บันทึก</span>
+      </button>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ================= SUCCESS MODAL ================= -->
+<div id="successModal" class="success-modal" role="status" aria-live="polite">
+  <div class="modal-box">
+
+    <div class="check-wrapper success">
+      <svg class="checkmark" viewBox="0 0 52 52" fill="none">
+        <circle class="check-circle" cx="26" cy="26" r="23" fill="none"/>
+        <path class="check-path" d="M14 26l9 9 15-18" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="check-wrapper danger" style="display:none;">
+      <svg class="warningmark" viewBox="0 0 52 52" fill="none">
+        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
+        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+        <circle class="warning-dot" cx="26" cy="38" r="2.5"/>
+      </svg>
+    </div>
+
+    <h3 id="successTitle">สำเร็จ</h3>
+    <p id="successDesc"></p>
+  </div>
+</div>
+
+
+<!-- ================= ERROR TOAST ================= -->
+<div id="errorToast" class="error-toast">
+  <i class="fa-solid fa-circle-exclamation"></i>
+  <span id="errorToastMsg">ไม่สามารถดำเนินการได้</span>
+</div>
+
+<!-- ================= EXPORT MODAL ================= -->
+<div id="exportModal" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:420px;">
+
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-file-excel" style="color:#1d6f42;"></i> Export คลังอุปกรณ์</h3>
+      <button type="button" class="modal-close-btn" id="closeExportModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="form-group" style="margin-top:12px;">
+      <label>ประเภทอุปกรณ์</label>
+      <select id="exportType" class="form-select">
+        <option value="">ทั้งหมด</option>
+        <% types.forEach(t => { %>
+        <option value="<%= t.TypeID %>"><%= t.TypeName %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>ยี่ห้อ</label>
+      <select id="exportBrand" class="form-select">
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>สถานะ</label>
+      <select id="exportStatus" class="form-select">
+        <option value="">ทั้งหมด</option>
+        <option value="1">พร้อมใช้งาน</option>
+        <option value="2">ถูกยืม</option>
+        <option value="3">ซ่อม</option>
+        <option value="4">ปิดใช้งาน</option>
+      </select>
+    </div>
+
+    <div class="modal-actions" style="margin-top:20px;">
+      <button type="button" id="cancelExportBtn" class="btn-cancel">ยกเลิก</button>
+      <button type="button" id="confirmExportBtn" class="btn-primary" style="background:#1d6f42;">
+        <i class="fa-solid fa-download"></i> ดาวน์โหลด
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,151 +1,220 @@
 <link rel="stylesheet" href="/css/report.css">
 
 <div class="top-bar">
-  <h1>รายงานการยืม–คืนอุปกรณ์</h1>
-<div class="top-right">
-
-
+  <h1>รายงานการยืม–คืน</h1>
+  <div class="top-right">
     <div class="admin-box">
       <span>Admin</span>
       <i class="fa-solid fa-user"></i>
     </div>
+    <div class="noti-wrap" id="notiWrap">
+      <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+        <i class="fa-solid fa-bell"></i>
+        <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+      </button>
+      <div class="noti-dropdown" id="notiDropdown">
+        <div class="noti-header">
+          <span>การแจ้งเตือน</span>
+          <span class="noti-count-label" id="notiCountLabel"></span>
+        </div>
+        <div class="noti-list" id="notiList">
+          <div class="noti-empty">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>ไม่มีการแจ้งเตือน</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo-box"><img src="/images/logo.png"></div>
+  </div>
+</div>
 
-    <div class="logo-box">
-      <img src="/images/logo.png">
+<!-- SUMMARY CARDS -->
+<div class="summary-cards">
+  <div class="sum-card">
+    <div class="sum-icon indigo"><i class="fa-solid fa-list"></i></div>
+    <div>
+      <div class="sum-num"><%= summary.total %></div>
+      <div class="sum-label">ทั้งหมด</div>
+    </div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-icon blue"><i class="fa-solid fa-laptop"></i></div>
+    <div>
+      <div class="sum-num"><%= summary.borrowing %></div>
+      <div class="sum-label">กำลังยืม</div>
+    </div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-icon green"><i class="fa-solid fa-circle-check"></i></div>
+    <div>
+      <div class="sum-num"><%= summary.returned %></div>
+      <div class="sum-label">คืนแล้ว</div>
+    </div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div>
+      <div class="sum-num"><%= summary.late %></div>
+      <div class="sum-label">เกินกำหนด</div>
     </div>
   </div>
 </div>
 
-<form method="GET" action="/admin/report" class="filter">
+<!-- FILTER -->
+<form method="GET" action="/admin/report" class="filter-box">
+  <div class="filter-row">
 
-  จาก:
-  <input type="date" name="start" value="<%= query.start || '' %>">
+    <div class="filter-group">
+      <label>จากวันที่</label>
+      <input type="date" name="start" value="<%= query.start || '' %>">
+    </div>
 
-  ถึง:
-  <input type="date" name="end" value="<%= query.end || '' %>">
+    <div class="filter-group">
+      <label>ถึงวันที่</label>
+      <input type="date" name="end" value="<%= query.end || '' %>">
+    </div>
 
-  รหัสพนักงาน:
-<input type="text" name="empid" value="<%= query.empid || '' %>">
+    <div class="filter-group">
+      <label>รหัสพนักงาน</label>
+      <input type="text" name="empid" placeholder="ค้นหา..." value="<%= query.empid || '' %>">
+    </div>
 
-สถานะ:
-<select name="status">
-  <option value="">ทั้งหมด</option>
-  <option value="pending" <%= query.status=='pending'?'selected':'' %>>รออนุมัติ</option>
-  <option value="borrowing" <%= query.status=='borrowing'?'selected':'' %>>กำลังยืม</option>
-  <option value="returned" <%= query.status=='returned'?'selected':'' %>>คืนแล้ว</option>
-  <option value="overdue" <%= query.status=='overdue'?'selected':'' %>>เกินกำหนด</option>
-</select>
-  สำนัก:
-  <select name="Institution">
-    <option value="">ทั้งหมด</option>
-    <% institutions.forEach(d => { %>
-      <option value="<%= d.InstitutionID %>"
-        <%= query.Institution==d.InstitutionID?'selected':'' %>>
-        <%= d.InstitutionName %>
-      </option>
-    <% }) %>
-  </select>
-  
-  ฝ่าย:
-  <select name="department">
-    <option value="">ทั้งหมด</option>
-    <% departments.forEach(d => { %>
-      <option value="<%= d.DepartmentID %>"
-        <%= query.department==d.DepartmentID?'selected':'' %>>
-        <%= d.DepartmentName %>
-      </option>
-    <% }) %>
-  </select>
+    <div class="filter-group">
+      <label>สถานะ</label>
+      <select name="status">
+        <option value="">ทั้งหมด</option>
+        <option value="pending"   <%= query.status=='pending'   ?'selected':'' %>>รออนุมัติ</option>
+        <option value="borrowing" <%= query.status=='borrowing' ?'selected':'' %>>กำลังยืม</option>
+        <option value="returned"  <%= query.status=='returned'  ?'selected':'' %>>คืนแล้ว</option>
+        <option value="overdue"   <%= query.status=='overdue'   ?'selected':'' %>>เกินกำหนด</option>
+      </select>
+    </div>
 
+    <div class="filter-group">
+      <label>สำนัก</label>
+      <select name="Institution">
+        <option value="">ทั้งหมด</option>
+        <% institutions.forEach(d => { %>
+          <option value="<%= d.InstitutionID %>"
+            <%= query.Institution==d.InstitutionID?'selected':'' %>>
+            <%= d.InstitutionName %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
 
-  <button class="btn blue">ค้นหา</button>
+    <div class="filter-group">
+      <label>ฝ่าย</label>
+      <select name="department">
+        <option value="">ทั้งหมด</option>
+        <% departments.forEach(d => { %>
+          <option value="<%= d.DepartmentID %>"
+            <%= query.department==d.DepartmentID?'selected':'' %>>
+            <%= d.DepartmentName %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
 
-<a href="/admin/report/excel?start=<%= query.start || '' %>&end=<%= query.end || '' %>&status=<%= query.status || '' %>&department=<%= query.department || '' %>&empid=<%= query.empid || '' %>&Institution=<%= query.Institution || '' %>" 
-class="btn green">
-📥 Excel
-</a>
+    <div class="filter-actions">
+      <button type="submit" class="btn-search">
+        <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+      </button>
+      <a href="/admin/report/excel?start=<%= query.start||'' %>&end=<%= query.end||'' %>&status=<%= query.status||'' %>&department=<%= query.department||'' %>&empid=<%= query.empid||'' %>&Institution=<%= query.Institution||'' %>"
+         class="btn-export">
+        <i class="fa-solid fa-file-excel"></i> Excel
+      </a>
+    </div>
 
+  </div>
 </form>
 
-
-<!-- SUMMARY -->
-<div class="summary-box">
-  <div>ทั้งหมด: <b><%= summary.total %></b></div>
-  <div>กำลังยืม: <b><%= summary.borrowing %></b></div>
-  <div>คืนแล้ว: <b><%= summary.returned %></b></div>
-  <div>เกินกำหนด: <b><%= summary.late %></b></div>
-</div>
-
-
-<table class="table">
-
-<tr>
-  <th>No.</th>
-  <th>เลขเอกสาร</th>
-  <th>ผู้ยืม</th>
-  <th>สังกัด</th>
-  <th>อุปกรณ์</th>
-  <th>วันยืม</th>
-  <th>กำหนดคืน</th>
-  <th>วันคืน</th>
-  <th>เกิน</th>
-  <th>สถานะ</th>
-</tr>
-
-<% reports.forEach((r, index) => { %>
-<tr>
-
-  <td class="col-no"><%= index + 1 %></td>
-
-  <td><%= r.BorrowCode %></td>
-
-  <td>
-    <strong><%= r.fname %> <%= r.lname %></strong><br>
-    <small>รหัสพนักงาน: <%= r.EMP_NUM %></small>
-  </td>
-
-  <td>
-    <%= r.InstitutionName || '-' %><br>
-    <small><%= r.DepartmentName || '-' %></small>
-  </td>
-
-<td class="device-col">
-  <strong><%= r.DeviceCode %></strong><br>
-
-  <%= r.DeviceName %><br>
-
-  <small>
-    <%= r.SerialNumber || '-' %> |
-    <%= r.Brand || '-' %>
-    <%= r.Model || '' %>
-  </small>
-</td>
-
-  <td><%= r.BorrowDate %></td>
-  <td><%= r.DueDate %></td>
-  <td><%= r.ReturnDate || "-" %></td>
-
-  <td>
-    <% if (r.LateDays > 0) { %>
-      <span class="badge red"><%= r.LateDays %> วัน</span>
-    <% } else { %>
-      - 
+<!-- TABLE -->
+<div class="table-wrap">
+  <table class="table" id="reportTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>เลขเอกสาร</th>
+        <th>ผู้ยืม</th>
+        <th>สังกัด</th>
+        <th>อุปกรณ์</th>
+        <th>วันยืม</th>
+        <th>กำหนดคืน</th>
+        <th>วันคืน</th>
+        <th>เกิน</th>
+        <th>สถานะ</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% if (reports.length === 0) { %>
+      <tr>
+        <td colspan="10" class="empty-row">
+          <i class="fa-solid fa-inbox"></i>
+          <p>ไม่พบข้อมูล</p>
+        </td>
+      </tr>
     <% } %>
-  </td>
-
-  <td>
-    <% 
+    <% reports.forEach((r, index) => {
       let statusClass = 'gray';
-      if (r.StatusLabel === 'กำลังยืม') statusClass = 'blue';
-      if (r.StatusLabel === 'คืนแล้ว') statusClass = 'green';
+      if (r.StatusLabel === 'กำลังยืม')  statusClass = 'blue';
+      if (r.StatusLabel === 'คืนแล้ว')   statusClass = 'green';
       if (r.StatusLabel === 'เกินกำหนด') statusClass = 'red';
-      if (r.StatusLabel === 'ปฏิเสธ') statusClass = 'red';
-      if (r.StatusLabel === 'ยกเลิก') statusClass = 'orange';
+      if (r.StatusLabel === 'ปฏิเสธ')    statusClass = 'red';
+      if (r.StatusLabel === 'ยกเลิก')    statusClass = 'orange';
+      if (r.StatusLabel === 'รออนุมัติ') statusClass = 'yellow';
     %>
-    <span class="badge <%= statusClass %>"><%= r.StatusLabel %></span>
-  </td>
+    <tr>
+      <td class="col-no"><%= index + 1 %></td>
 
-</tr>
-<% }) %>
+      <td>
+        <span class="borrow-code"><%= r.BorrowCode %></span>
+      </td>
 
-</table>
+      <td>
+        <div class="person-cell">
+          <div class="person-name"><%= r.fname %> <%= r.lname %></div>
+          <div class="person-sub"><%= r.EMP_NUM %></div>
+        </div>
+      </td>
+
+      <td>
+        <div class="dept-cell">
+          <div class="dept-main"><%= r.InstitutionName || '-' %></div>
+          <div class="dept-sub"><%= r.DepartmentName || '-' %></div>
+        </div>
+      </td>
+
+      <td>
+        <div class="device-cell">
+          <div class="device-name"><%= r.DeviceName %></div>
+          <div class="device-sub">
+            <span><%= r.AssetTag || '-' %></span>
+            <% if (r.Brand && r.Brand !== '-') { %>
+              · <span><%= r.Brand %> <%= r.Model || '' %></span>
+            <% } %>
+          </div>
+        </div>
+      </td>
+
+      <td class="date-cell"><%= r.BorrowDate %></td>
+      <td class="date-cell"><%= r.DueDate %></td>
+      <td class="date-cell"><%= r.ReturnDate || '—' %></td>
+
+      <td>
+        <% if (r.LateDays > 0) { %>
+          <span class="late-badge"><%= r.LateDays %> วัน</span>
+        <% } else { %>
+          <span class="no-late">—</span>
+        <% } %>
+      </td>
+
+      <td>
+        <span class="status-badge <%= statusClass %>"><%= r.StatusLabel %></span>
+      </td>
+    </tr>
+    <% }) %>
+    </tbody>
+  </table>
+</div>

@@ -13,9 +13,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 16px;
+  padding: 0 0 22px;
   margin-bottom: 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f1f1f1;
 }
 
 .top-left {
@@ -271,39 +271,34 @@
   font-size: 20px;
 }
 .empty-box {
-  width: 100%;
-  max-width: 500px;
-  margin: 60px auto;
-  padding: 50px 30px;
-
+  margin: 72px auto;
+  padding: 56px 40px;
   background: #ffffff;
-  border-radius: 16px;
-
   text-align: center;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-
-  animation: fadeIn 0.4s ease-in-out;
+  gap: 12px;
+  animation: fadeIn 0.4s ease;
 }
 
 .empty-box i {
-  font-size: 60px;
-  color: #c9c9c9;
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
 }
 
 .empty-box h3 {
-  font-size: 20px;
-  color: #444;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
   margin: 0;
 }
 
 .empty-box p {
-  color: #777;
-  margin: 0;
+  color: #94a3b8;
   font-size: 14px;
+  margin: 0;
 }
 
 @keyframes fadeIn {

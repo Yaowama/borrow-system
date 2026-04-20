@@ -1,136 +1,158 @@
 <link rel="stylesheet" href="/css/borrow_status.css">
 
 <main class="main">
-<div class="top-bar">
 
-  <div class="top-left">
-    <h1>สถานะคำขอยืมอุปกรณ์</h1>
-  </div>
-
-    <div class="top-right">
-        <div class="logo-box">
-            <img src="/images/logo.png">
-        </div>
-
+  <div class="top-bar">
+    <div class="top-left">
+      <h1>สถานะคำขอยืมอุปกรณ์</h1>
     </div>
 
-</div>
-
-<table class="status-table">
-  <thead>
-    <tr>
-      <th>รูป</th>
-      <th>อุปกรณ์</th>
-      <th>รหัสการยืม</th>
-      <th>วันที่ยืม</th>
-      <th>กำหนดคืน</th>
-      <th>สถานะ</th>
-      <th>รายละเอียด</th>
-      <th>จัดการ</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% rows.forEach(r => { %>
-      <tr>
-         <td>
-            <div class="device-image">
-              <% if (r.DeviceImage) { %>
-                <img src="/uploads/device/<%= r.DeviceImage %>" 
-                    onerror="this.src='/images/no-image.png'">
-              <% } else { %>
-                <img src="/images/no-image.png">
-              <% } %>
-            </div>
-          </td>
-        <td>
-          <div class="device-info">
-            <strong><%= r.DeviceName %></strong>
-            <div class="meta">
-              <%= r.BrandName || "-" %> · <%= r.ModelName || "-" %>
+    <div class="top-right">
+      <div class="noti-wrap" id="notiWrap">
+        <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+          <i class="fa-solid fa-bell"></i>
+          <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+        </button>
+        <div class="noti-dropdown" id="notiDropdown">
+          <div class="noti-header">
+            <span>การแจ้งเตือน</span>
+            <span class="noti-count-label" id="notiCountLabel"></span>
+          </div>
+          <div class="noti-list" id="notiList">
+            <div class="noti-empty">
+              <i class="fa-solid fa-bell-slash"></i>
+              <p>ไม่มีการแจ้งเตือน</p>
             </div>
           </div>
-        </td>
-        <td><%= r.BorrowCode %></td>
-        <td><%= r.BorrowDate %></td>
-        <td><%= r.DueDate %></td>
-        <td>
-          <span class="status status-<%= r.BorrowStatusID %>">
-            <%= r.StatusName %>
-          </span>
-        </td>
-        <td>
-          <button
-            class="icon-action view btn-detail"
-            data-code="<%= r.BorrowCode %>"
-            title="ดูรายละเอียด">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </td>
+        </div>
+      </div>
+      <div class="logo-box">
+        <img src="/images/logo.png">
+      </div>
+    </div>
+  </div>
 
-        <td>
-          <% if (r.BorrowStatusID == 1) { %>
-            <button class="btn-cancel-request"
-              data-id="<%= r.BorrowID %>"
-              title="ยกเลิก">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          <% } %>
-
-          <% if (r.BorrowStatusID == 2) { %>
-            <form action="/user/borrow/acknowledge/<%= r.BorrowID %>" method="POST" style="display:inline;">
-              <button class="btn-confirm">รับทราบ</button>
-            </form>
-          <% } %>
-
-          
-        </td>
-
-      </tr>
-    <% }) %>
-  </tbody>
-</table>
-
-<% if (rows.length === 0) { %>
+  <% if (rows.length === 0) { %>
     <div class="empty-box">
       <i class="fa-solid fa-box-open"></i>
+      <h3>ไม่มีรายการยืม</h3>
       <p>ขณะนี้คุณไม่มีอุปกรณ์ที่กำลังยืม</p>
     </div>
   <% } else { %>
-    
-<div class="overlay" id="detailOverlay">
-  <div class="detail-modal">
 
-    <div class="modal-header">
-      <h2>รายละเอียดการยืม</h2>
-      <span class="close-modal" id="closeDetail">&times;</span>
+    <div class="table-wrapper">
+      <table class="status-table">
+        <thead>
+          <tr>
+            <th>รูป</th>
+            <th>อุปกรณ์</th>
+            <th>รหัสการยืม</th>
+            <th>วันที่ยืม</th>
+            <th>กำหนดคืน</th>
+            <th>สถานะ</th>
+            <th>รายละเอียด</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(r => { %>
+            <tr>
+              <td>
+                <div class="device-image">
+                  <% if (r.DeviceImagePath) { %>
+                    <img src="<%= r.DeviceImagePath %>" onerror="this.src='/images/no-image.png'">
+                  <% } else { %>
+                    <img src="/images/no-image.png">
+                  <% } %>
+                </div>
+              </td>
+
+              <td>
+                <div class="device-info">
+                  <strong><%= r.DeviceName %></strong>
+                  <div class="meta">
+                    <%= r.BrandName || "-" %> · <%= r.ModelName || "-" %>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="borrow-code-cell"><%= r.BorrowCode %></span>
+              </td>
+
+              <td><span class="date-cell"><%= r.BorrowDate %></span></td>
+              <td><span class="date-cell"><%= r.DueDate %></span></td>
+
+              <td>
+                <span class="status status-<%= r.BorrowStatusID %>">
+                  <%= r.StatusName %>
+                </span>
+              </td>
+
+              <td>
+                <button
+                  class="icon-action view btn-detail"
+                  data-code="<%= r.BorrowCode %>"
+                  title="ดูรายละเอียด">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+
+              <td>
+                <div class="action-box">
+                  <% if (r.BorrowStatusID == 1) { %>
+                    <button class="btn-cancel-request"
+                      data-id="<%= r.BorrowID %>"
+                      title="ยกเลิก">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  <% } %>
+
+                  <% if (r.BorrowStatusID == 2) { %>
+                    <form action="/user/borrow/acknowledge/<%= r.BorrowID %>" method="POST" style="display:inline;">
+                      <button class="btn-confirm">
+                        <i class="fa-solid fa-check"></i> รับทราบ
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
 
-      <div class="modal-body detail-layout" id="detailContent">
-      
+    <!-- DETAIL MODAL -->
+    <div class="overlay" id="detailOverlay">
+      <div class="detail-modal">
+        <div class="modal-header">
+          <h2>รายละเอียดการยืม</h2>
+          <span class="close-modal" id="closeDetail">&times;</span>
+        </div>
+        <div class="modal-body detail-layout" id="detailContent"></div>
+      </div>
     </div>
 
-  </div>
-</div>
-
-<div id="cancelModal" class="delete-modal">
-  <div class="modal-box">
-
-    <div class="check-wrapper danger">
-      <svg class="warningmark" viewBox="0 0 52 52">
-        <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
-        <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
-        <circle class="warning-dot" cx="26" cy="36" r="2"/>
-      </svg>
+    <!-- CANCEL MODAL -->
+    <div id="cancelModal" class="delete-modal">
+      <div class="modal-box">
+        <div class="check-wrapper danger">
+          <svg class="warningmark" viewBox="0 0 52 52">
+            <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
+            <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
+            <circle class="warning-dot" cx="26" cy="36" r="2"/>
+          </svg>
+        </div>
+        <h3>ยืนยันการยกเลิก</h3>
+        <p>คุณต้องการยกเลิกคำขอนี้ใช่หรือไม่?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel-modal">ปิด</button>
+          <button id="confirmCancelBtn" class="btn-danger">ยืนยัน</button>
+        </div>
+      </div>
     </div>
 
-    <h3>ยืนยันการยกเลิก</h3>
-    <p>คุณต้องการยกเลิกคำขอนี้ใช่หรือไม่ ?</p>
+  <% } %>
 
-    <div class="modal-actions">
-      <button class="btn-cancel-modal">ยกเลิก</button>
-      <button id="confirmCancelBtn" class="btn-danger">ยืนยัน</button>
-    </div>
-  </div>
-</div>
-
-<% } %>
+</main>

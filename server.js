@@ -10,18 +10,105 @@ const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
 const adminRoute = require("./routes/admin.route");
 
-
 const app = express();
-const expressLayouts = require('express-ejs-layouts');
+const expressLayouts = require("express-ejs-layouts");
 
-app.use(express.static("public"));
+const cron = require('node-cron');
+const { sendEmail,emailNearDue, emailOverdue } = require('./config/mail');
+
+
 
 app.use(expressLayouts);
+app.set("layout", false);
 
-app.set('layout', false); 
+/* ===============================
+   🔔 CREATE NOTIFICATION
+================================ */
+async function createNotification({
+  receiverId,
+  type,
+  title,
+  message,
+  refId = null,
+  link = null
+}) {
+  try {
+    await db.query(`
+      INSERT INTO TB_T_Notification 
+      (ReceiverID, NotiType, Title, Message, RefID, Link, IsRead, IsDeleted, CreatedDate)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW())
+    `, [receiverId, type, title, message, refId, link]);
 
-app.use("/uploads", express.static("public/uploads"));
+  } catch (err) {
+    console.error("Notification error:", err);
+  }
+}
 
+// ทุกวัน 08:00
+cron.schedule('0 8 * * *', async () => {
+  try {
+    // ── ใกล้ครบกำหนด (0-3 วัน) ──
+    const [nearDues] = await db.query(`
+      SELECT bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS name, e.email,
+        d.DeviceName, da.AssetTag, da.ITCode,
+        DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+        DATEDIFF(bt.DueDate, CURDATE()) AS remainDays
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      WHERE bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+        AND e.email IS NOT NULL
+    `);
+
+    for (const r of nearDues) {
+      await Promise.all(
+        nearDues.map(r =>
+          sendEmail({
+            to: r.email,
+            subject: `แจ้งเตือน: อุปกรณ์ใกล้ครบกำหนดคืน ${r.BorrowCode}`,
+            html: emailNearDue(r)
+          })
+        )
+      );
+    }
+
+    // ── เกินกำหนด ──
+    const [overdues] = await db.query(`
+      SELECT bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS name, e.email,
+        d.DeviceName, da.AssetTag, da.ITCode,
+        DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+        DATEDIFF(CURDATE(), bt.DueDate) AS overdueDays
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      WHERE bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate < CURDATE()
+        AND e.email IS NOT NULL
+    `);
+
+    for (const r of overdues) {
+      await Promise.all(
+        overdues.map(r =>
+          sendEmail({
+            to: r.email,
+            subject: `⚠ แจ้งเตือน: อุปกรณ์เกินกำหนดคืน ${r.BorrowCode}`,
+            html: emailOverdue(r)
+          })
+        )
+      );
+    }
+
+  } catch (err) {
+    console.error('CRON EMAIL ERROR:', err);
+  }
+});
 /* ===============================
    SECURITY
 ================================ */
@@ -34,11 +121,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 /* ===============================
-   STATIC FILES
+   STATIC
 ================================ */
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static("uploads"));
-app.use('/uploads/asset', express.static('uploads/asset'));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 /* ===============================
    VIEW ENGINE

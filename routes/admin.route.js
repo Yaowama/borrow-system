@@ -2,14 +2,16 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const ExcelJS = require("exceljs");
-const { isLogin } = require("../middleware/auth");
+const { isLogin, check2FAWarning } = require("../middleware/auth");
 const bcrypt = require("bcrypt");
+const { sendEmail,emailApproved, emailRejected ,emailReturned  } = require('../config/mail');
 const uploadProfile = require("../middleware/uploadProfile");
 const uploadDevice = require("../middleware/uploadDevice");
 const uploadAsset = require("../middleware/uploadAsset");
 const controller = require("../controllers/admin.controller");
 const multer = require('multer');
 const path = require('path');
+
 
 // multer config
 const storage = multer.diskStorage({
@@ -35,10 +37,186 @@ function isAdmin(req, res, next) {
   next();
 }
 
+// ============================
+// 🔔 NOTIFICATION API
+// ============================
+router.get("/notifications", async (req, res) => {
+  try {
+    const empId = req.session.user?.EMPID;
+    const notifications = [];
+
+    // ---- 1. รออนุมัติ ----
+    const [pending] = await db.query(`
+      SELECT 
+        bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS name,
+        DATE_FORMAT(bt.BorrowDate,'%d/%m/%Y %H:%i') AS BorrowDate,
+        bt.BorrowDate AS rawTime
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      WHERE bt.BorrowStatusID = 1
+      ORDER BY bt.BorrowDate DESC
+      LIMIT 10
+    `);
+    pending.forEach(r => notifications.push({
+      notiKey: `pending-${r.BorrowID}`,
+      rawTime: new Date(r.rawTime),
+      type: "pending",
+      icon: "clock",
+      color: "#f59e0b",
+      title: "รออนุมัติ",
+      desc: `${r.name} • ${r.BorrowCode}`,
+      time: r.BorrowDate,
+      url: "/admin/borrow?status=1"
+    }));
+
+    // ---- 2. เกินกำหนด ----
+    const [overdue] = await db.query(`
+      SELECT 
+        bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS name,
+        DATEDIFF(CURDATE(), bt.DueDate) AS days,
+        DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+        bt.DueDate AS rawTime
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      WHERE bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate < CURDATE()
+      ORDER BY days DESC
+      LIMIT 10
+    `);
+    overdue.forEach(r => notifications.push({
+      notiKey: `overdue-${r.BorrowID}`,
+      rawTime: new Date(r.rawTime),
+      type: "overdue",
+      icon: "triangle-exclamation",
+      color: "#ef4444",
+      title: `เกินกำหนด ${r.days} วัน`,
+      desc: `${r.name} • ${r.BorrowCode}`,
+      time: `ครบ ${r.DueDate}`,
+      url: "/admin/borrow?status=6"
+    }));
+
+    // ---- 3. ใกล้ครบกำหนด ----
+      const [nearDue] = await db.query(`
+        SELECT 
+          bt.BorrowID, bt.BorrowCode,
+          CONCAT(e.fname,' ',e.lname) AS name,
+          DATEDIFF(bt.DueDate, CURDATE()) AS remain,
+          DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+          bt.BorrowDate AS rawTime      
+        FROM TB_T_BorrowTransaction bt
+        JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+        WHERE bt.BorrowStatusID = 6
+          AND bt.ReturnDate IS NULL
+          AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+        ORDER BY bt.BorrowDate DESC
+        LIMIT 10
+      `);
+      nearDue.forEach(r => notifications.push({
+        notiKey: `neardue-${r.BorrowID}`,
+        rawTime: new Date(r.rawTime),   
+        icon: "bell",
+        color: "#f97316",
+        title: `ใกล้ครบกำหนด ${r.remain} วัน`,
+        desc: `${r.name} • ${r.BorrowCode}`,
+        time: `ครบ ${r.DueDate}`,
+        url: "/admin/borrow?status=6"
+      }));
+
+    // ---- 4. ปฏิเสธล่าสุด (7 วันย้อนหลัง) ----
+    const [recentRejected] = await db.query(`
+      SELECT
+        bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS borrowerName,
+        CONCAT(ea.fname,' ',ea.lname) AS rejectedBy,
+        DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS RejectDate,
+        bt.ApproveDate AS rawTime,
+        COALESCE(d.DeviceName, t.TypeName) AS DeviceName
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN TB_T_Employee ea ON bt.ApproveBy = ea.EMPID
+      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
+      WHERE bt.BorrowStatusID = 3
+        AND bt.ApproveDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      ORDER BY bt.ApproveDate DESC
+      LIMIT 5
+    `);
+    recentRejected.forEach(r => notifications.push({
+      notiKey: `rejected-${r.BorrowID}`,
+      rawTime: new Date(r.rawTime),
+      type: "rejected",
+      icon: "xmark",
+      color: "#ef4444",
+      title: `ปฏิเสธแล้ว`,
+      desc: `${r.borrowerName} • ${r.BorrowCode}${r.rejectedBy ? ' — โดย ' + r.rejectedBy : ''}`,
+      time: r.RejectDate,
+      url: "/admin/borrow?status=3"
+    }));
+      
+
+    notifications.sort((a, b) => b.rawTime - a.rawTime);
+
+    let readKeys = new Set();
+    if (empId) {
+      const [reads] = await db.query(
+        "SELECT NotiKey FROM TB_T_NotificationRead WHERE EMPID = ?",
+        [empId]
+      );
+      reads.forEach(r => readKeys.add(r.NotiKey));
+    }
+
+    // ---- ใส่ isRead flag ----
+    const items = notifications.map(n => ({
+      ...n,
+      rawTime: undefined,   // ไม่ส่ง rawTime ออก
+      isRead: readKeys.has(n.notiKey)
+    }));
+
+    const unreadCount = items.filter(i => !i.isRead).length;
+
+    res.json({ count: unreadCount, items });
+
+  } catch (err) {
+    console.error("NOTI ERROR:", err);
+    res.json({ count: 0, items: [] });
+  }
+});
+
+
+router.post("/notifications/mark-read", async (req, res) => {
+  try {
+    const empId = req.session.user?.EMPID;
+    if (!empId) return res.json({ ok: false });
+
+    const { keys } = req.body; // array of notiKey strings
+    if (!Array.isArray(keys) || !keys.length) return res.json({ ok: true });
+
+    const values = keys.map(k => [empId, k]);
+    await db.query(
+      "INSERT IGNORE INTO TB_T_NotificationRead (EMPID, NotiKey) VALUES ?",
+      [values]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("MARK READ ERROR:", err);
+    res.json({ ok: false });
+  }
+});
 
 /* ===============================
    DASHBOARD
 ================================ */
+router.use(isAdmin, check2FAWarning);
+
+router.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
+
 router.get("/", isAdmin, async (req, res) => {
 
   const [[deviceTotal]] = await db.query(`
@@ -111,7 +289,8 @@ router.get("/", isAdmin, async (req, res) => {
     e.fname,
     e.lname,
 
-    da.AssetCode,
+    da.ITCode,
+    da.AssetTag,
     m.ModelName
 
   FROM TB_T_BorrowTransaction bt
@@ -138,7 +317,6 @@ router.get("/", isAdmin, async (req, res) => {
   res.render("admin/layout", {
     page: "admin",
     active: "dashboard",
-
     deviceTotal,
     availableDevice,
     pending,
@@ -152,6 +330,7 @@ router.get("/", isAdmin, async (req, res) => {
     devicePercent
   });
 });
+
 
 router.get("/dashboard-data", async (req, res) => {
   try {
@@ -189,6 +368,156 @@ router.get("/dashboard-data", async (req, res) => {
       error: "dashboard error"
     });
 
+  }
+});
+
+// ── NEW: dashboard monthly borrow trend (12 เดือนย้อนหลัง) ──
+router.get("/dashboard/monthly", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        DATE_FORMAT(BorrowDate, '%Y-%m') AS month,
+        COUNT(*) AS total,
+        SUM(CASE WHEN BorrowStatusID IN (2,6,4) THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN BorrowStatusID = 3 THEN 1 ELSE 0 END) AS rejected,
+        SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned
+      FROM TB_T_BorrowTransaction
+      WHERE BorrowDate >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(BorrowDate, '%Y-%m')
+      ORDER BY month ASC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("MONTHLY API ERROR:", err);
+    res.status(500).json({ error: "monthly error" });
+  }
+});
+
+// ── NEW: top borrowed device types ──
+router.get("/dashboard/top-devices", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        COALESCE(d.DeviceName, t.TypeName) AS name,
+        COUNT(*) AS count,
+        COALESCE(d.DeviceImage, t.TypeImage) AS image,
+        CASE WHEN d.DeviceImage IS NOT NULL THEN 'device'
+             WHEN t.TypeImage IS NOT NULL THEN 'type'
+             ELSE NULL END AS imageFolder
+      FROM TB_T_BorrowTransaction bt
+      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
+      WHERE bt.BorrowStatusID IN (2,6,4,3)
+        AND COALESCE(d.DeviceName, t.TypeName) IS NOT NULL
+      GROUP BY COALESCE(d.DeviceName, t.TypeName), d.DeviceImage, t.TypeImage
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("TOP DEVICES API ERROR:", err);
+    res.status(500).json({ error: "top devices error" });
+  }
+});
+
+// ── NEW: top borrowers ──
+router.get("/dashboard/top-borrowers", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        e.fname, e.lname, e.EMP_NUM,
+        COUNT(*) AS total,
+        SUM(CASE WHEN bt.BorrowStatusID = 6 AND bt.ReturnDate IS NULL AND bt.DueDate < CURDATE() THEN 1 ELSE 0 END) AS overdue
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      GROUP BY bt.EMPID, e.fname, e.lname, e.EMP_NUM
+      ORDER BY total DESC
+      LIMIT 5
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("TOP BORROWERS API ERROR:", err);
+    res.status(500).json({ error: "top borrowers error" });
+  }
+});
+
+// ── NEW: recent activity feed ──
+router.get("/dashboard/activity", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        bt.BorrowCode,
+        bt.BorrowStatusID,
+        bt.BorrowDate,
+        bt.ApproveDate,
+        bt.ReturnDate,
+        CONCAT(e.fname,' ',e.lname) AS borrowerName,
+        COALESCE(d.DeviceName, t.TypeName) AS deviceName,
+        CONCAT(a.fname,' ',a.lname) AS actionBy,
+        CASE
+          WHEN bt.ReturnDate IS NOT NULL THEN bt.ReturnDate
+          WHEN bt.ApproveDate IS NOT NULL THEN bt.ApproveDate
+          ELSE bt.BorrowDate
+        END AS latestTime
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
+      LEFT JOIN TB_T_Employee a ON bt.ApproveBy = a.EMPID
+      ORDER BY latestTime DESC
+      LIMIT 10
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("ACTIVITY API ERROR:", err);
+    res.status(500).json({ error: "activity error" });
+  }
+});
+
+
+
+
+router.post("/dismiss-2fa-banner", isLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.EMPID;
+
+    await db.query(
+      `
+      UPDATE TB_T_Employee
+      SET two_fa_dismissed = NOW()
+      WHERE EMPID = ?
+      `,
+      [userId]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("DISMISS 2FA ERROR:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/dismiss-2fa-banner", isLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.EMPID;
+
+    await db.query(
+      `
+      UPDATE TB_T_Employee
+      SET two_fa_dismissed = NOW()
+      WHERE EMPID = ?
+      `,
+      [userId]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("DISMISS 2FA ERROR:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -421,6 +750,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
         email,
         phone,
         fax,
+        EMP_NUM,
         DepartmentID,
         InstitutionID,
         RoleID,
@@ -465,6 +795,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
           email=?,
           phone=?,
           fax=?,
+          EMP_NUM=?, 
           DepartmentID=?,
           InstitutionID=?,
           RoleID=?,
@@ -477,6 +808,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
         email,
         phone,
         fax,
+        EMP_NUM,
         DepartmentID,
         InstitutionID,
         RoleID,
@@ -513,7 +845,39 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
     }
 
 });
+router.get("/borrow/available/:borrowId", async (req, res) => {
+  const { borrowId } = req.params;
 
+  // ดึง TypeID จาก borrow โดยตรง
+  const [[borrow]] = await db.query(`
+    SELECT TypeID
+    FROM TB_T_BorrowTransaction
+    WHERE BorrowID = ?
+  `, [borrowId]);
+
+  if (!borrow) return res.json([]);
+
+  // ดึงเครื่องที่พร้อมใช้งานใน Type เดียวกัน
+  const [devices] = await db.query(`
+    SELECT
+      da.DVID,
+      da.ITCode,
+      da.AssetTag,
+      da.SerialNumber,
+      d.DeviceName,
+      b.BrandName,
+      m.ModelName
+    FROM TB_T_DeviceAdd da
+    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
+    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+    WHERE d.TypeID = ?
+      AND da.DVStatusID = 1
+    ORDER BY da.ITCode ASC
+  `, [borrow.TypeID]);
+
+  res.json(devices);
+});
 
 /* ===============================
    PROFILE
@@ -620,6 +984,27 @@ router.post(
   }
 );
 
+router.post("/toggle-2fa", isLogin, async (req, res) => {
+  const userId = req.session.user.EMPID;
+  const { enable } = req.body;
+
+  try {
+    await db.query(`
+      UPDATE TB_T_Employee 
+      SET two_fa_enabled = ?
+      WHERE EMPID = ?
+    `, [enable ? 1 : 0, userId]);
+
+    res.json({ 
+      success: true,
+      enabled: enable   
+    });
+  } catch (err) {
+    console.error("2FA TOGGLE ERROR:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 router.get("/change_password", (req, res) => {
   res.render("admin/layout", {
     page: "change_password",
@@ -707,10 +1092,18 @@ router.get("/device", async (req, res) => {
     GROUP BY d.DeviceID
   `);
 
+  // ✅ เพิ่มตรงนี้
+  const [types] = await db.query(`
+    SELECT TypeID, TypeName, TypeImage
+    FROM TB_M_Type
+    ORDER BY TypeName ASC
+  `);
+
   res.render("admin/layout", {
     page: "device",
     active: "device",
     models,
+    types, // ✅ ตอนนี้ใช้ได้แล้ว
     success: req.query.success || null,   
     error: req.query.error || null
   });
@@ -837,7 +1230,7 @@ router.get("/device/edit/:id", async (req, res) => {
     page: "device_edit",
     active: "device",
     device,
-    models,      // ✅ ตอนนี้มีจริงแล้ว
+    models,      
     categories,
     brands,
     types
@@ -956,12 +1349,208 @@ router.get("/device/item/:id/delete", async (req, res) => {
 });
 
 // ============================
-// เพิ่มเครื่องจริง (ASSET)
+// HELPER
+// ============================
+function normalize(val) {
+  if (!val || val.trim() === "-") return null;
+  return val.trim();
+}
+/* ===============================
+   DEVICE EXPORT EXCEL
+================================ */
+router.get("/device/export/excel", isAdmin, async (req, res) => {
+  try {
+    const { type, brand, status } = req.query;
+
+    let where = [];
+    let params = [];
+
+    if (type) {
+      where.push("t.TypeID = ?");
+      params.push(type);
+    }
+
+    if (brand) {
+      where.push("b.BrandID = ?");
+      params.push(brand);
+    }
+
+    if (status) {
+      where.push("da.DVStatusID = ?");
+      params.push(status);
+    }
+
+    const whereSQL = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    const [rows] = await db.query(`
+      SELECT
+        da.ITCode,
+        da.AssetTag,
+        da.SerialNumber,
+        d.DeviceName,
+        b.BrandName,
+        m.ModelName,
+        c.CategoryName,
+        t.TypeName,
+        s.StatusName,
+        DATE_FORMAT(da.CreatedDate, '%d/%m/%Y %H:%i') AS CreatedDate,
+        DATE_FORMAT(da.UpdatedDate, '%d/%m/%Y %H:%i') AS UpdatedDate,
+        e.username AS CreatedBy
+      FROM TB_T_DeviceAdd da
+      JOIN TB_T_Device d   ON da.DeviceID  = d.DeviceID
+      LEFT JOIN TB_M_Brand b    ON d.BrandID    = b.BrandID
+      LEFT JOIN TB_M_Model m    ON d.ModelID    = m.ModelID
+      LEFT JOIN TB_M_Category c ON d.CategoryID = c.CategoryID
+      LEFT JOIN TB_M_Type t     ON d.TypeID     = t.TypeID
+      JOIN TB_M_DeviceStatus s  ON da.DVStatusID = s.DVStatusID
+      LEFT JOIN TB_T_Employee e ON da.CreatedBy  = e.EMPID
+      ${whereSQL}
+      ORDER BY t.TypeName, d.DeviceName, da.ITCode
+    `, params);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("คลังอุปกรณ์");
+
+    // ---- Header style ----
+    const headerFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FF1E3A5F" }
+    };
+    const headerFont  = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    const centerAlign = { horizontal: "center", vertical: "middle" };
+    const borderStyle = {
+      top:    { style: "thin", color: { argb: "FFCCCCCC" } },
+      left:   { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right:  { style: "thin", color: { argb: "FFCCCCCC" } }
+    };
+
+    // ---- Title row ----
+    sheet.mergeCells("A1:L1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "รายงานคลังอุปกรณ์";
+    titleCell.font  = { bold: true, size: 14, color: { argb: "FF1E3A5F" } };
+    titleCell.alignment = centerAlign;
+    sheet.getRow(1).height = 28;
+
+    // ---- Sub-title (filter info) ----
+    sheet.mergeCells("A2:L2");
+    const now = new Date();
+    const exportDate = `${now.getDate().toString().padStart(2,"0")}/${(now.getMonth()+1).toString().padStart(2,"0")}/${now.getFullYear()}  ${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}`;
+    sheet.getCell("A2").value = `ส่งออกเมื่อ: ${exportDate}  |  จำนวนทั้งหมด: ${rows.length} รายการ`;
+    sheet.getCell("A2").font  = { italic: true, size: 10, color: { argb: "FF666666" } };
+    sheet.getCell("A2").alignment = centerAlign;
+    sheet.getRow(2).height = 18;
+
+    // ---- Columns ----
+    sheet.columns = [
+      { key: "no",           width: 6  },
+      { key: "CategoryName", width: 14 },
+      { key: "TypeName",     width: 16 },
+      { key: "DeviceName",   width: 26 },
+      { key: "BrandName",    width: 16 },
+      { key: "ModelName",    width: 18 },
+      { key: "ITCode",       width: 16 },
+      { key: "AssetTag",     width: 18 },
+      { key: "SerialNumber", width: 20 },
+      { key: "StatusName",   width: 14 },
+      { key: "CreatedDate",  width: 18 },
+      { key: "CreatedBy",    width: 16 },
+    ];
+
+    // ---- Header row (row 3) ----
+    const headers = [
+      "No.", "หมวด", "ประเภท", "ชื่ออุปกรณ์",
+      "ยี่ห้อ", "รุ่น", "IT Code", "Asset Tag",
+      "Serial Number", "สถานะ", "วันที่เพิ่ม", "เพิ่มโดย"
+    ];
+
+    const headerRow = sheet.getRow(3);
+    headerRow.height = 22;
+    headers.forEach((h, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value     = h;
+      cell.font      = headerFont;
+      cell.fill      = headerFill;
+      cell.alignment = centerAlign;
+      cell.border    = borderStyle;
+    });
+
+    // ---- Status color map ----
+    const statusColor = {
+      "พร้อมใช้งาน": "FFD4EDDA",
+      "ถูกยืม":      "FFFFF3CD",
+      "ซ่อม":        "FFF8D7DA",
+      "ปิดใช้งาน":   "FFE2E3E5",
+    };
+
+    // ---- Data rows ----
+    rows.forEach((r, idx) => {
+      const row = sheet.addRow({
+        no:           idx + 1,
+        CategoryName: r.CategoryName || "-",
+        TypeName:     r.TypeName     || "-",
+        DeviceName:   r.DeviceName   || "-",
+        BrandName:    r.BrandName    || "-",
+        ModelName:    r.ModelName    || "-",
+        ITCode:       r.ITCode       || "-",
+        AssetTag:     r.AssetTag     || "-",
+        SerialNumber: r.SerialNumber || "-",
+        StatusName:   r.StatusName   || "-",
+        CreatedDate:  r.CreatedDate  || "-",
+        CreatedBy:    r.CreatedBy    || "-",
+      });
+
+      row.height = 20;
+
+      // สีแถวสลับ + สีสถานะ
+      const bgColor = statusColor[r.StatusName] || (idx % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA");
+
+      row.eachCell((cell, colNum) => {
+        cell.border    = borderStyle;
+        cell.alignment = { vertical: "middle", horizontal: colNum === 4 ? "left" : "center" };
+        // สีเฉพาะคอลัมน์สถานะ (col 10)
+        if (colNum === 10) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: statusColor[r.StatusName] || "FFFFFFFF" } };
+          cell.font = { bold: true };
+        } else {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: idx % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA" } };
+        }
+      });
+    });
+
+    // ---- Freeze pane ----
+    sheet.views = [{ state: "frozen", ySplit: 3 }];
+
+    // ---- Send ----
+    const filename = `Device_Export_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}.xlsx`;
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (err) {
+    console.error("DEVICE EXPORT ERROR:", err);
+    res.status(500).send("Export error");
+  }
+  
+});
+
+router.get("/api/brands", async (req, res) => {
+  const [brands] = await db.query(`
+    SELECT BrandID, BrandName FROM TB_M_Brand ORDER BY BrandName ASC
+  `);
+  res.json(brands);
+});
+// ============================
+// LIST
 // ============================
 router.get("/device/:modelId", async (req, res) => {
   const modelId = req.params.modelId;
 
-    const [devices] = await db.query(`
+  const [devices] = await db.query(`
     SELECT 
       da.DVID,
       da.DeviceID,
@@ -970,29 +1559,20 @@ router.get("/device/:modelId", async (req, res) => {
       DATE_FORMAT(da.UpdatedDate, '%d/%m/%Y %H:%i:%s') AS UpdatedDate,
       da.CreatedBy,
       da.SerialNumber,
-      da.AssetCode,
+      da.ITCode,
+      da.AssetTag,
       da.BarcodeImage,
       s.StatusName,
       e.username AS CreatedByName
-
     FROM TB_T_DeviceAdd da
-
-    JOIN TB_T_Device d
-      ON da.DeviceID = d.DeviceID
-
-    JOIN TB_M_DeviceStatus s 
-      ON da.DVStatusID = s.DVStatusID
-
-    LEFT JOIN TB_T_Employee e
-      ON da.CreatedBy = e.EMPID
-
+    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    JOIN TB_M_DeviceStatus s ON da.DVStatusID = s.DVStatusID
+    LEFT JOIN TB_T_Employee e ON da.CreatedBy = e.EMPID
     WHERE d.ModelID = ?
-
     ORDER BY da.CreatedDate DESC
   `, [modelId]);
 
-
-    res.render("admin/layout", {
+  res.render("admin/layout", {
     page: "device-list",
     active: "device",
     user: req.session.user,
@@ -1004,6 +1584,9 @@ router.get("/device/:modelId", async (req, res) => {
 });
 
 
+// ============================
+// ADD PAGE
+// ============================
 router.get("/device/:modelId/item/add", async (req, res) => {
   const modelId = req.params.modelId;
 
@@ -1011,8 +1594,6 @@ router.get("/device/:modelId/item/add", async (req, res) => {
     "SELECT * FROM TB_M_Model WHERE ModelID = ?",
     [modelId]
   );
-
-  if (!model) return res.redirect("/admin/device");
 
   const [status] = await db.query(
     "SELECT * FROM TB_M_DeviceStatus"
@@ -1026,35 +1607,53 @@ router.get("/device/:modelId/item/add", async (req, res) => {
 });
 
 
-
-router.post(
-  "/device/:modelId/item/add",
+// ============================
+// ADD
+// ============================
+router.post("/device/:modelId/item/add",
   uploadAsset.single("AssetImage"),
   async (req, res) => {
 
     const modelId = req.params.modelId;
-    const { SerialNumber, AssetCode, DVStatusID } = req.body;
 
-    // 🔹 หา DeviceID
+    let { SerialNumber, AssetTag, DVStatusID, ITCode } = req.body;
+
+    SerialNumber = normalize(SerialNumber);
+    AssetTag = normalize(AssetTag);
+    ITCode = normalize(ITCode);
+
     const [[device]] = await db.query(
       "SELECT DeviceID FROM TB_T_Device WHERE ModelID = ?",
       [modelId]
     );
 
-    if (!device) return res.redirect("/admin/device");
-
-    // 🔹 เช็ค Serial ซ้ำ
-    const [dup] = await db.query(
-      "SELECT 1 FROM TB_T_DeviceAdd WHERE SerialNumber = ?",
-      [SerialNumber]
-    );
+    // 🔥 เช็คซ้ำ (3 field)
+    const [dup] = await db.query(`
+      SELECT 1 FROM TB_T_DeviceAdd
+      WHERE 
+        (
+          (SerialNumber = ? AND ? IS NOT NULL)
+          OR
+          (ITCode = ? AND ? IS NOT NULL)
+          OR
+          (AssetTag = ? AND ? IS NOT NULL)
+        )
+    `, [
+      SerialNumber, SerialNumber,
+      ITCode, ITCode,
+      AssetTag, AssetTag
+    ]);
 
     if (dup.length > 0) {
+
       const [[model]] = await db.query(
         "SELECT * FROM TB_M_Model WHERE ModelID = ?",
         [modelId]
       );
-      const [status] = await db.query("SELECT * FROM TB_M_DeviceStatus");
+
+      const [status] = await db.query(
+        "SELECT * FROM TB_M_DeviceStatus"
+      );
 
       return res.render("admin/layout", {
         page: "device-listadd",
@@ -1063,112 +1662,236 @@ router.post(
           modelId,
           model,
           status,
-          error: "Serial Number นี้มีอยู่แล้ว"
+          error: "Serial / IT Code / AssetTag ซ้ำ ❌"
         }
       });
     }
 
     const imagePath = req.file ? req.file.filename : null;
 
-    await db.query(
-    `INSERT INTO TB_T_DeviceAdd
-    (DeviceID, SerialNumber, AssetCode, DVStatusID, BarcodeImage, CreatedBy, CreatedDate)
-    VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-    [
+    await db.query(`
+      INSERT INTO TB_T_DeviceAdd
+      (DeviceID, SerialNumber, AssetTag, ITCode, DVStatusID, BarcodeImage, CreatedBy, CreatedDate)
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [
       device.DeviceID,
       SerialNumber,
-      AssetCode,
+      AssetTag,
+      ITCode,
       DVStatusID,
       imagePath,
       req.session.user.EMPID
-    ]
-  );
+    ]);
 
     res.redirect(`/admin/device/${modelId}?success=add`);
-
   }
 );
 
+
 // ============================
-// แก้ไขเครื่องอุปกรณ์ (EDIT)
+// EDIT PAGE
 // ============================
 router.get("/device/item/:id/edit", async (req, res) => {
   const id = req.params.id;
 
- const [[device]] = await db.query(`
-  SELECT
-    da.*,
-    d.ModelID,
-    s.StatusName
-  FROM TB_T_DeviceAdd da
-  JOIN TB_T_Device d
-    ON da.DeviceID = d.DeviceID
-  JOIN TB_M_DeviceStatus s
-    ON da.DVStatusID = s.DVStatusID
-  WHERE da.DVID = ?
-`, [id]);
+  const [[device]] = await db.query(`
+    SELECT da.*, d.ModelID
+    FROM TB_T_DeviceAdd da
+    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    WHERE da.DVID = ?
+  `, [id]);
 
-  if (!device) {
-    return res.redirect("/admin/device");
-  }
+  const [[model]] = await db.query(
+    "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+    [device.ModelID]
+  );
 
-  const [statusList] = await db.query(`
-    SELECT * FROM TB_M_DeviceStatus
-  `);
+  const [statusList] = await db.query(
+    "SELECT * FROM TB_M_DeviceStatus"
+  );
 
   res.render("admin/layout", {
     page: "device_listedit",
     active: "device",
     locals: {
       device,
+      model,
       statusList
     }
   });
 });
 
+
+// ============================
+// EDIT
+// ============================
 router.post("/device/item/:id/edit",
   uploadAsset.single("AssetImage"),
   async (req, res) => {
 
-    const id = req.params.id;
-    const { SerialNumber, AssetCode, DVStatusID } = req.body;
+    try {
 
-    let sql = `
-      UPDATE TB_T_DeviceAdd
-      SET
-        SerialNumber = ?,
-        AssetCode = ?,
-        DVStatusID = ?,
-        UpdatedDate = NOW()
-    `;
+      const id = req.params.id;
 
-    const params = [SerialNumber, AssetCode, DVStatusID];
+      let { SerialNumber, AssetTag, DVStatusID, ITCode } = req.body;
 
-    // ✅ ถ้ามีอัปโหลดรูปใหม่
-    if (req.file) {
-      sql += `, BarcodeImage = ?`;
-      params.push(req.file.filename);
+      SerialNumber = normalize(SerialNumber);
+      AssetTag = normalize(AssetTag);
+      ITCode = normalize(ITCode);
+
+      // 🔥 เช็คซ้ำ (กันชนตัวเอง)
+      const [dup] = await db.query(`
+        SELECT 1 FROM TB_T_DeviceAdd
+        WHERE 
+          (
+            (SerialNumber = ? AND ? IS NOT NULL)
+            OR
+            (ITCode = ? AND ? IS NOT NULL)
+            OR
+            (AssetTag = ? AND ? IS NOT NULL)
+          )
+          AND DVID != ?
+      `, [
+        SerialNumber, SerialNumber,
+        ITCode, ITCode,
+        AssetTag, AssetTag,
+        id
+      ]);
+
+      if (dup.length > 0) {
+
+        const [[device]] = await db.query(`
+          SELECT da.*, d.ModelID
+          FROM TB_T_DeviceAdd da
+          JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+          WHERE da.DVID = ?
+        `, [id]);
+
+        const [[model]] = await db.query(
+          "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+          [device.ModelID]
+        );
+
+        const [statusList] = await db.query(
+          "SELECT * FROM TB_M_DeviceStatus"
+        );
+
+        return res.render("admin/layout", {
+          page: "device_listedit",
+          active: "device",
+          locals: {
+            device,
+            model,
+            statusList,
+            error: "Serial / IT Code / AssetTag ซ้ำ ❌"
+          }
+        });
+      }
+
+      // ✅ UPDATE
+      let sql = `
+        UPDATE TB_T_DeviceAdd
+        SET
+          SerialNumber = ?,
+          AssetTag = ?,
+          ITCode = ?,
+          DVStatusID = ?,
+          UpdatedDate = NOW()
+      `;
+
+      const params = [SerialNumber, AssetTag, ITCode, DVStatusID];
+
+      if (req.file) {
+        sql += `, BarcodeImage = ?`;
+        params.push(req.file.filename);
+      }
+
+      sql += ` WHERE DVID = ?`;
+      params.push(id);
+
+      await db.query(sql, params);
+
+      const [[row]] = await db.query(
+        "SELECT DeviceID FROM TB_T_DeviceAdd WHERE DVID = ?",
+        [id]
+      );
+
+      const [[device]] = await db.query(
+        "SELECT ModelID FROM TB_T_Device WHERE DeviceID = ?",
+        [row.DeviceID]
+      );
+
+      res.redirect(`/admin/device/${device.ModelID}?success=edit`);
+
+    } catch (err) {
+
+      console.error(err);
+
+      if (err.code === "ER_DUP_ENTRY") {
+
+        const id = req.params.id;
+
+        const [[device]] = await db.query(`
+          SELECT da.*, d.ModelID
+          FROM TB_T_DeviceAdd da
+          JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+          WHERE da.DVID = ?
+        `, [id]);
+
+        const [[model]] = await db.query(
+          "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+          [device.ModelID]
+        );
+
+        const [statusList] = await db.query(
+          "SELECT * FROM TB_M_DeviceStatus"
+        );
+
+        return res.render("admin/layout", {
+          page: "device_listedit",
+          active: "device",
+          locals: {
+            device,
+            model,
+            statusList,
+            error: "ข้อมูลซ้ำในระบบ ❌"
+          }
+        });
+      }
+
+      res.redirect("/admin/device");
     }
-
-    sql += ` WHERE DVID = ?`;
-    params.push(id);
-
-    await db.query(sql, params);
-
-    // หา ModelID เพื่อ redirect กลับ
-    const [[row]] = await db.query(
-      "SELECT DeviceID FROM TB_T_DeviceAdd WHERE DVID = ?",
-      [id]
-    );
-
-    const [[device]] = await db.query(
-      "SELECT ModelID FROM TB_T_Device WHERE DeviceID = ?",
-      [row.DeviceID]
-    );
-
-    res.redirect(`/admin/device/${device.ModelID}?success=edit`);
   }
 );
+
+router.get("/api/types", async (req, res) => {
+  const [types] = await db.query(`
+    SELECT TypeID, TypeName, TypeImage
+    FROM TB_M_Type
+    ORDER BY TypeName ASC
+  `);
+
+  res.json(types);
+});
+
+router.get("/api/devices/type/:typeId", async (req, res) => {
+  const typeId = req.params.typeId;
+
+  const [devices] = await db.query(`
+    SELECT 
+      d.DeviceID,
+      d.DeviceName,
+      d.DeviceImage,
+      m.ModelName,
+      b.BrandName
+    FROM TB_T_Device d
+    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
+    WHERE d.TypeID = ?
+  `, [typeId]);
+
+  res.json(devices);
+});
 
 router.get("/borrow", async (req, res) => {
 
@@ -1192,16 +1915,19 @@ router.get("/borrow", async (req, res) => {
       bt.BorrowCode,
       bt.BorrowStatusID,
       bt.EMPID, 
-      DATE_FORMAT(bt.BorrowDate, '%d/%m/%Y %H:%i:%s') AS BorrowDate,
+      DATE_FORMAT(bt.BorrowDate, '%d/%m/%Y') AS BorrowDate,
       bt.DueDate AS DueDateRaw,
       DATE_FORMAT(bt.DueDate, '%d/%m/%Y') AS DueDate,
 
       e.fname,
       e.lname,
-      
+      t.TypeID,
+      t.TypeImage,
+      t.TypeName,
       d.DeviceImage,
       d.DeviceName,
-      da.AssetCode,
+      da.ITCode,
+      da.AssetTag,
       da.DVID,
       da.DVStatusID,
 
@@ -1227,8 +1953,9 @@ router.get("/borrow", async (req, res) => {
 
     FROM TB_T_BorrowTransaction bt
     JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-    JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+    LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
     JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
     LEFT JOIN TB_T_Employee a ON bt.ApproveBy = a.EMPID
     LEFT JOIN TB_T_Repair r
@@ -1301,7 +2028,8 @@ router.get("/borrow/detail/data/:code", async (req, res) => {
       e.fname,
       e.lname,
 
-      da.AssetCode,
+      da.ITCode,
+      da.AssetTag,
       da.SerialNumber,
       da.BarcodeImage,
 
@@ -1373,20 +2101,57 @@ router.get("/borrow/detail/data/:code", async (req, res) => {
 router.post("/borrow/approve/:id", async (req, res) => {
   const borrowId = req.params.id;
   const adminId = req.session.user.EMPID;
+  const { DVID } = req.body;
 
   try {
-
-    // เปลี่ยนเป็น "อนุมัติแล้ว" (2)
     await db.query(`
       UPDATE TB_T_BorrowTransaction
-      SET 
-        BorrowStatusID = 2,
-        ApproveBy = ?,
-        ApproveDate = NOW()
+      SET BorrowStatusID = 2, DVID = ?, ApproveBy = ?, ApproveDate = NOW()
       WHERE BorrowID = ?
-    `, [adminId, borrowId]);
+    `, [DVID, adminId, borrowId]);
+
+    await db.query(`
+      UPDATE TB_T_DeviceAdd SET DVStatusID = 2 WHERE DVID = ?
+    `, [DVID]);
+
+    const [[borrower]] = await db.query(`
+      SELECT 
+        e.email, e.fname, e.lname,
+        bt.BorrowCode, bt.DueDate,
+        d.DeviceName, da.AssetTag, da.ITCode,
+        ea.fname AS approverFname,
+        ea.lname AS approverLname
+      FROM TB_T_BorrowTransaction bt
+      JOIN TB_T_Employee e  ON bt.EMPID     = e.EMPID
+      JOIN TB_T_DeviceAdd da ON da.DVID     = ?
+      JOIN TB_T_Device d     ON da.DeviceID = d.DeviceID
+      JOIN TB_T_Employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อ admin จาก DB ตรงๆ
+      WHERE bt.BorrowID = ?
+    `, [DVID, borrowId]);
 
     res.redirect("/admin/borrow?success=approve");
+
+    (async () => {
+      try {
+        if (borrower?.email) {
+          await sendEmail({
+            to: borrower.email,
+            subject: 'คำขอยืมอุปกรณ์ได้รับการอนุมัติ',
+            html: emailApproved({
+              borrowCode: borrower.BorrowCode,
+              name: `${borrower.fname} ${borrower.lname}`,
+              deviceName: borrower.DeviceName,
+              assetTag: borrower.AssetTag,
+              itCode: borrower.ITCode,
+              dueDate: new Date(borrower.DueDate).toLocaleDateString('th-TH'),
+              approveBy: `${borrower.approverFname} ${borrower.approverLname}`, // ✅ แก้ตรงนี้
+            })
+          });
+        }
+      } catch (e) {
+        console.error("EMAIL ERROR:", e.message);
+      }
+    })();
 
   } catch (err) {
     console.error("APPROVE ERROR:", err);
@@ -1429,7 +2194,47 @@ router.post("/borrow/return/:id", async (req, res) => {
       WHERE DVID = ?
     `, [borrow.DVID]);
 
+    // ✅ ดึงข้อมูลก่อน redirect
+    const [[borrower]] = await db.query(`
+    SELECT 
+      e.email, e.fname, e.lname, 
+      bt.BorrowCode, d.DeviceName,
+      ea.fname AS returnFname,
+      ea.lname AS returnLname
+    FROM TB_T_BorrowTransaction bt
+    JOIN TB_T_Employee e  ON bt.EMPID    = e.EMPID
+    JOIN TB_T_DeviceAdd da ON bt.DVID   = da.DVID
+    JOIN TB_T_Device d     ON da.DeviceID = d.DeviceID
+    JOIN TB_T_Employee ea  ON bt.ReturnBy = ea.EMPID   -- ✅ ดึงชื่อคนรับคืน
+    WHERE bt.BorrowID = ?
+  `, [borrowId]);
+
+    // 🚀 redirect ก่อน (เร็วทันที)
     res.redirect("/admin/borrow?success=return");
+
+    // 📧 ส่ง email แบบ async
+    (async () => {
+      try {
+        if (borrower?.email) {
+          await sendEmail({
+            to: borrower.email,
+            subject: 'การคืนอุปกรณ์เรียบร้อยแล้ว',
+            html: emailReturned({
+              borrowCode: borrower.BorrowCode,
+              name: `${borrower.fname} ${borrower.lname}`,
+              deviceName: borrower.DeviceName,
+              returnDate: new Date().toLocaleString('th-TH', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+              }),
+              returnBy: `${borrower.returnFname} ${borrower.returnLname}`,
+            })
+          });
+        }
+      } catch (e) {
+        console.error("EMAIL ERROR:", e.message);
+      }
+    })();
 
   } catch (err) {
     console.error("RETURN ERROR:", err);
@@ -1474,17 +2279,56 @@ router.post("/borrow/reject/:id", async (req, res) => {
       WHERE BorrowID = ?
     `, [remark, adminId, borrowId]);
 
-    // 2️⃣ 🔥 ตั้งค่าอุปกรณ์กลับเป็น "พร้อมใช้งาน"
-    await db.query(`
-      UPDATE TB_T_DeviceAdd
-      SET
-        DVStatusID = 1,
-        UpdatedDate = NOW()
-      WHERE DVID = ?
-    `, [borrow.DVID]);
+    // 2️⃣ 🔥 ตั้งค่าอุปกรณ์กลับเป็น "พร้อมใช้งาน" (ถ้ามี DVID)
+    if (borrow.DVID) {
+      await db.query(`
+        UPDATE TB_T_DeviceAdd
+        SET
+          DVStatusID = 1,
+          UpdatedDate = NOW()
+        WHERE DVID = ?
+      `, [borrow.DVID]);
+    }
 
-    res.redirect("/admin/borrow?success=reject");
+      res.redirect("/admin/borrow?success=reject");
 
+      // 📧 ยิง async แยก
+      (async () => {
+        try {
+          const [[borrower]] = await db.query(`
+            SELECT
+              e.email, e.fname, e.lname,
+              bt.BorrowCode,
+              COALESCE(d.DeviceName, t.TypeName) AS DeviceName,
+              ea.fname AS rejectFname,
+              ea.lname AS rejectLname
+            FROM TB_T_BorrowTransaction bt
+            JOIN TB_T_Employee e   ON bt.EMPID    = e.EMPID
+            LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
+            LEFT JOIN TB_T_Device d    ON da.DeviceID = d.DeviceID
+            LEFT JOIN TB_M_Type t      ON bt.TypeID   = t.TypeID
+            JOIN TB_T_Employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อคนปฏิเสธ
+            WHERE bt.BorrowID = ?
+          `, [borrowId]);
+
+          if (borrower?.email) {
+            await sendEmail({
+              to: borrower.email,
+              subject: 'คำขอยืมอุปกรณ์ถูกปฏิเสธ',
+              html: emailRejected({
+                borrowCode: borrower.BorrowCode,
+                name: `${borrower.fname} ${borrower.lname}`,
+                deviceName: borrower.DeviceName || '-',
+                rejectBy: `${borrower.rejectFname} ${borrower.rejectLname}`,
+                rejectDate: new Date().toLocaleString('th-TH'),
+                remark,
+              })
+            });
+          }
+        } catch (e) {
+          console.error("EMAIL ERROR:", e.message);
+        }
+      })();
   } catch (err) {
     console.error("REJECT ERROR:", err);
     res.redirect("/admin/borrow?error=reject");
@@ -1554,7 +2398,8 @@ if (status === undefined) {
       r.RepairStatusID,
       DATE_FORMAT(r.CreateDate,'%d/%m/%Y %H:%i:%s') AS CreateDate,
 
-      da.AssetCode,
+      da.ITCode,
+      da.AssetTag,
       d.DeviceName,
       d.DeviceImage,
 
@@ -1661,7 +2506,8 @@ router.get("/repair/:dvid", async (req, res) => {
     const [[device]] = await db.query(`
       SELECT
         da.DVID,
-        da.AssetCode,
+        da.ITCode,
+        da.AssetTag,
         da.SerialNumber,
         da.DVStatusID,
 
@@ -1704,7 +2550,8 @@ router.get("/repair/detail/:id", async (req, res) => {
 
       d.DeviceName,
       d.DeviceImage,
-      da.AssetCode,
+      da.ITCode,
+      da.AssetTag,
       da.SerialNumber,
 
       s.StatusName AS RepairStatusName,
@@ -1899,10 +2746,12 @@ router.get("/report", isAdmin, async (req, res) => {
 
         e.fname,
         e.lname,
+        da.ITCode,
         e.EMP_NUM,
         ins.InstitutionName,
         dep.DepartmentName,
-        da.AssetCode AS DeviceCode,
+        da.ITCode AS DeviceCode,
+        da.AssetTag AS AssetTag,
         d.DeviceName,
         IFNULL(NULLIF(da.SerialNumber, ''), '-') AS SerialNumber,
         IFNULL(NULLIF(b.BrandName, ''), '-') AS Brand,
@@ -2043,9 +2892,11 @@ router.get("/report/excel", isAdmin, async (req, res) => {
         e.EMP_NUM,
         e.fname,
         e.lname,
+        da.ITCode,
         ins.InstitutionName,
         dep.DepartmentName,
-        da.AssetCode,
+        da.ITCode,
+        da.AssetTag,
         d.DeviceName,
         da.SerialNumber,
         b.BrandName AS Brand,
@@ -2093,63 +2944,262 @@ router.get("/report/excel", isAdmin, async (req, res) => {
       ORDER BY bt.BorrowDate DESC
     `, params);
 
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Report");
+     const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("รายงานการยืม-คืน");
 
+    const headerFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FF1E3A5F" }
+    };
+    const headerFont  = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    const centerAlign = { horizontal: "center", vertical: "middle", wrapText: true };
+    const leftAlign   = { horizontal: "left",   vertical: "middle", wrapText: true };
+    const border = {
+      top:    { style: "thin", color: { argb: "FFD1D5DB" } },
+      left:   { style: "thin", color: { argb: "FFD1D5DB" } },
+      bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+      right:  { style: "thin", color: { argb: "FFD1D5DB" } }
+    };
+
+    const statusFill = {
+      "กำลังยืม":  { argb: "FFDBEAFE" },
+      "คืนแล้ว":   { argb: "FFDCFCE7" },
+      "เกินกำหนด": { argb: "FFFEE2E2" },
+      "รออนุมัติ": { argb: "FFFFF9C3" },
+      "ปฏิเสธ":    { argb: "FFFEE2E2" },
+      "ยกเลิก":    { argb: "FFFFEDD5" },
+    };
+
+    const statusColor = {
+      "กำลังยืม":  { argb: "FF1D4ED8" },
+      "คืนแล้ว":   { argb: "FF15803D" },
+      "เกินกำหนด": { argb: "FFB91C1C" },
+      "รออนุมัติ": { argb: "FF854D0E" },
+      "ปฏิเสธ":    { argb: "FFB91C1C" },
+      "ยกเลิก":    { argb: "FFC2410C" },
+    };
+
+    // Title
+    sheet.mergeCells("A1:P1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "รายงานการยืม–คืนอุปกรณ์";
+    titleCell.font = { bold: true, size: 16, color: { argb: "FF1E3A5F" } };
+    titleCell.alignment = centerAlign;
+    sheet.getRow(1).height = 32;
+
+    // Sub title
+    sheet.mergeCells("A2:P2");
+    const now = new Date();
+    const exportDate = now.toLocaleString("th-TH", {
+      dateStyle: "medium", timeStyle: "short"
+    });
+    sheet.getCell("A2").value = `ส่งออกเมื่อ: ${exportDate}  |  จำนวน: ${rows.length} รายการ`;
+    sheet.getCell("A2").font = { italic: true, size: 10, color: { argb: "FF6B7280" } };
+    sheet.getCell("A2").alignment = centerAlign;
+    sheet.getRow(2).height = 18;
+
+    // Columns
     sheet.columns = [
-    { header: "เลขเอกสาร", key: "BorrowCode", width: 20 },
-    { header: "รหัสพนักงาน", key: "EMP_NUM", width: 15 },
-    { header: "ผู้ยืม", key: "Borrower", width: 25 },
-    { header: "หน่วยงาน", key: "InstitutionName", width: 20 },
-    { header: "แผนก", key: "DepartmentName", width: 20 },
-    { header: "รหัสครุภัณฑ์", key: "AssetCode", width: 20 },
-    { header: "ชื่ออุปกรณ์", key: "DeviceName", width: 25 },
-    { header: "Serial Number", key: "SerialNumber", width: 20 },
-    { header: "ยี่ห้อ", key: "Brand", width: 20 },
-    { header: "รุ่น", key: "Model", width: 20 },
-    { header: "วันยืม", key: "BorrowDate", width: 15 },
-    { header: "กำหนดคืน", key: "DueDate", width: 15 },
-    { header: "วันคืน", key: "ReturnDate", width: 15 },
-    { header: "วันเกิน", key: "LateDays", width: 10 },
-    { header: "สถานะ", key: "StatusLabel", width: 15 },
-  ];
+      { key: "no",              width: 5  },
+      { key: "BorrowCode",      width: 20 },
+      { key: "EMP_NUM",         width: 14 },
+      { key: "Borrower",        width: 24 },
+      { key: "InstitutionName", width: 20 },
+      { key: "DepartmentName",  width: 20 },
+      { key: "DeviceName",      width: 22 },
+      { key: "AssetTag",        width: 16 },
+      { key: "SerialNumber",    width: 18 },
+      { key: "Brand",           width: 14 },
+      { key: "Model",           width: 16 },
+      { key: "BorrowDate",      width: 14 },
+      { key: "DueDate",         width: 14 },
+      { key: "ReturnDate",      width: 14 },
+      { key: "LateDays",        width: 10 },
+      { key: "StatusLabel",     width: 14 },
+    ];
 
-    rows.forEach(r => {
-      sheet.addRow({
-        BorrowCode: r.BorrowCode,
-        EMP_NUM: r.EMP_NUM,
-        Borrower: r.fname + " " + r.lname,
-        InstitutionName: r.InstitutionName,
-        DepartmentName: r.DepartmentName,
-        AssetCode: r.AssetCode,
-        DeviceName: r.DeviceName,
-        SerialNumber: r.SerialNumber,
-        Brand: r.Brand,
-        Model: r.Model,
-        BorrowDate: r.BorrowDate,
-        DueDate: r.DueDate,
-        ReturnDate: r.ReturnDate || "-",
-        LateDays: r.LateDays > 0 ? r.LateDays : "-",
-        StatusLabel: r.StatusLabel
+    // Header row
+    const headers = [
+      "No.", "เลขเอกสาร", "รหัสพนักงาน", "ผู้ยืม",
+      "สำนัก", "ฝ่าย", "อุปกรณ์", "รหัสครุภัณฑ์",
+      "Serial No.", "ยี่ห้อ", "รุ่น",
+      "วันยืม", "กำหนดคืน", "วันคืน", "วันเกิน", "สถานะ"
+    ];
+
+    const hRow = sheet.getRow(3);
+    hRow.height = 24;
+    headers.forEach((h, i) => {
+      const cell = hRow.getCell(i + 1);
+      cell.value     = h;
+      cell.font      = headerFont;
+      cell.fill      = headerFill;
+      cell.alignment = centerAlign;
+      cell.border    = border;
+    });
+
+    // Data rows
+    rows.forEach((r, idx) => {
+      const rowBg = idx % 2 === 0 ? "FFFFFFFF" : "FFF8FAFC";
+
+      const row = sheet.addRow({
+        no:              idx + 1,
+        BorrowCode:      r.BorrowCode,
+        EMP_NUM:         r.EMP_NUM         || "-",
+        Borrower:        `${r.fname} ${r.lname}`,
+        InstitutionName: r.InstitutionName || "-",
+        DepartmentName:  r.DepartmentName  || "-",
+        DeviceName:      r.DeviceName      || "-",
+        AssetTag:        r.AssetTag        || "-",
+        SerialNumber:    r.SerialNumber    || "-",
+        Brand:           r.Brand           || "-",
+        Model:           r.Model           || "-",
+        BorrowDate:      r.BorrowDate      || "-",
+        DueDate:         r.DueDate         || "-",
+        ReturnDate:      r.ReturnDate      || "-",
+        LateDays:        r.LateDays > 0 ? `${r.LateDays} วัน` : "-",
+        StatusLabel:     r.StatusLabel,
+      });
+
+      row.height = 22;
+
+      row.eachCell((cell, colNum) => {
+        cell.border    = border;
+        cell.alignment = [4, 5, 6, 7].includes(colNum) ? leftAlign : centerAlign;
+
+        if (colNum === 16) {
+          cell.fill = { type: "pattern", pattern: "solid",
+            fgColor: statusFill[r.StatusLabel] || { argb: "FFE5E7EB" } };
+          cell.font = { bold: true,
+            color: statusColor[r.StatusLabel] || { argb: "FF374151" }, size: 11 };
+        } else if (colNum === 15 && r.LateDays > 0) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } };
+          cell.font = { bold: true, color: { argb: "FFB91C1C" }, size: 11 };
+        } else {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: rowBg } };
+        }
       });
     });
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    sheet.views = [{ state: "frozen", ySplit: 3 }];
+    sheet.autoFilter = { from: "A3", to: "P3" };
 
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=Borrow_Report.xlsx"
-    );
-
+    const filename = `BorrowReport_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}.xlsx`;
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
     await workbook.xlsx.write(res);
     res.end();
 
   } catch (err) {
     console.error("EXCEL ERROR:", err);
     res.status(500).send("Excel error");
+  }
+});
+
+/* ===============================
+   TYPE (ประเภทอุปกรณ์)
+================================ */
+
+// multer สำหรับ type image (ใช้ diskStorage ที่มีอยู่แล้ว)
+const uploadType = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/type'),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  })
+});
+
+// เพิ่ม / แก้ไขประเภท (ใช้ route เดียว แยกด้วย TypeID)
+router.post("/type/add", uploadType.single("TypeImage"), async (req, res) => {
+  try {
+    const { TypeID, TypeName } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    if (TypeID && TypeID !== "") {
+      // แก้ไข
+      await db.query(`
+        UPDATE TB_M_Type
+        SET TypeName = ?, TypeImage = COALESCE(?, TypeImage)
+        WHERE TypeID = ?
+      `, [TypeName, image, TypeID]);
+    } else {
+      // เพิ่มใหม่
+      await db.query(`
+        INSERT INTO TB_M_Type (TypeName, TypeImage)
+        VALUES (?, ?)
+      `, [TypeName, image]);
+    }
+
+    res.redirect("/admin/device?success=add");
+
+  } catch (err) {
+    console.error("TYPE ADD/EDIT ERROR:", err);
+    res.redirect("/admin/device?error=type");
+  }
+
+});
+router.get("/search-asset", async (req, res) => {
+  const q = req.query.q?.trim();
+  if (!q || q.length < 2) return res.json({ found: false, suggestions: [] });
+
+  try {
+    // ถ้าพิมพ์ครบ exact → redirect ทันที
+    const [[exact]] = await db.query(`
+      SELECT da.AssetTag, da.ITCode, da.SerialNumber, d.ModelID
+      FROM TB_T_DeviceAdd da
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      WHERE da.AssetTag = ? OR da.ITCode = ? OR da.SerialNumber = ?
+      LIMIT 1
+    `, [q, q, q]);
+
+    if (exact) {
+      return res.json({
+        found: true,
+        modelId: exact.ModelID,
+        assetTag: exact.AssetTag || exact.ITCode || exact.SerialNumber,
+        suggestions: []
+      });
+    }
+
+    // ถ้ายังไม่ครบ → ส่ง suggestion กลับมา
+    const [suggestions] = await db.query(`
+      SELECT 
+        da.AssetTag, da.ITCode, da.SerialNumber,
+        d.ModelID, dev.DeviceName, m.ModelName
+      FROM TB_T_DeviceAdd da
+      JOIN TB_T_Device dev ON da.DeviceID = dev.DeviceID
+      JOIN TB_M_Model m ON dev.ModelID = m.ModelID
+      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      WHERE da.AssetTag LIKE ? OR da.ITCode LIKE ? OR da.SerialNumber LIKE ?
+      LIMIT 8
+    `, [`%${q}%`, `%${q}%`, `%${q}%`]);
+
+    res.json({ found: false, suggestions });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ found: false, suggestions: [] });
+  }
+});
+
+// ลบประเภท
+router.get("/type/delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // เช็กว่ามีอุปกรณ์ใช้ type นี้อยู่ไหม
+    const [[used]] = await db.query(`
+      SELECT 1 FROM TB_T_Device WHERE TypeID = ? LIMIT 1
+    `, [id]);
+
+    if (used) {
+      return res.redirect("/admin/device?error=used");
+    }
+
+    await db.query("DELETE FROM TB_M_Type WHERE TypeID = ?", [id]);
+    res.redirect("/admin/device?success=delete");
+
+  } catch (err) {
+    console.error("TYPE DELETE ERROR:", err);
+    res.redirect("/admin/device?error=type");
   }
 });
 

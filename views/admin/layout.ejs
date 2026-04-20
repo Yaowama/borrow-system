@@ -2,43 +2,28 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-
     <title>
-        <%= typeof title !== 'undefined'
-            ? title
-            : 'Admin Dashboard' %>
+        <%= typeof title !== 'undefined' ? title : 'Admin Dashboard' %>
     </title>
-
     <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body>
+
+<%
+  const pageSuccess = (typeof success !== 'undefined' && success) ? success : '';
+%>
+
+<body data-role="admin" data-success="<%= pageSuccess %>">
 
 <div class="container">
-
-    <%- include('./sidebar', { user, active: active || '' }) %>
+   <%- include("./sidebar", { user: locals.user, active }) %>
 
     <main class="content">
-
         <div class="content-scroll">
             <%- include(page, locals) %>
         </div>
-
     </main>
-
 </div>
-
-<script src="/js/chart.umd.js"></script>
-
-<script src="/js/admin-device.js"></script>
-<script src="/js/device-edit.js"></script>
-<script src="/js/device-upload.js"></script>
-<script src="/js/admin.js"></script>
-<script src="/js/profile_edit.js"></script>
-<script src="/js/admin_borrow_detail.js"></script>
-<script src="/js/repair.js"></script>
-<script src="/js/employee.js"></script>
 
 <!-- Success Modal -->
 <div id="successModal" class="success-modal">
@@ -46,17 +31,15 @@
     <div class="check-wrapper">
       <svg class="checkmark" viewBox="0 0 52 52">
         <circle class="checkmark-circle" cx="26" cy="26" r="23" fill="none"/>
-        <path class="checkmark-check" fill="none"
-          d="M14 27 l7 7 l17 -17"/>
+        <path class="checkmark-check" fill="none" d="M14 27 l7 7 l17 -17"/>
       </svg>
     </div>
-
     <h2 id="successTitle"></h2>
     <p id="successDesc"></p>
   </div>
 </div>
 
-
+<!-- Error Toast -->
 <div id="errorToast" class="toast error">
   <i class="fa-solid fa-circle-xmark"></i>
   <div>
@@ -65,6 +48,35 @@
   </div>
 </div>
 
+<% if (show2faWarning) { %>
+<div class="banner-2fa" id="b2fa">
+  <div class="banner-top">
+    <span class="bi">🔐</span>
+    <div class="banner-top-txt">
+      <h4>เพิ่มความปลอดภัยด้วย 2FA</h4>
+      <p>ป้องกันบัญชีจากการเข้าถึงโดยไม่รับอนุญาต</p>
+    </div>
+  </div>
+  <div class="banner-body">
+    <p>เปิดใช้งาน Two-Factor Authentication เพื่อเพิ่มชั้นความปลอดภัย ระบบจะส่ง OTP ทาง Email ทุกครั้งที่เข้าสู่ระบบ</p>
+    <div class="banner-actions">
+      <button class="banner-btn-yes" id="btnGoProfile">ตั้งค่าเลย</button>
+      <button class="banner-btn-no" id="btnDismiss2FA">ไม่สนใจ 10 วัน</button>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<script src="/js/chart.umd.js"></script>
+<script src="/js/admin-device.js"></script>
+<script src="/js/device-edit.js"></script>
+<script src="/js/device-upload.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/profile_edit.js"></script>
+<script src="/js/admin_borrow_detail.js"></script>
+<script src="/js/repair.js"></script>
+<script src="/js/employee.js"></script>
+<script src="/js/profile.js"></script>
+
 </body>
 </html>
-

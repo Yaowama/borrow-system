@@ -1,99 +1,136 @@
 <link rel="stylesheet" href="/css/borrow_status.css">
 
-<main class="main">
-
 <div class="top-bar">
   <div class="top-left">
     <h1>ประวัติการยืม</h1>
   </div>
-
   <div class="top-right">
-    <div class="logo-box">
-      <img src="/images/logo.png">
+    <div class="noti-wrap" id="notiWrap">
+      <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+        <i class="fa-solid fa-bell"></i>
+        <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+      </button>
+      <div class="noti-dropdown" id="notiDropdown">
+        <div class="noti-header">
+          <span>การแจ้งเตือน</span>
+          <span class="noti-count-label" id="notiCountLabel"></span>
+        </div>
+        <div class="noti-list" id="notiList">
+          <div class="noti-empty">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>ไม่มีการแจ้งเตือน</p>
+          </div>
+        </div>
+      </div>
     </div>
+    <div class="logo-box"><img src="/images/logo.png"></div>
   </div>
 </div>
 
-<table class="status-table">
-  <thead>
-    <tr>
-      <th>รูป</th>
-      <th>อุปกรณ์</th>
-      <th>รหัส</th>
-      <th>วันที่ยืม</th>
-      <th>กำหนดคืน</th>
-      <th>วันที่คืน</th>
-      <th>สถานะ</th>
-      <th>รายละเอียด</th>
-    </tr>
-  </thead>
+<% if (rows.length === 0) { %>
+  <div class="empty-box">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <h3>ยังไม่มีประวัติการยืม</h3>
+    <p>รายการยืม–คืนของคุณจะแสดงที่นี่</p>
+  </div>
+<% } else { %>
 
-  <tbody>
-    <% rows.forEach(r => { %>
+<!-- SUMMARY STRIP -->
+<div class="history-summary">
+  <div class="hs-item">
+    <span class="hs-num"><%= rows.length %></span>
+    <span class="hs-label">ทั้งหมด</span>
+  </div>
+  <div class="hs-item green">
+    <span class="hs-num"><%= rows.filter(r => r.BorrowStatusID == 4).length %></span>
+    <span class="hs-label">คืนแล้ว</span>
+  </div>
+  <div class="hs-item red">
+    <span class="hs-num"><%= rows.filter(r => r.BorrowStatusID == 3).length %></span>
+    <span class="hs-label">ปฏิเสธ</span>
+  </div>
+  <div class="hs-item orange">
+    <span class="hs-num">
+      <%= rows.filter(r => r.ReturnDate && new Date(r.ReturnDate) > new Date(r.DueDate)).length %>
+    </span>
+    <span class="hs-label">คืนเกินกำหนด</span>
+  </div>
+</div>
+
+<!-- TABLE WRAP -->
+<div class="history-table-wrap">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>อุปกรณ์</th>
+        <th>รหัสการยืม</th>
+        <th>วันที่ยืม</th>
+        <th>กำหนดคืน</th>
+        <th>วันที่คืน</th>
+        <th>สถานะ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach((r, idx) => { %>
       <tr>
 
-        <td>
-          <div class="device-image">
-            <img src="/uploads/device/<%= r.DeviceImage %>"
-                 onerror="this.src='/images/no-image.png'">
-          </div>
-        </td>
+        <td class="col-no"><%= idx + 1 %></td>
 
+        <!-- อุปกรณ์ -->
         <td>
-          <div class="device-info">
-            <strong><%= r.DeviceName %></strong>
-            <div class="meta">
-              <%= r.BrandName || "-" %> · <%= r.ModelName || "-" %>
+          <div class="device-cell">
+            <div class="device-thumb">
+              <img src="<%= r.DeviceImagePath || '/images/no-image.png' %>"
+                   onerror="this.src='/images/no-image.png'">
+            </div>
+            <div>
+              <div class="device-name"><%= r.DeviceName || '-' %></div>
+              <div class="device-meta"><%= r.BrandName || '-' %> · <%= r.ModelName || '-' %></div>
             </div>
           </div>
         </td>
 
-        <td><%= r.BorrowCode %></td>
-        <td><%= r.BorrowDate %></td>
-        <td><%= r.DueDate %></td>
-
+        <!-- รหัส -->
         <td>
-          <%= r.ReturnDate || "-" %>
+          <span class="borrow-code"><%= r.BorrowCode %></span>
         </td>
 
+        <!-- วันที่ -->
+        <td class="date-col"><%= r.BorrowDate %></td>
+        <td class="date-col"><%= r.DueDate %></td>
+        <td class="date-col"><%= r.ReturnDate || '—' %></td>
+
+        <!-- สถานะ -->
         <td>
           <span class="status status-<%= r.BorrowStatusID %>">
             <%= r.StatusName %>
           </span>
         </td>
 
+        <!-- ปุ่ม -->
         <td>
-          <button
-            class="icon-action view btn-detail"
-            data-code="<%= r.BorrowCode %>"
-            title="ดูรายละเอียด">
+          <button class="btn-eye btn-detail" data-code="<%= r.BorrowCode %>" title="ดูรายละเอียด">
             <i class="fa-solid fa-eye"></i>
           </button>
         </td>
 
       </tr>
-    <% }) %>
-  </tbody>
-</table>
-
-<% if (rows.length === 0) { %>
-    <div class="empty-box">
-      <i class="fa-solid fa-box-open"></i>
-      <p>ขณะนี้คุณไม่มีอุปกรณ์ที่กำลังยืม</p>
-    </div>
-  <% } else { %>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
 
 <!-- DETAIL MODAL -->
 <div class="overlay" id="detailOverlay">
   <div class="detail-modal">
     <div class="modal-header">
-      <h2>รายละเอียดการยืม</h2>
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> รายละเอียดการยืม</h2>
       <span class="close-modal" id="closeDetail">&times;</span>
     </div>
     <div class="modal-body" id="detailContent"></div>
   </div>
 </div>
-
-</main>
 
 <% } %>

@@ -44,18 +44,28 @@ function formatThaiDate(dateStr) {
           }
         }
 
-        content.innerHTML = `
+      content.innerHTML = `
           <div class="detail-layout">
 
             <div class="detail-image">
-              <img src="${h.DeviceImage 
-                ? `/uploads/device/${h.DeviceImage}` 
-                : '/images/no-image.png'}"
-                onerror="this.src='/images/no-image.png'">
+              <img src="${
+                h.DeviceImage
+                  ? `/uploads/device/${h.DeviceImage}`
+                  : (h.TypeImage
+                      ? `/uploads/type/${h.TypeImage}`
+                      : '/images/no-image.png')
+              }"
+              onerror="this.src='/images/no-image.png'">
             </div>
 
             <div class="detail-info">
 
+              ${h.BorrowStatusID == 1 ? `
+              <div class="row">
+                <div class="label">อุปกรณ์:</div>
+                <div>${h.DeviceName || '-'}</div>
+              </div>
+            ` : `
               <div class="row">
                 <div class="label">อุปกรณ์:</div>
                 <div>${h.DeviceName || '-'}</div>
@@ -70,6 +80,7 @@ function formatThaiDate(dateStr) {
                 <div class="label">รุ่น:</div>
                 <div>${h.ModelName || '-'}</div>
               </div>
+            `}
 
               <div class="row">
                 <div class="label">รหัสการยืม:</div>
@@ -219,13 +230,12 @@ if (borrowInput && dueInput) {
 function convertDate(inputId){
   const input = document.getElementById(inputId);
 
-  input.addEventListener("change", function(){
+  if (!input) return; // ⭐ กัน null
 
+  input.addEventListener("change", function(){
     let parts = this.value.split("-");
     let formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-
     console.log("วันที่เลือก:", formatted);
-
   });
 }
 

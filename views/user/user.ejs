@@ -1,86 +1,101 @@
 <!-- ================= TOP BAR ================= -->
-<div class="topbar">
-
-    <!-- ซ้าย -->
-    <h2>ระบบการยืม–คืน</h2>
+<div class="top-bar">
+    <h1>ระบบการยืม-คืน</h1>
 
     <!-- ขวา -->
     <div class="top-right">
 
-        <div class="search">
-            <input type="text" placeholder="ค้นหาอุปกรณ์">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </div>
+          <div class="search">
+              <input
+                type="text"
+                class="admin-search"
+                data-target=".borrow_list-row"
+                placeholder="ค้นหาอุปกรณ์"
+                >
+              <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div class="noti-wrap" id="notiWrap">
+            <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+              <i class="fa-solid fa-bell"></i>
+              <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+            </button>
 
-        <div class="logo-box">
-            <img src="/images/logo.png">
-        </div>
+            <div class="noti-dropdown" id="notiDropdown">
+              <div class="noti-header">
+                <span>การแจ้งเตือน</span>
+                <span class="noti-count-label" id="notiCountLabel"></span>
+              </div>
+              <div class="noti-list" id="notiList">
+                <div class="noti-empty">
+                  <i class="fa-solid fa-bell-slash"></i>
+                  <p>ไม่มีการแจ้งเตือน</p>
+                </div>
+              </div>
+            </div>
+          </div>
+           <div class="logo-box">
+                <img src="/images/logo.png">
+            </div>
 
+      </div>
+
+</div>
+<div class="welcome-box">
+  <div class="user-info">
+    <img src="/uploads/profile/<%= user.ProfileImage || 'default.png' %>" class="avatar">
+    <div>
+<h3>
+  สวัสดี <%= user.fname %> <%= user.lname %>
+</h3>
+      <p>ยินดีต้อนรับสู่ระบบยืม–คืน</p>
     </div>
-
+  </div>
 </div>
 
-<!-- ================= CATEGORY ================= -->
-<div class="category">
+<div class="summary-cards">
 
-  <div class="card" data-type="1">
-      <img src="/images/iconuser.png">
-      <p>คอมพิวเตอร์และอุปกรณ์พกพา</p>
+  <div class="sum-card blue">
+    <i class="fa-solid fa-box"></i>
+    <span>กำลังยืม: <%= stats.borrowing || 0 %></span>
   </div>
 
-  <div class="card" data-type="2">
-      <img src="/images/iconuser2.png">
-      <p>อุปกรณ์เสริม</p>
+  <div class="sum-card yellow">
+    <i class="fa-solid fa-clock"></i>
+    <span>รออนุมัติ: <%= stats.pending || 0 %></span>
   </div>
 
-  <div class="card" data-type="3">
-      <img src="/images/iconuser3.png">
-      <p>อุปกรณ์เครือข่าย</p>
+  <div class="sum-card green">
+    <i class="fa-solid fa-check"></i>
+    <span>เกินกำหนด: <%= stats.overdue || 0 %></span>
   </div>
 
-  <div class="card" data-type="4">
-      <img src="/images/iconuser4.png">
-      <p>อุปกรณ์จัดเก็บข้อมูล</p>
-  </div>
-
-  <div class="card" data-type="5">
-      <img src="/images/iconuser6.png">
-      <p>อุปกรณ์นำเสนอ</p>
-  </div>
-
-  <div class="card" data-type="6">
-      <img src="/images/iconuser7.png">
-      <p>อุปกรณ์พิมพ์และสแกน</p>
+  <div class="sum-card gray">
+    <i class="fa-solid fa-folder"></i>
+    <span>ประวัติ: <%= stats.history || 0 %></span>
   </div>
 
 </div>
-
-
-
+<!-- ================= DEVICE GRID ================= -->
 <div class="device-grid">
 
-  <% devices.forEach(d => { %>
-    <div class="device-card" data-type="<%= d.TypeID %>">
+  <% types.forEach(t => { %>
+    <div class="device-card" data-type="<%= t.TypeID %>">
 
       <!-- image -->
       <div class="device-img-box">
-        <% if (d.DeviceImage) { %>
-          <img src="/uploads/device/<%= d.DeviceImage %>">
-        <% } else { %>
+        <% if (t.TypeImage) { %>
+          <img src="/uploads/type/<%= t.TypeImage %>">
+          <% } else { %>
           <div class="no-img">No Image</div>
         <% } %>
       </div>
 
       <!-- info -->
       <div class="device-info">
-        <h3><%= d.DeviceName %></h3>
-
-        <p class="meta">
-          <%= d.BrandName || "-" %> · <%= d.ModelName || "-" %>
-        </p>
+        <h3><%= t.TypeName %></h3>
 
         <p class="category">
-          <%= d.CategoryName || "-" %>
+          <%= t.CategoryName || "-" %>
         </p>
       </div>
 
@@ -88,14 +103,17 @@
       <div class="device-footer">
 
         <span class="stock 
-          <%= d.Stock > 1 ? 'green' : d.Stock == 1 ? 'yellow' : 'red' %>">
-          <%= d.Stock > 0 ? `เหลือ ${d.Stock}` : 'หมด' %>
+          <%= t.Stock > 3 ? 'green' : t.Stock > 0 ? 'yellow' : 'red' %>">
+          <%= t.Stock > 0 ? `เหลือ ${t.Stock} เครื่อง` : 'หมด' %>
         </span>
 
-        <% if (d.Stock > 0) { %>
-          <a href="/user/borrow/<%= d.DeviceID %>" class="btn blue">
+        <% if (t.Stock > 0) { %>
+          <button class="btn blue borrowBtn"
+                  data-id="<%= t.TypeID %>"
+                  data-name="<%= t.TypeName %>"
+                  data-stock="<%= t.Stock %>">
             ยืม
-          </a>
+          </button>
         <% } else { %>
           <span class="btn gray disabled">หมด</span>
         <% } %>
@@ -106,3 +124,59 @@
   <% }) %>
 
 </div>
+
+
+<!-- Modal ยืมอุปกรณ์ -->
+<div id="borrowModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>ยืมอุปกรณ์</h2>
+
+    <div class="device-summary">
+      <p>อุปกรณ์: <span id="modalDeviceName"></span></p>
+      <p>จำนวนคงเหลือ: <span id="modalRemainQty"></span> ชิ้น</p>
+    </div>
+
+    <form id="borrowForm">
+      <input type="hidden" name="DeviceID" id="modalDeviceID">
+
+      <div class="form-group">
+        <label>จำนวนที่ต้องการยืม</label>
+        <input type="number" name="qty" id="modalQty" min="1" value="1" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>วันที่ยืม</label>
+          <input type="date" name="BorrowDate" id="modalBorrowDate"
+            value="<%= new Date().toISOString().split('T')[0] %>"
+            min="<%= new Date().toISOString().split('T')[0] %>" required>
+        </div>
+
+        <div class="form-group">
+          <label>วันที่คืน</label>
+          <input type="date" name="DueDate" id="modalDueDate"
+            value="<%= new Date(Date.now()+86400000).toISOString().split('T')[0] %>" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>วัตถุประสงค์ในการยืม</label>
+        <textarea name="purpose" rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>สถานที่ใช้งาน</label>
+        <input type="text" name="location" required>
+      </div>
+
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <textarea name="note" rows="2"></textarea>
+      </div>
+
+      <button type="submit" class="btn-confirm">ยืนยันการยืม</button>
+    </form>
+  </div>
+</div>
+

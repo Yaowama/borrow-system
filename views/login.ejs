@@ -25,6 +25,11 @@
   </div>
 <% } %>
 
+<% if (typeof success !== "undefined") { %>
+  <div class="success-box show">
+    <%= success %>
+  </div>
+<% } %>
 
 
     <form method="POST" action="/login">
@@ -80,6 +85,12 @@
 
 
 </div>
+
+<div id="globalLoader" class="global-loader hidden">
+  <div class="spinner"></div>
+  <p>กำลังส่ง OTP...</p>
+</div>
+
 <script src="/js/login.js"></script>
 </body>
 </html>

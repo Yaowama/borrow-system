@@ -1,70 +1,115 @@
+<link rel="stylesheet" href="/css/repair.css">
+
 <div class="top-bar">
+  <h1>รายละเอียดใบแจ้งซ่อม</h1>
 
-        <h1>รายละเอียดใบแจ้งซ่อม</h1>
-
-        <div class="top-right">
-            <div class="admin-box">
-                <span>Admin</span>
-                <i class="fa-solid fa-user"></i>
-            </div>
-
-            <div class="logo-box">
-                <img src="/images/logo.png">
-            </div>
-        </div>
-
+  <div class="top-right">
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
     </div>
 
-<div class="card">
+    <div class="noti-wrap" id="notiWrap">
+      <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+        <i class="fa-solid fa-bell"></i>
+        <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+      </button>
+      <div class="noti-dropdown" id="notiDropdown">
+        <div class="noti-header">
+          <span>การแจ้งเตือน</span>
+          <span class="noti-count-label" id="notiCountLabel"></span>
+        </div>
+        <div class="noti-list" id="notiList">
+          <div class="noti-empty">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>ไม่มีการแจ้งเตือน</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <p><b>เลขแจ้งซ่อม:</b> <%= repair.RepairCode %></p>
-  <p><b>อุปกรณ์:</b> <%= repair.DeviceCode %> - <%= repair.DeviceName %></p>
-  <p><b>ผู้แจ้ง:</b> <%= repair.fname %> <%= repair.lname %></p>
-  <p><b>ปัญหาที่แจ้ง:</b> <%= repair.ProblemDetail %></p>
-  <p><b>วันที่แจ้ง:</b>
-    <%= new Date(repair.CreateDate).toLocaleString("th-TH") %>
-  </p>
-
-  <p>
-    <b>สถานะ:</b>
-    <span class="badge blue"><%= repair.StatusName %></span>
-  </p>
-
+    <div class="logo-box"><img src="/images/logo.png"></div>
+  </div>
 </div>
 
-<hr>
+<div class="repair-detail-wrap">
 
-<h3>🔧 บันทึกผลการซ่อม</h3>
-
-<form action="/admin/repair/finish/<%= repair.RepairID %>" method="POST">
-
-  <div class="form-group">
-    <label>วิธีการซ่อม</label>
-    <textarea name="repair_detail" required></textarea>
+  <!-- LEFT: Info panel -->
+  <div class="repair-detail-panel">
+    <div class="panel-header">
+      <div class="ph-icon"><i class="fa-solid fa-file-lines"></i></div>
+      <h2>ข้อมูลใบแจ้งซ่อม</h2>
+    </div>
+    <div class="panel-body">
+      <div class="info-row">
+        <span class="info-label">เลขใบซ่อม</span>
+        <span class="info-value" style="font-family:'IBM Plex Mono',monospace;"><%= repair.RepairCode %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">อุปกรณ์</span>
+        <span class="info-value"><%= repair.DeviceCode %> — <%= repair.DeviceName %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">ผู้แจ้ง</span>
+        <span class="info-value"><%= repair.fname %> <%= repair.lname %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">ปัญหาที่แจ้ง</span>
+        <span class="info-value"><%= repair.ProblemDetail %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">วันที่แจ้ง</span>
+        <span class="info-value"><%= new Date(repair.CreateDate).toLocaleString("th-TH") %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">สถานะ</span>
+        <span class="info-value">
+          <span class="badge status-<%= repair.RepairStatusID %>"><%= repair.StatusName %></span>
+        </span>
+      </div>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>อะไหล่ที่เปลี่ยน</label>
-    <input type="text" name="repair_part">
+  <!-- RIGHT: Form panel -->
+  <div class="repair-form-panel">
+    <div class="panel-header">
+      <div class="ph-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+      <h2>บันทึกผลการซ่อม</h2>
+    </div>
+    <div class="form-body">
+      <form action="/admin/repair/finish/<%= repair.RepairID %>" method="POST">
+
+        <div class="form-group">
+          <label>วิธีการซ่อม</label>
+          <textarea name="repair_detail" required placeholder="อธิบายวิธีการซ่อม..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>อะไหล่ที่เปลี่ยน</label>
+          <input type="text" name="repair_part" placeholder="ระบุอะไหล่ (ถ้ามี)">
+        </div>
+
+        <div class="form-group">
+          <label>ค่าใช้จ่าย (บาท)</label>
+          <input type="number" name="repair_cost" min="0" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>ช่างผู้ซ่อม</label>
+          <input type="text" name="repair_by" required placeholder="ชื่อช่าง">
+        </div>
+
+        <div class="form-group">
+          <label>หมายเหตุ</label>
+          <textarea name="remark" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="fa-solid fa-circle-check"></i> ปิดงานซ่อม
+        </button>
+
+      </form>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>ค่าใช้จ่าย (บาท)</label>
-    <input type="number" name="repair_cost" min="0">
-  </div>
-
-  <div class="form-group">
-    <label>ช่างผู้ซ่อม</label>
-    <input type="text" name="repair_by" required>
-  </div>
-
-  <div class="form-group">
-    <label>หมายเหตุ</label>
-    <textarea name="remark"></textarea>
-  </div>
-
-  <button class="btn green">
-    ✔ ปิดงานซ่อม
-  </button>
-
-</form>
+</div>
