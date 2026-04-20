@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 30px;
-  background: linear-gradient(135deg,#ff944d,#ffa86b);
+  background: linear-gradient(120deg, #2a1a0f 0%, #5f321e 45%, #d8811d 100%);
   border-radius: 28px;
   padding: 45px;
   color: #fff;
@@ -273,3 +273,138 @@
   text-decoration: none;
   font-weight: 700;
 }
+
+
+/* ================= 2FA CARD ================= */
+
+.twofa-card {
+  margin-top: 36px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.08);
+  border: 1.5px solid #ffe0c8;
+  position: relative;
+  overflow: hidden;
+}
+
+.twofa-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #ff7a2d, #ff9f5a);
+  border-radius: 6px 0 0 6px;
+}
+
+.twofa-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff7a2d, #ff6000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(255,122,45,.30);
+}
+
+.twofa-icon i {
+  font-size: 26px;
+  color: #fff;
+}
+
+.twofa-info {
+  flex: 1;
+}
+
+.twofa-info h4 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e1e1e;
+}
+
+.twofa-info > p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #777;
+  line-height: 1.6;
+}
+
+/* toggle row */
+.twofa-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* SWITCH */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ddd;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  left: 3px;
+  top: 3px;
+  transition: .3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider {
+  background: linear-gradient(135deg, #ff7a2d, #ff6000);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+/* status label */
+.twofa-status {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 30px;
+  letter-spacing: .3px;
+}
+
+.twofa-status.on {
+  background: #e8f8ef;
+  color: #1a7a3e;
+}
+
+.twofa-status.off {
+  background: #f5f5f5;
+  color: #888;
+}
+

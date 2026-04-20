@@ -2,11 +2,16 @@ const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false, // ต้อง false สำหรับ 587
+  port: Number(process.env.EMAIL_PORT),
+  secure: false, // 587 = false, 465 = true
+
   auth: {
-    user: process.env.EMAIL_USER, // apikey
-    pass: process.env.EMAIL_PASS  // SG.xxxxxx
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+
+  tls: {
+    rejectUnauthorized: false
   }
 });
 

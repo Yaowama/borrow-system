@@ -6,129 +6,94 @@
 
 <div class="profile-container">
 
-  <!-- ================= HEADER ================= -->
+  <!-- HEADER -->
   <div class="profile-header">
-
     <img
       src="<%= user.ProfileImage
       ? '/uploads/profile/' + user.ProfileImage
       : '/images/default-avatar.svg'%>"
       class="avatar"
     >
-
     <div>
       <h1><%= user.fname %> <%= user.lname %></h1>
       <span class="username">@<%= user.username %></span>
     </div>
-
   </div>
 
-
-  <!-- ================= USER INFO ================= -->
+  <!-- USER INFO -->
   <div class="profile-title">ข้อมูลผู้ใช้งาน</div>
-
   <div class="profile-grid">
-
-    <!-- EMAIL -->
     <div class="info-card">
       <i class="fa-solid fa-envelope"></i>
-      <div>
-        <label>Email</label>
-        <p><%= user.email %></p>
-      </div>
+      <div><label>Email</label><p><%= user.email %></p></div>
     </div>
-
-    <!-- EMPLOYEE CODE -->
     <div class="info-card">
       <i class="fa-solid fa-id-badge"></i>
-      <div>
-        <label>รหัสพนักงาน</label>
-        <p><%= user.EMP_NUM || user.EMPID %></p>
-      </div>
+      <div><label>รหัสพนักงาน</label><p><%= user.EMP_NUM || user.EMPID %></p></div>
     </div>
-
-    <!-- PHONE -->
     <div class="info-card">
       <i class="fa-solid fa-phone"></i>
-      <div>
-        <label>เบอร์โทรศัพท์</label>
-        <p><%= user.phone || "-" %></p>
-      </div>
+      <div><label>เบอร์โทรศัพท์</label><p><%= user.phone || "-" %></p></div>
     </div>
-
-    <!-- FAX -->
     <div class="info-card">
       <i class="fa-solid fa-fax"></i>
-      <div>
-        <label>โทรสาร</label>
-        <p><%= user.fax || "-" %></p>
-      </div>
+      <div><label>โทรสาร</label><p><%= user.fax || "-" %></p></div>
     </div>
-
-<!-- ORGANIZATION -->
     <div class="info-card">
       <i class="fa-solid fa-city"></i>
-      <div>
-        <label>สำนัก</label>
-        <p><%= user.InstitutionName || "-" %></p>
-      </div>
+      <div><label>สำนัก</label><p><%= user.InstitutionName || "-" %></p></div>
     </div>
-
-    <!-- DEPARTMENT -->
     <div class="info-card">
       <i class="fa-solid fa-building"></i>
-      <div>
-        <label>ฝ่าย</label>
-        <p><%= user.DepartmentName || "-" %></p>
-      </div>
+      <div><label>ฝ่าย</label><p><%= user.DepartmentName || "-" %></p></div>
     </div>
-
-    
-
   </div>
 
-
-  <!-- ================= SYSTEM INFO ================= -->
+  <!-- SYSTEM INFO -->
   <div class="profile-title">ข้อมูลระบบ</div>
-
   <div class="profile-grid">
-
-    <!-- ROLE -->
     <div class="info-card">
       <i class="fa-solid fa-user-shield"></i>
-      <div>
-        <label>ประเภทผู้ใช้งาน</label>
-        <p><%= user.RoleName || "-" %></p>
-      </div>
+      <div><label>ประเภทผู้ใช้งาน</label><p><%= user.RoleName || "-" %></p></div>
     </div>
-
-    <!-- CREATE DATE -->
     <div class="info-card">
       <i class="fa-solid fa-calendar-check"></i>
       <div>
         <label>วันที่สมัครใช้งาน</label>
-        <p>
-          <%= new Date(user.CreateDate).toLocaleDateString("th-TH") %>
-        </p>
+        <p><%= new Date(user.CreateDate).toLocaleDateString("th-TH") %></p>
       </div>
     </div>
-
   </div>
 
-  <!-- ================= ACTION ================= -->
+  <!-- 2FA (ย้ายมาอยู่ก่อนปุ่ม) -->
+  <div class="profile-title">ความปลอดภัย</div>
+
+  <div class="twofa-card">
+    <div class="twofa-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="twofa-info">
+      <h4>Two-Factor Authentication (2FA)</h4>
+      <p>รับ OTP ทาง Email ทุกครั้งที่เข้าสู่ระบบ เพิ่มความปลอดภัยอีกชั้น</p>
+      <div class="twofa-toggle">
+        <label class="switch">
+          <input type="checkbox" id="tfaCheck" <%= user.two_fa_enabled ? 'checked' : '' %>>
+          <span class="slider"></span>
+        </label>
+        <span class="twofa-status <%= user.two_fa_enabled ? 'on' : 'off' %>" id="tfaLabel">
+          <%= user.two_fa_enabled ? 'เปิดใช้งาน' : 'ปิดอยู่' %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
   <div class="profile-actions">
-
+    <!-- admin ใช้ /admin/profile/edit | user ใช้ /user/profile/edit -->
     <a href="/admin/profile/edit" class="btn primary">
-      <i class="fa-solid fa-pen-to-square"></i>
-      แก้ไขข้อมูล
+      <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
     </a>
-
     <a href="/admin/change_password" class="btn outline">
-      <i class="fa-solid fa-lock"></i>
-      เปลี่ยนรหัสผ่าน
+      <i class="fa-solid fa-lock"></i> เปลี่ยนรหัสผ่าน
     </a>
-
-
   </div>
 
 </div>

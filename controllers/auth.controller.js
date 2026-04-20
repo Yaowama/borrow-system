@@ -138,16 +138,13 @@ exports.register = async (req, res) => {
 // ================= LOGIN =================
 exports.login = async (req, res) => {
   try {
-
     const { username, password } = req.body;
 
-    // หา user
     const [rows] = await db.execute(
       "SELECT * FROM TB_T_Employee WHERE username=?",
       [username]
     );
 
-    // ❌ ไม่พบ username
     if (rows.length === 0) {
       return res.render("login", {
         error: "❌ ไม่พบชื่อผู้ใช้นี้ในระบบ",
@@ -159,12 +156,11 @@ exports.login = async (req, res) => {
 
     if (user.EMPStatusID == 0) {
       return res.render("login", {
-        error: "⛔ บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อ Admin",
+        error: "⛔ บัญชีนี้ถูกปิดใช้งาน",
         form: req.body
       });
     }
 
-    // ตรวจ password
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -174,31 +170,159 @@ exports.login = async (req, res) => {
       });
     }
 
-    // login สำเร็จ
-    req.session.user = {
-      EMPID: user.EMPID,
-      RoleID: user.RoleID,
-      username: user.username,
-      ProfileImage: user.ProfileImage
-    };
+    // ===============================
+    // ❗ ถ้าไม่เปิด 2FA → เข้าเลย
+    // ===============================
+    if (user.two_fa_enabled == 0) {
+      req.session.user = {
+        EMPID: user.EMPID,
+        RoleID: user.RoleID,
+        username: user.username,
+        email: user.email,
+        ProfileImage: user.ProfileImage
+      };
 
-    if (user.RoleID == 2) {
-      return res.redirect("/admin");
-    } else {
+      if (user.RoleID == 2) return res.redirect("/admin");
       return res.redirect("/user");
     }
 
+    // ===============================
+    // 🔐 ถ้าเปิด 2FA → สร้าง OTP
+    // ===============================
+    req.session.tempUser = {
+      EMPID: user.EMPID,
+      RoleID: user.RoleID,
+      username: user.username,
+      email: user.email,
+      ProfileImage: user.ProfileImage
+    };
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashOtp = await bcrypt.hash(otp, 10);
+
+    await db.execute(`
+      UPDATE TB_T_Employee
+      SET login_otp = ?,
+          login_expire = DATE_ADD(NOW(), INTERVAL 5 MINUTE),
+          login_attempt = 0
+      WHERE EMPID = ?
+    `, [hashOtp, user.EMPID]);
+
+    await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: user.email,
+    subject: "Login OTP - ยืนยันการเข้าสู่ระบบ",
+    html: `
+    <div style="font-family:Arial,sans-serif;background:#f4f6f8;padding:30px;">
+      <div style="max-width:420px;margin:auto;background:#ffffff;padding:30px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+
+        <h2 style="text-align:center;color:#f97316;margin-bottom:10px;">
+          🔐 ยืนยันการเข้าสู่ระบบ
+        </h2>
+
+        <p style="text-align:center;color:#555;font-size:14px;">
+          มีการเข้าสู่ระบบด้วยบัญชีของคุณ<br>
+          กรุณายืนยันตัวตนด้วยรหัส OTP ด้านล่าง
+        </p>
+
+        <div style="text-align:center;margin:25px 0;">
+          <div style="
+            display:inline-block;
+            padding:14px 26px;
+            font-size:30px;
+            letter-spacing:6px;
+            background:#fff7ed;
+            color:#c2570a;
+            border-radius:10px;
+            font-weight:bold;
+            border:2px solid #fed7aa;
+          ">
+            ${otp}
+          </div>
+        </div>
+
+        <p style="text-align:center;color:#ef4444;font-size:13px;">
+          ⏱ รหัสนี้จะหมดอายุภายใน <b>5 นาที</b>
+        </p>
+
+        <hr style="margin:20px 0;border:none;border-top:1px solid #eee;" />
+
+        <p style="text-align:center;color:#999;font-size:12px;">
+          หากคุณไม่ได้ทำการเข้าสู่ระบบ กรุณาเปลี่ยนรหัสผ่านทันที
+        </p>
+
+      </div>
+    </div>
+    `
+  });
+
+    return res.render("otp-login", {
+      email: user.email,
+      mode: "login"
+    });
+
   } catch (err) {
-
     console.error(err);
-
     res.render("login", {
       error: "⚠️ ระบบขัดข้อง กรุณาลองใหม่"
     });
-
   }
 };
+exports.verifyLoginOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
 
+    const [rows] = await db.execute(`
+      SELECT * FROM TB_T_Employee
+      WHERE email=? AND login_expire > NOW() AND login_otp IS NOT NULL
+    `, [email]);
+
+    if (rows.length === 0) {
+      return res.render("otp-login", {
+        email,
+        error: "OTP หมดอายุ"
+      });
+    }
+
+    const user = rows[0];
+
+    const match = await bcrypt.compare(otp, user.login_otp);
+
+    if (!match) {
+      await db.execute(`
+        UPDATE TB_T_Employee
+        SET login_attempt = login_attempt + 1
+        WHERE email=?
+      `, [email]);
+
+      return res.render("otp-login", {
+        email,
+        error: "OTP ไม่ถูกต้อง"
+      });
+    }
+
+    await db.execute(`
+      UPDATE TB_T_Employee
+      SET login_otp=NULL,
+          login_expire=NULL,
+          login_attempt=0
+      WHERE email=?
+    `, [email]);
+
+    req.session.user = req.session.tempUser;
+    delete req.session.tempUser;
+
+    if (req.session.user.RoleID == 2) return res.redirect("/admin");
+    return res.redirect("/user");
+
+  } catch (err) {
+    console.error(err);
+    res.render("otp-login", {
+      email: req.body.email,
+      error: "ระบบผิดพลาด"
+    });
+  }
+};
 
 // ================= FORGOT (OTP) =================
 exports.forgot = async (req, res) => {
@@ -239,9 +363,44 @@ exports.forgot = async (req, res) => {
       to: email,
       subject: "OTP Reset Password",
       html: `
-        <h2>รหัส OTP สำหรับรีเซ็ตรหัสผ่าน</h2>
-        <h1>${otp}</h1>
-        <p>หมดอายุภายใน 10 นาที</p>
+      <div style="font-family:Arial,sans-serif;background:#f4f6f8;padding:30px;">
+        <div style="max-width:420px;margin:auto;background:#ffffff;padding:30px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+
+          <h2 style="text-align:center;color:#4f46e5;margin-bottom:10px;">
+            🔐 OTP ยืนยันตัวตน
+          </h2>
+
+          <p style="text-align:center;color:#555;font-size:14px;">
+            ใช้รหัสด้านล่างเพื่อรีเซ็ตรหัสผ่าน
+          </p>
+
+          <div style="text-align:center;margin:25px 0;">
+            <div style="
+              display:inline-block;
+              padding:14px 26px;
+              font-size:30px;
+              letter-spacing:6px;
+              background:#eef2ff;
+              color:#111827;
+              border-radius:10px;
+              font-weight:bold;
+            ">
+              ${otp}
+            </div>
+          </div>
+
+          <p style="text-align:center;color:#ef4444;font-size:13px;">
+            ⏱ รหัสนี้จะหมดอายุภายใน <b>10 นาที</b>
+          </p>
+
+          <hr style="margin:20px 0;border:none;border-top:1px solid #eee;" />
+
+          <p style="text-align:center;color:#999;font-size:12px;">
+            หากคุณไม่ได้ร้องขอรหัสนี้ กรุณาเพิกเฉยต่ออีเมลนี้
+          </p>
+
+        </div>
+      </div>
       `
     });
 
@@ -317,7 +476,7 @@ exports.verifyOtp = async (req, res) => {
       UPDATE TB_T_Employee
       SET reset_otp=NULL,
           reset_expire=NULL,
-          otp_attempt=0
+          login_attempt=0
       WHERE email=?
       `,
       [email]
@@ -342,7 +501,7 @@ exports.verifyOtp = async (req, res) => {
 // ================= RESET =================
 exports.resetPassword = async (req, res) => {
   try {
-    const { password, confirm } = req.body;
+    const { password } = req.body;
     const email = req.session.resetEmail;
 
     // ❌ ไม่มี session
@@ -360,13 +519,6 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // ❌ รหัสผ่านไม่ตรงกัน
-    if (password !== confirm) {
-      return res.render("reset-password", {
-        error: "❌ รหัสผ่านไม่ตรงกัน"
-      });
-    }
-
     const hash = await bcrypt.hash(password, 10);
 
     await db.execute(
@@ -376,12 +528,10 @@ exports.resetPassword = async (req, res) => {
       [hash, email]
     );
 
-    // ✅ ล้าง session OTP
     delete req.session.resetEmail;
 
-    // ✅ เด้งข้อความสำเร็จหน้า login
     return res.render("login", {
-      success: "✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบ"
+      success: "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบ"
     });
 
   } catch (err) {

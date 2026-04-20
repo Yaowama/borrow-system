@@ -190,3 +190,35 @@
   display: none;
 }
 
+/* Toast container */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  min-width: 260px;
+  max-width: 320px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #1e1e2f;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.4s ease;
+  z-index: 9999;
+}
+
+/* แสดง */
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* error style */
+.toast i {
+  color: #ff4d4f;
+  font-size: 18px;
+}

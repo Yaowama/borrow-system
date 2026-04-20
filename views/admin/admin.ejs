@@ -3,11 +3,31 @@
         <h1>ระบบการยืม-คืน</h1>
 
         <div class="top-right">
+          
             <div class="admin-box">
                 <span>Admin</span>
                 <i class="fa-solid fa-user"></i>
             </div>
 
+            <div class="noti-wrap" id="notiWrap">
+              <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+                <i class="fa-solid fa-bell"></i>
+                <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+              </button>
+
+              <div class="noti-dropdown" id="notiDropdown">
+                <div class="noti-header">
+                  <span>การแจ้งเตือน</span>
+                  <span class="noti-count-label" id="notiCountLabel"></span>
+                </div>
+                <div class="noti-list" id="notiList">
+                  <div class="noti-empty">
+                    <i class="fa-solid fa-bell-slash"></i>
+                    <p>ไม่มีการแจ้งเตือน</p>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="logo-box">
                 <img src="/images/logo.png">
             </div>
@@ -72,23 +92,95 @@
 <div class="dashboard-graphs">
 
   <div class="graph-box">
+
+  <div class="graph-title">
     <h3>สรุปสถานะการยืม</h3>
-    <canvas id="borrowChart"
-    data-approved="<%= approved.total %>"
-    data-pending="<%= pending.total %>"
-    data-rejected="<%= rejected.total %>"
-    data-returned="<%= returned.total %>">
-    data-overdue="<%= overdue.total %>">
-    </canvas>
+    <p class="graph-sub">ภาพรวมรายการยืม-คืนทั้งหมด</p>
   </div>
 
-  <div class="graph-box">
-    <h3>สถานะอุปกรณ์</h3>
-    <canvas id="deviceChart"
-      data-available="<%= availableDevice.total %>"
-      data-borrowed="<%= approved.total %>"
-      data-repair="0">
+  <div class="graph-flex">
+
+    <!-- chart -->
+    <div class="chart-area">
+      <canvas id="borrowChart"
+        data-approved="<%= approved.total %>"
+        data-pending="<%= pending.total %>"
+        data-rejected="<%= rejected.total %>"
+        data-returned="<%= returned.total %>"
+        data-overdue="<%= overdue.total %>">
       </canvas>
+    </div>
+
+    <!-- legend custom -->
+    <div class="legend-box">
+      <div class="legend-item"><span class="dot green"></span> อนุมัติ <b><%= approved.total %></b></div>
+      <div class="legend-item"><span class="dot yellow"></span> รอตรวจสอบ <b><%= pending.total %></b></div>
+      <div class="legend-item"><span class="dot red"></span> ไม่อนุมัติ <b><%= rejected.total %></b></div>
+      <div class="legend-item"><span class="dot blue"></span> คืนแล้ว <b><%= returned.total %></b></div>
+      <div class="legend-item"><span class="dot purple"></span> เกินกำหนด <b><%= overdue.total %></b></div>
+    </div>
+
   </div>
+
+  <div class="graph-divider"></div>
+
+    <div class="device-bars"
+      data-available="<%= deviceStatus.available %>"
+      data-borrowed="<%= deviceStatus.borrowed %>"
+      data-repair="<%= deviceStatus.repair %>"
+      data-total="<%= deviceTotal.total %>">
+
+      <div class="bar-row">
+        <span>คงเหลือ</span>
+        <div class="bar"><div class="bar-fill" data-key="available"></div></div>
+        <b><%= deviceStatus.available %></b>
+      </div>
+
+      <div class="bar-row">
+        <span>ถูกยืม</span>
+        <div class="bar"><div class="bar-fill" data-key="borrowed"></div></div>
+        <b><%= deviceStatus.borrowed %></b>
+      </div>
+
+      <div class="bar-row">
+        <span>ซ่อม</span>
+        <div class="bar"><div class="bar-fill" data-key="repair"></div></div>
+        <b><%= deviceStatus.repair %></b>
+      </div>
+
+    </div>
+
+</div>
+
+<div class="graph-box near-due-box">
+  <h3>ใกล้ครบกำหนด / เกิน</h3>
+  <p class="graph-sub">รายการที่ต้องติดตาม</p>
+
+  <% if (nearDueList && nearDueList.length > 0) { %>
+
+    <% nearDueList.forEach(item => { %>
+      <div class="nitem">
+        <div class="avatar"><%= item.fname[0] %><%= item.lname[0] %></div>
+        <div class="ninfo">
+          <div class="nname"><%= item.fname %> <%= item.lname %></div>
+          <div class="ncode"><%= item.BorrowCode %></div>
+        </div>
+        <div class="ndays <%= item.remain_day < 0 ? 'over' : 'near' %>">
+          <%= item.remain_day < 0 ? 'เกิน '+Math.abs(item.remain_day)+' วัน' : 'เหลือ '+item.remain_day+' วัน' %>
+        </div>
+      </div>
+    <% }) %>
+
+  <% } else { %>
+
+    <div class="empty-state">
+      <i class="fa-solid fa-circle-check"></i>
+      <p>ไม่มีรายการใกล้ครบกำหนด</p>
+      <span>ทุกการยืมอยู่ในระยะเวลาปกติ</span>
+    </div>
+
+  <% } %>
+
+</div>
 
 </div>

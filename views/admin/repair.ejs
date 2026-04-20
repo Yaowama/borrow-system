@@ -1,179 +1,249 @@
 <link rel="stylesheet" href="/css/repair.css">
 
 <div class="top-bar">
-
-        <h1>แจ้งซ่อมอุปกรณ์</h1>
-
-        <div class="top-right">
-          <div class="search">
-              <input
-                type="text"
-                class="admin-search"
-                data-target=".repair-row"
-                placeholder="ค้นหาอุปกรณ์ / เลขใบซ่อม"
-              >
-              <i class="fa-solid fa-magnifying-glass"></i>
-          </div>
-            <div class="admin-box">
-                <span>Admin</span>
-                <i class="fa-solid fa-user"></i>
-            </div>
- 
-            <div class="logo-box">
-                <img src="/images/logo.png">
-            </div>
+  <h1>แจ้งซ่อมอุปกรณ์</h1>
+  <div class="top-right">
+    <div class="search">
+      <input type="text" class="admin-search"
+        data-target=".repair-row"
+        placeholder="ค้นหาอุปกรณ์ / เลขใบซ่อม">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+    <div class="admin-box">
+      <span>Admin</span>
+      <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="noti-wrap" id="notiWrap">
+      <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+        <i class="fa-solid fa-bell"></i>
+        <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+      </button>
+      <div class="noti-dropdown" id="notiDropdown">
+        <div class="noti-header">
+          <span>การแจ้งเตือน</span>
+          <span class="noti-count-label" id="notiCountLabel"></span>
         </div>
+        <div class="noti-list" id="notiList">
+          <div class="noti-empty">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>ไม่มีการแจ้งเตือน</p>
+          </div>
+        </div>
+      </div>
     </div>
+    <div class="logo-box"><img src="/images/logo.png"></div>
+  </div>
+</div>
 
-    <div class="repair-tabs">
-      <a href="/admin/repair?status=all"
-        class="tab <%= status === 'all' ? 'active' : '' %>">
-        ทั้งหมด
-      </a>
-      <a href="/admin/repair?status=1" class="tab <%= status == '1' ? 'active' : '' %>">
-        รอรับงาน
-      </a>
-
-      <a href="/admin/repair?status=2" class="tab <%= status == '2' ? 'active' : '' %>">
-        กำลังซ่อม
-      </a>
-
-      <a href="/admin/repair?status=3" class="tab <%= status == '3' ? 'active' : '' %>">
-        ซ่อมเสร็จ
-      </a>
-
-      <a href="/admin/repair?status=4" class="tab <%= status == '4' ? 'active' : '' %>">
-        ยกเลิก
-      </a>
-
-     
+<!-- SUMMARY -->
+<div class="repair-summary">
+  <div class="rs-item">
+    <div class="rs-icon all"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+    <div>
+      <div class="rs-num"><%= repairs.length %></div>
+      <div class="rs-label">ทั้งหมด</div>
     </div>
+  </div>
+  <div class="rs-item">
+    <div class="rs-icon wait"><i class="fa-solid fa-clock"></i></div>
+    <div>
+      <div class="rs-num"><%= repairs.filter(r => r.RepairStatusID === 1).length %></div>
+      <div class="rs-label">รอรับงาน</div>
+    </div>
+  </div>
+  <div class="rs-item">
+    <div class="rs-icon working"><i class="fa-solid fa-gears"></i></div>
+    <div>
+      <div class="rs-num"><%= repairs.filter(r => r.RepairStatusID === 2).length %></div>
+      <div class="rs-label">กำลังซ่อม</div>
+    </div>
+  </div>
+  <div class="rs-item">
+    <div class="rs-icon done"><i class="fa-solid fa-circle-check"></i></div>
+    <div>
+      <div class="rs-num"><%= repairs.filter(r => r.RepairStatusID === 3).length %></div>
+      <div class="rs-label">ซ่อมเสร็จ</div>
+    </div>
+  </div>
+  <div class="rs-item">
+    <div class="rs-icon cancel"><i class="fa-solid fa-ban"></i></div>
+    <div>
+      <div class="rs-num"><%= repairs.filter(r => r.RepairStatusID === 4).length %></div>
+      <div class="rs-label">ยกเลิก</div>
+    </div>
+  </div>
+</div>
 
-<table class="table">
-  <thead>
-    <tr>
-    <th>No.</th>
-    <th>รูป</th>
-    <th>เลขใบซ่อม</th>
-    <th>อุปกรณ์</th>
-    <th>ผู้แจ้ง</th>
-    <th>วันที่ส่งซ่อม</th>
-    <th>สถานะ</th>
-    <th>ดำเนินการโดย</th>
-    <th>จัดการ</th>
-    <th></th>
-  </tr>
-  </thead>
+<!-- TABS -->
+<div class="repair-tabs">
+  <a href="/admin/repair?status=all" class="tab <%= status === 'all' ? 'active' : '' %>">
+    <i class="fa-solid fa-list"></i> ทั้งหมด
+  </a>
+  <a href="/admin/repair?status=1" class="tab <%= status == '1' ? 'active' : '' %>">
+    <i class="fa-solid fa-clock"></i> รอรับงาน
+  </a>
+  <a href="/admin/repair?status=2" class="tab <%= status == '2' ? 'active' : '' %>">
+    <i class="fa-solid fa-gears"></i> กำลังซ่อม
+  </a>
+  <a href="/admin/repair?status=3" class="tab <%= status == '3' ? 'active' : '' %>">
+    <i class="fa-solid fa-circle-check"></i> ซ่อมเสร็จ
+  </a>
+  <a href="/admin/repair?status=4" class="tab <%= status == '4' ? 'active' : '' %>">
+    <i class="fa-solid fa-ban"></i> ยกเลิก
+  </a>
+</div>
 
-  <tbody>
-  <% repairs.forEach((r, index) => { %>
-  <tr class="repair-row">
+<!-- TABLE -->
+<div class="repair-table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>รูป</th>  
+        <th>อุปกรณ์</th>
+        <th>เลขใบซ่อม</th>
+        <th>ผู้แจ้ง</th>
+        <th>วันที่แจ้ง</th>
+        <th>ดำเนินการโดย</th>
+        <th>สถานะ</th>
+        <th>ดำเนินการ</th>   
+        <th>เพิ่มเติม</th> 
+      </tr>
+    </thead>
+    <tbody>
+    <% if (repairs.length === 0) { %>
+      <tr>
+        <td colspan="10" class="empty-row">
+          <i class="fa-solid fa-inbox"></i>
+          <p>ไม่พบรายการแจ้งซ่อม</p>
+        </td>
+      </tr>
+    <% } %>
+    <% repairs.forEach((r, index) => { %>
+    <tr class="repair-row">
 
-    <td><%= index + 1 %></td>
+      <td class="col-no"><%= index + 1 %></td>
 
-    <td>
-      <img src="/uploads/device/<%= r.DeviceImage %>" class="table-img">
-    </td>
+      <!-- รูป -->
+      <td class="td-img">
+        <div class="device-thumb">
+          <img src="/uploads/device/<%= r.DeviceImage %>"
+              onerror="this.src='/images/no-image.png'">
+        </div>
+      </td>
 
-    <td><%= r.RepairCode || '-' %></td>
+      <!-- อุปกรณ์ -->
+      <td>
+        <div class="device-name"><%= r.DeviceName %></div>
+        <div class="device-meta"><%= r.ITCode || '-' %> · <%= r.AssetTag || '-' %></div>
+      </td>
 
-    <td>
-      <strong><%= r.DeviceName %></strong><br>
-      <small><%= r.AssetCode %></small>
-    </td>
+      <!-- เลขใบซ่อม -->
+      <td>
+        <span class="repair-code"><%= r.RepairCode || '-' %></span>
+      </td>
 
-    <td><%= r.CreateBy || '-' %></td>
+      <!-- ผู้แจ้ง -->
+      <td>
+        <div class="person-name"><%= r.CreateBy || '-' %></div>
+      </td>
 
-    <td><%= r.CreateDate %></td>
+      <!-- วันที่ -->
+      <td class="date-col"><%= r.CreateDate %></td>
 
-    <td>
-      <span class="badge status-<%= r.RepairStatusID %>">
-        <%= r.RepairStatusName %>
-      </span>
-    </td>
+      <!-- ช่าง -->
+      <td>
+        <% if (r.Technician) { %>
+          <div class="tech-cell">
+            <i class="fa-solid fa-user-gear"></i>
+            <%= r.Technician %>
+          </div>
+        <% } else { %>
+          <span class="no-data">—</span>
+        <% } %>
+      </td>
 
-    <td><%= r.Technician || '-' %></td>
+      <!-- สถานะ -->
+      <td>
+        <span class="badge status-<%= r.RepairStatusID %>">
+          <%= r.RepairStatusName %>
+        </span>
+      </td>
 
-    <td>
+      <!-- ดำเนินการ -->
+      <td>
+        <div class="action-group">
+          <% if (r.RepairStatusID === 1) { %>
+            <form action="/admin/repair/start/<%= r.RepairID %>" method="POST">
+              <button class="btn blue">
+                <i class="fa-solid fa-play"></i> รับงาน
+              </button>
+            </form>
+          <% } else if (r.RepairStatusID === 2) { %>
+            <form action="/admin/repair/process/<%= r.RepairID %>" method="POST">
+              <button class="btn green">
+                <i class="fa-solid fa-check"></i> ซ่อมเสร็จ
+              </button>
+            </form>
+          <% } else if (r.RepairStatusID === 3) { %>
+            <span class="done-label">
+              <i class="fa-solid fa-circle-check"></i> เสร็จแล้ว
+            </span>
+          <% } else { %>
+            <span class="no-data">—</span>
+          <% } %>
+        </div>
+      </td>
 
-  <% if (!r.RepairStatusID || r.RepairStatusID === 0) { %>
+      <!-- เพิ่มเติม -->
+      <td>
+        <div class="action-group">
+          <button class="btn-detail" data-id="<%= r.RepairID %>" title="ดูรายละเอียด">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+          <% if (r.RepairStatusID !== 3 && r.RepairStatusID !== 4) { %>
+            <button class="btn-repair-cancel" data-id="<%= r.RepairID %>" title="ยกเลิก">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          <% } %>
+        </div>
+      </td>
 
-    <span>-</span>
+    </tr>
+    <% }) %>
+    </tbody>
+  </table>
+</div>
 
-  <% } else if (r.RepairStatusID === 1) { %>
-
-    <form action="/admin/repair/start/<%= r.RepairID %>" method="POST">
-      <button class="btn blue">รับงาน</button>
-    </form>
-
-  <% } else if (r.RepairStatusID === 2) { %>
-
-    <form action="/admin/repair/process/<%= r.RepairID %>" method="POST">
-      <button class="btn green">ซ่อมเสร็จ</button>
-    </form>
-
-  <% } else if (r.RepairStatusID === 3) { %>
-
-    <span class="done">เสร็จแล้ว</span>
-
-  <% } else { %>
-
-    <span>-</span>
-
-  <% } %>
-
-</td>
-
-    <td>
-  <button class="btn-detail" data-id="<%= r.RepairID %>">
-    <i class="fa-solid fa-eye"></i>
-  </button>
-
-  <% if (r.RepairStatusID !== 3 && r.RepairStatusID !== 4) { %>
-   <button
-      type="button"
-      class="btn-repair-cancel"
-      data-id="<%= r.RepairID %>"
-      title="ยกเลิกคำสั่งซ่อม"
-    >
+<!-- DETAIL MODAL -->
+<div class="modal" id="repairDetailModal">
+  <div class="repair-detail-modal">
+    <button id="closeDetail" class="close-btn">
       <i class="fa-solid fa-xmark"></i>
     </button>
-  <% } %>
-</td>
-
-  </tr>
-<% }) %>
-</tbody>
-</table>
-
-<div class="modal" id="repairDetailModal">
-  <div class="modal-box-detail-modal">
-    <button id="closeDetail" class="close-btn"> <i class="fa-solid fa-xmark"></i></button>
+    <div class="repair-modal-header">
+      <i class="fa-solid fa-screwdriver-wrench"></i>
+      <h2>รายละเอียดใบซ่อม</h2>
+    </div>
     <div class="modal-body" id="detailContent"></div>
   </div>
 </div>
 
-<!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
+<!-- CANCEL CONFIRM MODAL -->
 <div id="deleteModal" class="delete-modal">
   <div class="modal-box">
-
-    <div class="check-wrapper danger">
+    <div class="check-wrapper">
       <svg class="warningmark" viewBox="0 0 52 52">
         <circle class="warning-circle" cx="26" cy="26" r="23" fill="none"/>
         <line class="warning-line" x1="26" y1="14" x2="26" y2="30"/>
         <circle class="warning-dot" cx="26" cy="36" r="2"/>
       </svg>
     </div>
-
     <h3>ยืนยันการยกเลิก</h3>
-    <p>คุณต้องการยกเลิกคำสั่งซ่อมนี้ใช่หรือไม่ ?</p>
-
+    <p>คุณต้องการยกเลิกคำสั่งซ่อมนี้ใช่หรือไม่?</p>
     <div class="modal-actions">
       <button class="btn-cancel">กลับ</button>
       <button id="confirmDeleteBtn" class="btn-danger">ยืนยัน</button>
     </div>
   </div>
 </div>
-
-
-

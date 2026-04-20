@@ -100,68 +100,6 @@ rows.forEach(row=>{
 });
 
 
-/* ====== ALL CATEGORY ====== */
-
-let allCategory = document.createElement("div");
-allCategory.innerText = "ทั้งหมด";
-
-allCategory.onclick = ()=>{
-    rows.forEach(r=>{
-        r.style.display = "";
-    });
-};
-
-categoryFilter.appendChild(allCategory);
-
-
-/* ====== CATEGORY LIST ====== */
-
-categories.forEach(c=>{
-    let div = document.createElement("div");
-    div.innerText = c;
-
-    div.onclick = ()=>{
-        rows.forEach(r=>{
-            r.style.display =
-            r.dataset.category === c ? "" : "none";
-        });
-    };
-
-    categoryFilter.appendChild(div);
-});
-
-
-/* ====== ALL TYPE ====== */
-
-let allType = document.createElement("div");
-allType.innerText = "ทั้งหมด";
-
-allType.onclick = ()=>{
-    rows.forEach(r=>{
-        r.style.display = "";
-    });
-};
-
-typeFilter.appendChild(allType);
-
-
-/* ====== TYPE LIST ====== */
-
-types.forEach(t=>{
-    let div = document.createElement("div");
-    div.innerText = t;
-
-    div.onclick = ()=>{
-        rows.forEach(r=>{
-            r.style.display =
-            r.dataset.type === t ? "" : "none";
-        });
-    };
-
-    typeFilter.appendChild(div);
-});
-
-
 /* ====== DROPDOWN TOGGLE ====== */
 
 document.querySelectorAll(".filter-head").forEach(head=>{
@@ -182,3 +120,22 @@ document.querySelectorAll(".filter-head").forEach(head=>{
 });
 
 });
+
+  const toast = document.getElementById("toastBox");
+
+  if (toast) {
+    // แสดง
+    setTimeout(() => {
+      toast.classList.add("show");
+    }, 100);
+
+    // หาย
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, 3000);
+
+    // ลบออกจาก DOM
+    setTimeout(() => {
+      toast.remove();
+    }, 3500);
+  }

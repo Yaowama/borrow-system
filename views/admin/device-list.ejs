@@ -16,6 +16,7 @@
     <div class="search">
             <input
                 type="text"
+                id="searchInput"
                 class="admin-search"
                 data-target=".device-list-row"
                 placeholder="ค้นหาอุปกรณ์"
@@ -28,6 +29,25 @@
       <i class="fa-solid fa-user"></i>
     </div>
 
+    <div class="noti-wrap" id="notiWrap">
+    <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+        <i class="fa-solid fa-bell"></i>
+        <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+    </button>
+
+    <div class="noti-dropdown" id="notiDropdown">
+        <div class="noti-header">
+        <span>การแจ้งเตือน</span>
+        <span class="noti-count-label" id="notiCountLabel"></span>
+        </div>
+        <div class="noti-list" id="notiList">
+        <div class="noti-empty">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>ไม่มีการแจ้งเตือน</p>
+        </div>
+        </div>
+    </div>
+    </div>
     <div class="logo-box">
       <img src="/images/logo.png">
     </div>
@@ -49,8 +69,9 @@
         <tr>
             <th class="center">No.</th>
             <th class="center">Barcode</th>
-            <th class="center">Serial</th>
-            <th class="center">Asset Code</th>
+            <th class="center">Asset Tag</th>
+            <th class="center">IT Code</th>
+            <th class="center">Serial Number</th>
             <th class="center">สถานะ</th>
             <th class="center">เพิ่มเมื่อ</th>
             <th class="center">แก้ไขล่าสุด</th>
@@ -84,14 +105,18 @@
             <% } %>
             </td>
 
-            <!-- Serial -->
+            <!-- Asset Tag -->
             <td class="center">
-                <strong><%= d.SerialNumber %></strong>
+                <%= d.AssetTag || "-" %>
             </td>
 
-            <!-- Asset Code -->
+            <!-- IT Code -->
             <td class="center">
-                <%= d.AssetCode || "-" %>
+                <%= d.ITCode || "-" %>
+            </td>
+
+            <td class="center">
+                <%= d.SerialNumber || '-' %>
             </td>
 
             <!-- Status -->
@@ -152,7 +177,6 @@
 </table>
 
 
-<!-- ✅ DELETE MODAL ต้องอยู่นอก if -->
 <div id="deleteModal" class="delete-modal">
   <div class="modal-box">
 

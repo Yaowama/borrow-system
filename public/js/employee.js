@@ -75,10 +75,10 @@ async function apiFetch(url, options = {}) {
       if (form.InstitutionID) form.InstitutionID.value = data.InstitutionID || "";
 
       if (form.RoleID)
-        form.RoleID.value = data.RoleID || "";
+        form.RoleID.value = String(data.RoleID ?? "");
 
       if (form.IsActive)
-        form.IsActive.value = data.IsActive || "";
+        form.IsActive.value = String(data.IsActive ?? "");
 
       if (form.password) form.password.value = "";
       if (form.username)

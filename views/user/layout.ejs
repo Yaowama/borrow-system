@@ -11,7 +11,7 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body data-success="<%= typeof success !== 'undefined' ? success : '' %>">
+<body data-role="user" data-success="<%= typeof success !== 'undefined' ? success : '' %>">
 
 <div class="container">
 
@@ -45,7 +45,31 @@
   <img id="barcodePreview" />
 </div>
 
+
+<% if (show2faWarning) { %>
+<div class="banner-2fa" id="b2fa">
+  <div class="banner-top">
+    <span class="bi">🔐</span>
+    <div class="banner-top-txt">
+      <h4>เพิ่มความปลอดภัยด้วย 2FA</h4>
+      <p>ป้องกันบัญชีจากการเข้าถึงโดยไม่รับอนุญาต</p>
+    </div>
+  </div>
+  <div class="banner-body">
+    <p>เปิดใช้งาน Two-Factor Authentication เพื่อเพิ่มชั้นความปลอดภัย ระบบจะส่ง OTP ทาง Email ทุกครั้งที่เข้าสู่ระบบ</p>
+    <div class="banner-actions">
+      <button class="banner-btn-yes" id="btnGoProfile">ตั้งค่าเลย</button>
+      <button class="banner-btn-no" id="btnDismiss2FA">ไม่สนใจ 10 วัน</button>
+    </div>
+  </div>
+</div>
+<% } %>
+
+
 <script src="/js/borrow_status.js"></script>
 <script src="/js/user.js"></script>
+<script src="/js/profile.js"></script>
+
+
 </body>
 </html>

@@ -26,8 +26,13 @@ function showRepairDetail(r) {
       </div>
 
       <div class="row">
-        <span class="label">Asset Code:</span>
-        ${r.AssetCode || '-'}
+        <span class="label">Asset Tag:</span>
+        ${r.AssetTag || '-'}
+      </div>
+
+      <div class="row">
+        <span class="label">IT Code:</span>
+        ${r.ITCode || '-'}
       </div>
 
       <div class="row">

@@ -84,3 +84,41 @@ exports.isAdmin = async (req, res, next) => {
   }
 
 };
+
+async function check2FAWarning(req, res, next) {
+  try {
+    const EMPID = req.session.user.EMPID;
+
+    const [[emp]] = await db.query(`
+      SELECT two_fa_enabled, two_fa_dismissed
+      FROM TB_T_Employee
+      WHERE EMPID = ?
+    `, [EMPID]);
+
+    let show2faWarning = false;
+
+    if (emp.two_fa_enabled == 0) {
+      if (!emp.two_fa_dismissed) {
+        show2faWarning = true;
+      } else {
+        const now = new Date();
+        const dismissed = new Date(emp.two_fa_dismissed);
+        const diffDays = (now - dismissed) / (1000 * 60 * 60 * 24);
+
+        if (diffDays > 10) {
+          show2faWarning = true;
+        }
+      }
+    }
+
+    res.locals.show2faWarning = show2faWarning;
+
+    next();
+
+  } catch (err) {
+    console.error(err);
+    next();
+  }
+}
+
+exports.check2FAWarning = check2FAWarning;

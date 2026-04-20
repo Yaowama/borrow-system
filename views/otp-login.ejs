@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ยืนยัน OTP (2FA)</title>
+
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="container">
+
+  <div class="left">
+
+    <!-- ปุ่มย้อนกลับ -->
+    <a href="/login" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <h1>ยืนยัน OTP</h1>
+
+    <p class="info-text">
+      ระบบได้ส่งรหัส OTP ไปยังอีเมลของคุณ<br>
+    </p>
+
+    <% if (typeof error !== "undefined" && error) { %>
+      <div class="error-box show">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- OTP FORM -->
+    <form method="POST" action="/verify-login-otp" id="otpForm">
+
+      <input type="hidden" name="email" value="<%= email %>">
+
+      <div class="label">กรอกรหัส OTP (6 หลัก)</div>
+
+      <div class="input">
+        <input
+          type="text"
+          name="otp"
+          maxlength="6"
+          placeholder="------"
+          required
+          autocomplete="one-time-code"
+        >
+      </div>
+      
+
+      <button class="btn">
+        <i class="fa-solid fa-shield-check"></i>
+        ยืนยัน OTP
+      </button>
+
+    </form>
+
+  </div>
+
+  <div class="right">
+
+    <div class="logo-box">
+      <img src="/images/logo2.png" alt="logo">
+    </div>
+
+    <h2>เพิ่มความปลอดภัยให้บัญชี</h2>
+    <p>กรุณายืนยันตัวตนอีกขั้นก่อนเข้าสู่ระบบ</p>
+
+  </div>
+
+</div>
+
+</body>
+</html>

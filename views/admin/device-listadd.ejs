@@ -9,6 +9,25 @@
       <i class="fa-solid fa-user"></i>
     </div>
 
+  <div class="noti-wrap" id="notiWrap">
+    <button class="noti-btn" id="notiBtn" aria-label="แจ้งเตือน">
+      <i class="fa-solid fa-bell"></i>
+      <span class="noti-badge" id="notiBadge" style="display:none;">0</span>
+    </button>
+
+    <div class="noti-dropdown" id="notiDropdown">
+      <div class="noti-header">
+        <span>การแจ้งเตือน</span>
+        <span class="noti-count-label" id="notiCountLabel"></span>
+      </div>
+      <div class="noti-list" id="notiList">
+        <div class="noti-empty">
+          <i class="fa-solid fa-bell-slash"></i>
+          <p>ไม่มีการแจ้งเตือน</p>
+        </div>
+      </div>
+    </div>
+  </div>
     <div class="logo-box">
       <img src="/images/logo.png">
     </div>
@@ -47,18 +66,29 @@
         <input
           type="text"
           name="SerialNumber"
-          placeholder="SN-XXXXX"
+          placeholder="SNXXXXX"
           required
         >
       </div>
 
-      <!-- Asset Code -->
+      <!-- Asset Tag -->
       <div class="form-group">
-        <label>Asset Code</label>
+        <label>Asset Tag</label>
         <input
           type="text"
-          name="AssetCode"
-          placeholder="ASSET-001"
+          name="AssetTag"
+          placeholder="B00-0001"
+          required
+        >
+      </div>
+
+      <!-- IT Code -->
+      <div class="form-group">
+        <label>IT Code</label>
+        <input
+          type="text"
+          name="ITCode"
+          placeholder="IT-00000001-0001"
         >
       </div>
 
@@ -114,3 +144,9 @@
   </form>
 </div>
 
+<% if (typeof error !== "undefined" && error) { %>
+  <div class="toast show" id="toastBox">
+    <i class="fa-solid fa-circle-xmark"></i>
+    <span><%= error %></span>
+  </div>
+<% } %>
