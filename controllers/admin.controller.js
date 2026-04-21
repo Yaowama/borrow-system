@@ -4,7 +4,7 @@ exports.deviceListAdd = (req, res) => {
   const sql = `
     SELECT d.*,
            e.username AS CreatedByName
-    FROM TB_T_Deviceadd d
+    FROM tb_t_deviceadd d
     LEFT JOIN tb_t_employee e
            ON d.CreatedBy = e.EMPID
     WHERE d.ModelID = ?

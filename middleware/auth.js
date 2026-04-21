@@ -9,7 +9,7 @@ exports.isLogin = async (req, res, next) => {
   try {
 
     const [rows] = await db.execute(
-      "SELECT EMPStatusID FROM TB_T_Employee WHERE EMPID=?",
+      "SELECT EMPStatusID FROM tb_t_employee WHERE EMPID=?",
       [req.session.user.EMPID]
     );
 
@@ -50,7 +50,7 @@ exports.isAdmin = async (req, res, next) => {
   try {
 
     const [rows] = await db.execute(
-      "SELECT EMPStatusID, RoleID FROM TB_T_Employee WHERE EMPID=?",
+      "SELECT EMPStatusID, RoleID FROM tb_t_employee WHERE EMPID=?",
       [req.session.user.EMPID]
     );
 
@@ -91,7 +91,7 @@ async function check2FAWarning(req, res, next) {
 
     const [[emp]] = await db.query(`
       SELECT two_fa_enabled, two_fa_dismissed
-      FROM TB_T_Employee
+      FROM tb_t_employee
       WHERE EMPID = ?
     `, [EMPID]);
 

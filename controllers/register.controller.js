@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
 
   // 2. check duplicate
   const [exists] = await db.query(
-    "SELECT 1 FROM TB_T_Employee WHERE email = ? OR EMP_NUM = ?",
+    "SELECT 1 FROM tb_t_employee WHERE email = ? OR EMP_NUM = ?",
     [email, EMP_NUM]
   );
 
@@ -44,7 +44,7 @@ exports.register = async (req, res) => {
 
   // 4. insert
   await db.query(`
-    INSERT INTO TB_T_Employee
+    INSERT INTO tb_t_employee
     (
       fname,lname,username,
       EMP_NUM,email,password,

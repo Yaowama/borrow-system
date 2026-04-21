@@ -37,7 +37,7 @@ async function checkActive(req, res, next) {
     const EMPID = req.session.user.EMPID;
 
     const [rows] = await db.query(
-      "SELECT IsActive FROM TB_T_Employee WHERE EMPID=?",
+      "SELECT IsActive FROM tb_t_employee WHERE EMPID=?",
       [EMPID]
     );
 
@@ -81,7 +81,7 @@ router.get("/notifications", async (req, res) => {
     SELECT bt.BorrowID, bt.BorrowCode,
            DATE_FORMAT(bt.BorrowDate,'%d/%m/%Y %H:%i') AS CreatedDate,
            bt.BorrowDate AS rawTime
-    FROM TB_T_BorrowTransaction bt
+    FROM tb_t_borrowtransaction bt
     WHERE bt.EMPID = ? AND bt.BorrowStatusID = 1
     ORDER BY bt.BorrowDate DESC LIMIT 5
   `, [empId]);
@@ -98,7 +98,7 @@ router.get("/notifications", async (req, res) => {
     SELECT bt.BorrowID, bt.BorrowCode,
            DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS ApproveDate,
            bt.ApproveDate AS rawTime
-    FROM TB_T_BorrowTransaction bt
+    FROM tb_t_borrowtransaction bt
     WHERE bt.EMPID = ? AND bt.BorrowStatusID = 2
     ORDER BY bt.ApproveDate DESC LIMIT 5
   `, [empId]);
@@ -116,7 +116,7 @@ router.get("/notifications", async (req, res) => {
             DATEDIFF(bt.DueDate, CURDATE()) AS remain,
             DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
             bt.BorrowDate AS rawTime    
-      FROM TB_T_BorrowTransaction bt
+      FROM tb_t_borrowtransaction bt
       WHERE bt.EMPID = ? AND bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
         AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
@@ -133,7 +133,7 @@ router.get("/notifications", async (req, res) => {
         SELECT bt.BorrowID, bt.BorrowCode,
               DATE_FORMAT(bt.ReturnDate,'%d/%m/%Y %H:%i') AS ReturnDate,
               bt.ReturnDate AS rawTime
-        FROM TB_T_BorrowTransaction bt
+        FROM tb_t_borrowtransaction bt
         WHERE bt.EMPID = ?
           AND bt.BorrowStatusID = 4
           AND bt.ReturnDate IS NOT NULL
@@ -156,7 +156,7 @@ router.get("/notifications", async (req, res) => {
               bt.Remark,
               DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS ApproveDate,
               bt.ApproveDate AS rawTime
-        FROM TB_T_BorrowTransaction bt
+        FROM tb_t_borrowtransaction bt
         WHERE bt.EMPID = ?
           AND bt.BorrowStatusID = 3
           AND bt.ApproveDate >= DATE_SUB(NOW(), INTERVAL 3 DAY)
@@ -177,7 +177,7 @@ router.get("/notifications", async (req, res) => {
 
   // ---- read keys ----
   const [reads] = await db.query(
-    "SELECT NotiKey FROM TB_T_NotificationRead WHERE EMPID = ?", [empId]
+    "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?", [empId]
   );
   const readKeys = new Set(reads.map(r => r.NotiKey));
 
@@ -197,7 +197,7 @@ router.post("/notifications/mark-read", isLogin, checkActive, async (req, res) =
     if (!Array.isArray(keys) || !keys.length) return res.json({ ok: true });
     const values = keys.map(k => [empId, k]);
     await db.query(
-      "INSERT IGNORE INTO TB_T_NotificationRead (EMPID, NotiKey) VALUES ?",
+      "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES ?",
       [values]
     );
     res.json({ ok: true });
@@ -244,14 +244,14 @@ router.get("/dashboard", async (req, res) => {
         SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
         SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL AND DueDate < CURDATE() THEN 1 ELSE 0 END) AS overdue,
         COUNT(*) AS history
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
       WHERE EMPID = ?
     `, [req.session.user.EMPID]);
 
     // เปลี่ยนชื่อ variable ที่ query มาจาก DB
       const [[dbUser]] = await db.query(`
         SELECT fname, lname, ProfileImage
-        FROM TB_T_Employee
+        FROM tb_t_employee
         WHERE EMPID = ?
       `, [req.session.user.EMPID]);
 
@@ -349,7 +349,7 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
       borrowCodes.push(borrowCode);
 
       await db.query(`
-        INSERT INTO TB_T_BorrowTransaction
+        INSERT INTO tb_t_borrowtransaction
         (BorrowCode, EMPID, TypeID, DVID, DueDate, Purpose, \`Location\`, BorrowStatusID, Remark)
         VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)
       `, [
@@ -364,7 +364,7 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
       ]);
 
       await db.query(`
-        INSERT INTO TB_T_Notification
+        INSERT INTO tb_t_notification
         (ReceiverID, NotiType, Title, Message, RefID, IsRead, CreatedDate)
         VALUES (?, ?, ?, ?, ?, 0, NOW())
       `, [
@@ -382,16 +382,16 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
     const borrowCodeText = borrowCodes.join(", ");
 
     const [admins] = await db.query(`
-      SELECT email FROM TB_T_Employee 
+      SELECT email FROM tb_t_employee 
       WHERE RoleID = 2 AND IsActive = 1 AND email IS NOT NULL
     `);
 
     const [[emp]] = await db.query(`
-      SELECT fname, lname, EMP_NUM FROM TB_T_Employee WHERE EMPID = ?
+      SELECT fname, lname, EMP_NUM FROM tb_t_employee WHERE EMPID = ?
     `, [EMPID]);
 
     const [[type]] = await db.query(`
-      SELECT TypeName FROM TB_M_Type WHERE TypeID = ?
+      SELECT TypeName FROM tb_m_type WHERE TypeID = ?
     `, [TypeID]);
 
     const dueDateFormatted = new Date(DueDate).toLocaleDateString('th-TH');
@@ -449,10 +449,10 @@ router.get("/borrow/history", isLogin, checkActive, async (req, res) => {
       DATE_FORMAT(bt.DueDate, '%d/%m/%Y') AS DueDate,
       d.DeviceName,
       s.StatusName
-    FROM TB_T_BorrowTransaction bt
+    FROM tb_t_borrowtransaction bt
     JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
     JOIN tb_t_device d ON da.DeviceID = d.DeviceID
-    JOIN TB_M_BorrowStatus s
+    JOIN tb_m_borrowstatus s
       ON bt.BorrowStatusID = s.BorrowStatusID
     WHERE bt.EMPID = ?
     ORDER BY bt.BorrowDate DESC
@@ -503,14 +503,14 @@ router.get("/borrow_status", isLogin, checkActive, async (req, res) => {
           ELSE NULL
         END AS DeviceImagePath
 
-      FROM TB_T_BorrowTransaction bt
+      FROM tb_t_borrowtransaction bt
       LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
       LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
       LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
       LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
       LEFT JOIN tb_m_category c ON d.CategoryID = c.CategoryID
       LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
-      JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
+      JOIN tb_m_borrowstatus s ON bt.BorrowStatusID = s.BorrowStatusID
       WHERE bt.EMPID = ?
         AND (
           bt.BorrowStatusID IN (1,2)
@@ -575,13 +575,13 @@ router.get("/borrow/detail/data/:code", isLogin, checkActive, async (req, res) =
         ELSE NULL
       END AS OverdueText
 
-    FROM TB_T_BorrowTransaction bt
+    FROM tb_t_borrowtransaction bt
     LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
     LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
     LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
     LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
     LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
-    JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
+    JOIN tb_m_borrowstatus s ON bt.BorrowStatusID = s.BorrowStatusID
 
     WHERE bt.BorrowCode = ?
       AND bt.EMPID = ?
@@ -597,7 +597,7 @@ router.post('/borrow/mark-viewed/:code', isLogin, checkActive, async (req, res) 
 
   try {
     await db.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET IsUserViewed = 1
       WHERE BorrowCode = ?
         AND EMPID = ?
@@ -622,7 +622,7 @@ router.post("/borrow/cancel/:id", isLogin, checkActive, async (req, res) => {
 
     const [[borrow]] = await conn.query(`
       SELECT DVID
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
       WHERE BorrowID = ?
         AND EMPID = ?
         AND BorrowStatusID = 1
@@ -635,7 +635,7 @@ router.post("/borrow/cancel/:id", isLogin, checkActive, async (req, res) => {
     }
 
     const [result] = await conn.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET BorrowStatusID = 5
       WHERE BorrowID = ?
         AND BorrowStatusID = 1
@@ -647,7 +647,7 @@ router.post("/borrow/cancel/:id", isLogin, checkActive, async (req, res) => {
     }
 
     await conn.query(`
-      UPDATE TB_T_DeviceAdd
+      UPDATE tb_t_deviceadd
       SET DVStatusID = 1
       WHERE DVID = ?
     `, [borrow.DVID]);
@@ -671,7 +671,7 @@ router.post("/borrow/acknowledge/:id", isLogin, checkActive, async (req, res) =>
 
   try {
     const [result] = await db.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET BorrowStatusID = 6
       WHERE BorrowID = ?
         AND EMPID = ?
@@ -710,13 +710,13 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
     m.ModelName,
     c.CategoryName,
     s.StatusName
-  FROM TB_T_BorrowTransaction bt
+  FROM tb_t_borrowtransaction bt
   JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
   JOIN tb_t_device d ON da.DeviceID = d.DeviceID
   LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
   LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
   LEFT JOIN tb_m_category c ON d.CategoryID = c.CategoryID
-  JOIN TB_M_BorrowStatus s
+  JOIN tb_m_borrowstatus s
     ON bt.BorrowStatusID = s.BorrowStatusID
   WHERE bt.EMPID = ?
     AND bt.BorrowStatusID IN (2,6)
@@ -785,14 +785,14 @@ router.get("/history", isLogin, checkActive, async (req, res) => {
       ELSE NULL
     END AS DeviceImagePath
 
-  FROM TB_T_BorrowTransaction bt
+  FROM tb_t_borrowtransaction bt
   LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
   LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
   LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
   LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
   LEFT JOIN tb_m_category c ON d.CategoryID = c.CategoryID
   LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
-  JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
+  JOIN tb_m_borrowstatus s ON bt.BorrowStatusID = s.BorrowStatusID
   WHERE bt.EMPID = ?
     AND bt.BorrowStatusID IN (3,4,5)
   ORDER BY bt.BorrowDate DESC
@@ -819,12 +819,12 @@ router.get("/profile", isLogin, checkActive, async (req, res) => {
       r.RoleName,
       d.DepartmentName,
       i.InstitutionName
-    FROM TB_T_Employee e
+    FROM tb_t_employee e
     LEFT JOIN Roles r 
       ON e.RoleID = r.RoleID
-    LEFT JOIN TB_M_Department d 
+    LEFT JOIN tb_m_department d 
       ON e.DepartmentID = d.DepartmentID
-    LEFT JOIN TB_M_Institution i 
+    LEFT JOIN tb_m_institution i 
       ON e.InstitutionID = i.InstitutionID
     WHERE e.EMPID = ?
   `, [req.session.user.EMPID]);
@@ -843,15 +843,15 @@ router.get("/profile/edit", isLogin, checkActive, async (req, res) => {
     const empId = req.session.user.EMPID;
 
     const [[user]] = await db.query(`
-      SELECT * FROM TB_T_Employee WHERE EMPID = ?
+      SELECT * FROM tb_t_employee WHERE EMPID = ?
     `, [empId]);
 
     const [departments] = await db.query(`
-      SELECT * FROM TB_M_Department
+      SELECT * FROM tb_m_department
     `);
 
     const [institutions] = await db.query(`
-      SELECT * FROM TB_M_Institution
+      SELECT * FROM tb_m_institution
     `);
 
     res.render("user/layout", {
@@ -906,7 +906,7 @@ router.post("/profile/edit",isLogin,checkActive,upload.single("profile"),
 
       await db.query(
         `
-        UPDATE TB_T_Employee
+        UPDATE tb_t_employee
         SET
           EMP_NUM = ?,
           fname = ?,
@@ -942,7 +942,7 @@ router.post("/toggle-2fa", isLogin, async (req, res) => {
 
   try {
     await db.query(`
-      UPDATE TB_T_Employee 
+      UPDATE tb_t_employee 
       SET two_fa_enabled = ?, two_fa_dismissed = NULL
       WHERE EMPID = ?
     `, [enable ? 1 : 0, userId]);
@@ -964,7 +964,7 @@ router.post("/dismiss-2fa-banner", isLogin, async (req, res) => {
 
     await db.query(
       `
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET two_fa_dismissed = NOW()
       WHERE EMPID = ?
       `,
@@ -1010,7 +1010,7 @@ router.post("/change_password", async (req, res) => {
 
     // 3 get password
     const [[user]] = await db.query(
-      "SELECT password FROM TB_T_Employee WHERE EMPID = ?",
+      "SELECT password FROM tb_t_employee WHERE EMPID = ?",
       [req.session.user.EMPID]
     );
 
@@ -1027,7 +1027,7 @@ router.post("/change_password", async (req, res) => {
     const hashed = await bcrypt.hash(newPassword, 10);
 
     await db.query(
-      "UPDATE TB_T_Employee SET password = ? WHERE EMPID = ?",
+      "UPDATE tb_t_employee SET password = ? WHERE EMPID = ?",
       [hashed, req.session.user.EMPID]
     );
 

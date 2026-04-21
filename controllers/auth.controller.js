@@ -60,7 +60,7 @@ exports.register = async (req, res) => {
        3. ตรวจ username / email ซ้ำ
     ================================ */
     const [exist] = await db.execute(
-      "SELECT EMPID FROM TB_T_Employee WHERE username=? OR email=?",
+      "SELECT EMPID FROM tb_t_employee WHERE username=? OR email=?",
       [username, email]
     );
 
@@ -87,7 +87,7 @@ exports.register = async (req, res) => {
     ================================ */
     await db.execute(
       `
-      INSERT INTO TB_T_Employee
+      INSERT INTO tb_t_employee
       (
         username,
         password,
@@ -141,7 +141,7 @@ exports.login = async (req, res) => {
     const { username, password } = req.body;
 
     const [rows] = await db.execute(
-      "SELECT * FROM TB_T_Employee WHERE username=?",
+      "SELECT * FROM tb_t_employee WHERE username=?",
       [username]
     );
 
@@ -201,7 +201,7 @@ exports.login = async (req, res) => {
     const hashOtp = await bcrypt.hash(otp, 10);
 
     await db.execute(`
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET login_otp = ?,
           login_expire = DATE_ADD(NOW(), INTERVAL 5 MINUTE),
           login_attempt = 0
@@ -273,7 +273,7 @@ exports.verifyLoginOtp = async (req, res) => {
     const { email, otp } = req.body;
 
     const [rows] = await db.execute(`
-      SELECT * FROM TB_T_Employee
+      SELECT * FROM tb_t_employee
       WHERE email=? AND login_expire > NOW() AND login_otp IS NOT NULL
     `, [email]);
 
@@ -290,7 +290,7 @@ exports.verifyLoginOtp = async (req, res) => {
 
     if (!match) {
       await db.execute(`
-        UPDATE TB_T_Employee
+        UPDATE tb_t_employee
         SET login_attempt = login_attempt + 1
         WHERE email=?
       `, [email]);
@@ -302,7 +302,7 @@ exports.verifyLoginOtp = async (req, res) => {
     }
 
     await db.execute(`
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET login_otp=NULL,
           login_expire=NULL,
           login_attempt=0
@@ -330,7 +330,7 @@ exports.forgot = async (req, res) => {
     const { email } = req.body;
 
     const [rows] = await db.execute(
-      "SELECT EMPID FROM TB_T_Employee WHERE email=?",
+      "SELECT EMPID FROM tb_t_employee WHERE email=?",
       [email]
     );
 
@@ -348,7 +348,7 @@ exports.forgot = async (req, res) => {
 
     await db.execute(
       `
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET reset_otp = ?,
           reset_expire = DATE_ADD(NOW(), INTERVAL 10 MINUTE),
           otp_attempt = 0
@@ -426,7 +426,7 @@ exports.verifyOtp = async (req, res) => {
     const [rows] = await db.execute(
       `
       SELECT *
-      FROM TB_T_Employee
+      FROM tb_t_employee
       WHERE email=?
         AND reset_expire > NOW()
       `,
@@ -457,7 +457,7 @@ exports.verifyOtp = async (req, res) => {
     if (!match) {
       await db.execute(
         `
-        UPDATE TB_T_Employee
+        UPDATE tb_t_employee
         SET otp_attempt = otp_attempt + 1
         WHERE email=?
         `,
@@ -473,7 +473,7 @@ exports.verifyOtp = async (req, res) => {
     // ✅ ผ่าน OTP
     await db.execute(
       `
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET reset_otp=NULL,
           reset_expire=NULL,
           login_attempt=0
@@ -522,7 +522,7 @@ exports.resetPassword = async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
 
     await db.execute(
-      `UPDATE TB_T_Employee
+      `UPDATE tb_t_employee
        SET password=?
        WHERE email=?`,
       [hash, email]
@@ -551,7 +551,7 @@ exports.resetPassword = async (req, res) => {
 exports.getInstitutions = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT InstitutionID, InstitutionName FROM TB_M_Institution"
+      "SELECT InstitutionID, InstitutionName FROM tb_m_institution"
     );
     res.json(rows);
   } catch (err) {
@@ -563,7 +563,7 @@ exports.getInstitutions = async (req, res) => {
 exports.getDepartments = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT DepartmentID, DepartmentName FROM TB_M_Department"
+      "SELECT DepartmentID, DepartmentName FROM tb_m_department"
     );
     res.json(rows);
   } catch (err) {

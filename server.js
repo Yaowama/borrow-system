@@ -34,7 +34,7 @@ async function createNotification({
 }) {
   try {
     await db.query(`
-      INSERT INTO TB_T_Notification 
+      INSERT INTO tb_t_notification 
       (ReceiverID, NotiType, Title, Message, RefID, Link, IsRead, IsDeleted, CreatedDate)
       VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW())
     `, [receiverId, type, title, message, refId, link]);
@@ -54,10 +54,10 @@ cron.schedule('0 8 * * *', async () => {
         d.DeviceName, da.AssetTag, da.ITCode,
         DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
         DATEDIFF(bt.DueDate, CURDATE()) AS remainDays
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
       WHERE bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
         AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
@@ -83,10 +83,10 @@ cron.schedule('0 8 * * *', async () => {
         d.DeviceName, da.AssetTag, da.ITCode,
         DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
         DATEDIFF(CURDATE(), bt.DueDate) AS overdueDays
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
       WHERE bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
         AND bt.DueDate < CURDATE()

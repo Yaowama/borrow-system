@@ -52,8 +52,8 @@ router.get("/notifications", async (req, res) => {
         CONCAT(e.fname,' ',e.lname) AS name,
         DATE_FORMAT(bt.BorrowDate,'%d/%m/%Y %H:%i') AS BorrowDate,
         bt.BorrowDate AS rawTime
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
       WHERE bt.BorrowStatusID = 1
       ORDER BY bt.BorrowDate DESC
       LIMIT 10
@@ -78,8 +78,8 @@ router.get("/notifications", async (req, res) => {
         DATEDIFF(CURDATE(), bt.DueDate) AS days,
         DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
         bt.DueDate AS rawTime
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
       WHERE bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
         AND bt.DueDate < CURDATE()
@@ -106,8 +106,8 @@ router.get("/notifications", async (req, res) => {
           DATEDIFF(bt.DueDate, CURDATE()) AS remain,
           DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
           bt.BorrowDate AS rawTime      
-        FROM TB_T_BorrowTransaction bt
-        JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+        FROM tb_t_borrowtransaction bt
+        JOIN tb_t_employee e ON bt.EMPID = e.EMPID
         WHERE bt.BorrowStatusID = 6
           AND bt.ReturnDate IS NULL
           AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
@@ -134,12 +134,12 @@ router.get("/notifications", async (req, res) => {
         DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS RejectDate,
         bt.ApproveDate AS rawTime,
         COALESCE(d.DeviceName, t.TypeName) AS DeviceName
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      LEFT JOIN TB_T_Employee ea ON bt.ApproveBy = ea.EMPID
-      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN tb_t_employee ea ON bt.ApproveBy = ea.EMPID
+      LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
       WHERE bt.BorrowStatusID = 3
         AND bt.ApproveDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
       ORDER BY bt.ApproveDate DESC
@@ -163,7 +163,7 @@ router.get("/notifications", async (req, res) => {
     let readKeys = new Set();
     if (empId) {
       const [reads] = await db.query(
-        "SELECT NotiKey FROM TB_T_NotificationRead WHERE EMPID = ?",
+        "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?",
         [empId]
       );
       reads.forEach(r => readKeys.add(r.NotiKey));
@@ -197,7 +197,7 @@ router.post("/notifications/mark-read", async (req, res) => {
 
     const values = keys.map(k => [empId, k]);
     await db.query(
-      "INSERT IGNORE INTO TB_T_NotificationRead (EMPID, NotiKey) VALUES ?",
+      "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES ?",
       [values]
     );
     res.json({ ok: true });
@@ -221,12 +221,12 @@ router.get("/", isAdmin, async (req, res) => {
 
   const [[deviceTotal]] = await db.query(`
   SELECT COUNT(*) total 
-  FROM TB_T_DeviceAdd
+  FROM tb_t_deviceadd
 `);
 
   const [[availableDevice]] = await db.query(`
     SELECT COUNT(*) total
-    FROM TB_T_DeviceAdd
+    FROM tb_t_deviceadd
     WHERE DVStatusID = 1
   `);
   
@@ -235,7 +235,7 @@ router.get("/", isAdmin, async (req, res) => {
       SUM(CASE WHEN DVStatusID = 1 THEN 1 ELSE 0 END) AS available,
       SUM(CASE WHEN DVStatusID = 2 THEN 1 ELSE 0 END) AS borrowed,
       SUM(CASE WHEN DVStatusID = 3 THEN 1 ELSE 0 END) AS repair
-    FROM TB_T_DeviceAdd
+    FROM tb_t_deviceadd
   `);
   
   const total =
@@ -252,24 +252,24 @@ router.get("/", isAdmin, async (req, res) => {
       };
 
   const [[pending]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_BorrowTransaction WHERE BorrowStatusID = 1
+    SELECT COUNT(*) total FROM tb_t_borrowtransaction WHERE BorrowStatusID = 1
   `);
 
   const [[approved]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_BorrowTransaction WHERE BorrowStatusID IN (2,6)
+    SELECT COUNT(*) total FROM tb_t_borrowtransaction WHERE BorrowStatusID IN (2,6)
   `);
 
   const [[rejected]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_BorrowTransaction WHERE BorrowStatusID = 3
+    SELECT COUNT(*) total FROM tb_t_borrowtransaction WHERE BorrowStatusID = 3
   `);
 
   const [[returned]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_BorrowTransaction WHERE BorrowStatusID = 4
+    SELECT COUNT(*) total FROM tb_t_borrowtransaction WHERE BorrowStatusID = 4
   `);
 
   const [[overdue]] = await db.query(`
   SELECT COUNT(*) total
-  FROM TB_T_BorrowTransaction
+  FROM tb_t_borrowtransaction
   WHERE BorrowStatusID = 6
     AND ReturnDate IS NULL
     AND DueDate < CURDATE()
@@ -277,7 +277,7 @@ router.get("/", isAdmin, async (req, res) => {
 
 
   const [[employeeTotal]] = await db.query(`
-    SELECT COUNT(*) total FROM TB_T_Employee
+    SELECT COUNT(*) total FROM tb_t_employee
   `);
 
   const [nearDueList] = await db.query(`
@@ -293,18 +293,18 @@ router.get("/", isAdmin, async (req, res) => {
     da.AssetTag,
     m.ModelName
 
-  FROM TB_T_BorrowTransaction bt
+  FROM tb_t_borrowtransaction bt
 
-  JOIN TB_T_Employee e 
+  JOIN tb_t_employee e 
     ON bt.EMPID = e.EMPID
 
-  JOIN TB_T_DeviceAdd da
+  JOIN tb_t_deviceadd da
     ON bt.DVID = da.DVID
 
-  JOIN TB_T_Device d
+  JOIN tb_t_device d
     ON da.DeviceID = d.DeviceID
 
-  JOIN TB_M_Model m
+  JOIN tb_m_model m
     ON d.ModelID = m.ModelID
 
   WHERE bt.BorrowStatusID = 6
@@ -341,7 +341,7 @@ router.get("/dashboard-data", async (req, res) => {
         SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
         SUM(CASE WHEN BorrowStatusID = 3 THEN 1 ELSE 0 END) AS rejected,
         SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
     `);
 
     const [[deviceStatus]] = await db.query(`
@@ -349,7 +349,7 @@ router.get("/dashboard-data", async (req, res) => {
         SUM(CASE WHEN DVStatusID = 1 THEN 1 ELSE 0 END) AS available,
         SUM(CASE WHEN DVStatusID = 2 THEN 1 ELSE 0 END) AS borrowed,
         SUM(CASE WHEN DVStatusID = 3 THEN 1 ELSE 0 END) AS repair
-      FROM TB_T_DeviceAdd
+      FROM tb_t_deviceadd
     `);
 
     res.json({
@@ -381,7 +381,7 @@ router.get("/dashboard/monthly", async (req, res) => {
         SUM(CASE WHEN BorrowStatusID IN (2,6,4) THEN 1 ELSE 0 END) AS approved,
         SUM(CASE WHEN BorrowStatusID = 3 THEN 1 ELSE 0 END) AS rejected,
         SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
       WHERE BorrowDate >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(BorrowDate, '%Y-%m')
       ORDER BY month ASC
@@ -404,10 +404,10 @@ router.get("/dashboard/top-devices", async (req, res) => {
         CASE WHEN d.DeviceImage IS NOT NULL THEN 'device'
              WHEN t.TypeImage IS NOT NULL THEN 'type'
              ELSE NULL END AS imageFolder
-      FROM TB_T_BorrowTransaction bt
-      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
+      FROM tb_t_borrowtransaction bt
+      LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
       WHERE bt.BorrowStatusID IN (2,6,4,3)
         AND COALESCE(d.DeviceName, t.TypeName) IS NOT NULL
       GROUP BY COALESCE(d.DeviceName, t.TypeName), d.DeviceImage, t.TypeImage
@@ -429,8 +429,8 @@ router.get("/dashboard/top-borrowers", async (req, res) => {
         e.fname, e.lname, e.EMP_NUM,
         COUNT(*) AS total,
         SUM(CASE WHEN bt.BorrowStatusID = 6 AND bt.ReturnDate IS NULL AND bt.DueDate < CURDATE() THEN 1 ELSE 0 END) AS overdue
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
       GROUP BY bt.EMPID, e.fname, e.lname, e.EMP_NUM
       ORDER BY total DESC
       LIMIT 5
@@ -460,12 +460,12 @@ router.get("/dashboard/activity", async (req, res) => {
           WHEN bt.ApproveDate IS NOT NULL THEN bt.ApproveDate
           ELSE bt.BorrowDate
         END AS latestTime
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
-      LEFT JOIN TB_T_Employee a ON bt.ApproveBy = a.EMPID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
+      LEFT JOIN tb_t_employee a ON bt.ApproveBy = a.EMPID
       ORDER BY latestTime DESC
       LIMIT 10
     `);
@@ -485,7 +485,7 @@ router.post("/dismiss-2fa-banner", isLogin, async (req, res) => {
 
     await db.query(
       `
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET two_fa_dismissed = NOW()
       WHERE EMPID = ?
       `,
@@ -506,7 +506,7 @@ router.post("/dismiss-2fa-banner", isLogin, async (req, res) => {
 
     await db.query(
       `
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET two_fa_dismissed = NOW()
       WHERE EMPID = ?
       `,
@@ -548,21 +548,21 @@ router.get("/employee", isAdmin, async (req, res) => {
         IFNULL(tb.totalBorrow, 0) AS totalBorrow,
         IFNULL(lb.lateCount, 0) AS lateCount
 
-      FROM TB_T_Employee e
+      FROM tb_t_employee e
 
       LEFT JOIN roles r 
         ON e.RoleID = r.RoleID
 
-      LEFT JOIN TB_M_Institution i 
+      LEFT JOIN tb_m_institution i 
         ON e.InstitutionID = i.InstitutionID
 
-      LEFT JOIN TB_M_Department d 
+      LEFT JOIN tb_m_department d 
         ON e.DepartmentID = d.DepartmentID
 
       -- 🔹 กำลังยืม
       LEFT JOIN (
         SELECT EMPID, COUNT(*) AS activeBorrow
-        FROM TB_T_BorrowTransaction
+        FROM tb_t_borrowtransaction
         WHERE BorrowStatusID IN (1,2,6)
         GROUP BY EMPID
       ) ab 
@@ -571,7 +571,7 @@ router.get("/employee", isAdmin, async (req, res) => {
       -- 🔹 ยืมทั้งหมด
       LEFT JOIN (
         SELECT EMPID, COUNT(*) AS totalBorrow
-        FROM TB_T_BorrowTransaction
+        FROM tb_t_borrowtransaction
         GROUP BY EMPID
       ) tb 
         ON e.EMPID = tb.EMPID
@@ -579,7 +579,7 @@ router.get("/employee", isAdmin, async (req, res) => {
       -- 🔹 คืนเกินกำหนด
       LEFT JOIN (
         SELECT EMPID, COUNT(*) AS lateCount
-        FROM TB_T_BorrowTransaction
+        FROM tb_t_borrowtransaction
         WHERE ReturnDate IS NOT NULL
           AND DATE(ReturnDate) > DATE(DueDate)
         GROUP BY EMPID
@@ -592,14 +592,14 @@ router.get("/employee", isAdmin, async (req, res) => {
 
     const [departments] = await db.query(`
       SELECT DepartmentID, DepartmentName
-      FROM TB_M_Department
+      FROM tb_m_department
       ORDER BY DepartmentName ASC
     `);
 
 
     const [institutions] = await db.query(`
       SELECT InstitutionID, InstitutionName
-      FROM TB_M_Institution
+      FROM tb_m_institution
       ORDER BY InstitutionName ASC
     `);
 
@@ -631,15 +631,15 @@ router.get("/employee/detail/:id", isAdmin, async (req, res) => {
         r.RoleName,
         d.DepartmentName,
         i.InstitutionName
-      FROM TB_T_Employee e
+      FROM tb_t_employee e
 
       LEFT JOIN roles r 
         ON e.RoleID = r.RoleID
 
-      LEFT JOIN TB_M_Department d 
+      LEFT JOIN tb_m_department d 
         ON e.DepartmentID = d.DepartmentID
 
-      LEFT JOIN TB_M_Institution i
+      LEFT JOIN tb_m_institution i
         ON e.InstitutionID = i.InstitutionID
 
       WHERE e.EMPID = ?
@@ -680,7 +680,7 @@ router.put("/employee/toggle/:id", isAdmin, async (req, res) => {
 
     // 🔎 ดึงข้อมูล user เป้าหมาย
     const [[user]] = await db.query(
-      "SELECT RoleID, IsActive FROM TB_T_Employee WHERE EMPID=?",
+      "SELECT RoleID, IsActive FROM tb_t_employee WHERE EMPID=?",
       [id]
     );
 
@@ -696,7 +696,7 @@ router.put("/employee/toggle/:id", isAdmin, async (req, res) => {
 
       const [[adminCount]] = await db.query(`
         SELECT COUNT(*) total
-        FROM TB_T_Employee
+        FROM tb_t_employee
         WHERE RoleID = 2 AND IsActive = 1
       `);
 
@@ -712,7 +712,7 @@ router.put("/employee/toggle/:id", isAdmin, async (req, res) => {
     const newStatus = user.IsActive ? 0 : 1;
 
     await db.query(`
-      UPDATE TB_T_Employee
+      UPDATE tb_t_employee
       SET IsActive=?
       WHERE EMPID=?
     `, [newStatus, id]);
@@ -764,7 +764,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
       }
 
       const [oldData] = await db.query(
-        "SELECT * FROM TB_T_Employee WHERE EMPID=?",
+        "SELECT * FROM tb_t_employee WHERE EMPID=?",
         [id]
       );
 
@@ -788,7 +788,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
         });
       }
       await db.query(`
-        UPDATE TB_T_Employee
+        UPDATE tb_t_employee
         SET
           fname=?,
           lname=?,
@@ -820,7 +820,7 @@ router.put("/employee/update/:id", isAdmin, uploadProfile.single("profileImage")
       if (parseInt(id) === req.session.user.EMPID) {
 
         const [rows] = await db.query(
-          "SELECT * FROM TB_T_Employee WHERE EMPID=?",
+          "SELECT * FROM tb_t_employee WHERE EMPID=?",
           [id]
         );
 
@@ -851,7 +851,7 @@ router.get("/borrow/available/:borrowId", async (req, res) => {
   // ดึง TypeID จาก borrow โดยตรง
   const [[borrow]] = await db.query(`
     SELECT TypeID
-    FROM TB_T_BorrowTransaction
+    FROM tb_t_borrowtransaction
     WHERE BorrowID = ?
   `, [borrowId]);
 
@@ -867,10 +867,10 @@ router.get("/borrow/available/:borrowId", async (req, res) => {
       d.DeviceName,
       b.BrandName,
       m.ModelName
-    FROM TB_T_DeviceAdd da
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
-    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+    FROM tb_t_deviceadd da
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
+    LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
     WHERE d.TypeID = ?
       AND da.DVStatusID = 1
     ORDER BY da.ITCode ASC
@@ -890,12 +890,12 @@ router.get("/profile", async (req, res) => {
       r.RoleName,
       d.DepartmentName,
       i.InstitutionName
-    FROM TB_T_Employee e
+    FROM tb_t_employee e
     LEFT JOIN Roles r 
       ON e.RoleID = r.RoleID
-    LEFT JOIN TB_M_Department d 
+    LEFT JOIN tb_m_department d 
       ON e.DepartmentID = d.DepartmentID
-    LEFT JOIN TB_M_Institution i 
+    LEFT JOIN tb_m_institution i 
       ON e.InstitutionID = i.InstitutionID
     WHERE e.EMPID = ?
   `, [req.session.user.EMPID]);
@@ -913,15 +913,15 @@ router.get("/profile/edit", async (req, res) => {
     const empId = req.session.user.EMPID;
 
     const [[user]] = await db.query(`
-      SELECT * FROM TB_T_Employee WHERE EMPID = ?
+      SELECT * FROM tb_t_employee WHERE EMPID = ?
     `, [empId]);
 
     const [departments] = await db.query(`
-      SELECT * FROM TB_M_Department
+      SELECT * FROM tb_m_department
     `);
 
     const [institutions] = await db.query(`
-      SELECT * FROM TB_M_Institution
+      SELECT * FROM tb_m_institution
     `);
 
     res.render("admin/layout", {
@@ -957,7 +957,7 @@ router.post(
       params.push(empId);
 
       await db.query(`
-        UPDATE TB_T_Employee
+        UPDATE tb_t_employee
         SET
           fname = ?,
           lname = ?,
@@ -990,7 +990,7 @@ router.post("/toggle-2fa", isLogin, async (req, res) => {
 
   try {
     await db.query(`
-      UPDATE TB_T_Employee 
+      UPDATE tb_t_employee 
       SET two_fa_enabled = ?
       WHERE EMPID = ?
     `, [enable ? 1 : 0, userId]);
@@ -1033,7 +1033,7 @@ router.post("/change_password", async (req, res) => {
 
     // 3 ดึง password เดิม
     const [[user]] = await db.query(
-      "SELECT password FROM TB_T_Employee WHERE EMPID = ?",
+      "SELECT password FROM tb_t_employee WHERE EMPID = ?",
       [req.session.user.EMPID]
     );
 
@@ -1050,7 +1050,7 @@ router.post("/change_password", async (req, res) => {
     const hashed = await bcrypt.hash(newPassword, 10);
 
     await db.query(
-      "UPDATE TB_T_Employee SET password = ? WHERE EMPID = ?",
+      "UPDATE tb_t_employee SET password = ? WHERE EMPID = ?",
       [hashed, req.session.user.EMPID]
     );
 
@@ -1083,19 +1083,19 @@ router.get("/device", async (req, res) => {
       SUM(CASE WHEN da.DVStatusID = 2 THEN 1 ELSE 0 END) AS BorrowQty,
       SUM(CASE WHEN da.DVStatusID = 3 THEN 1 ELSE 0 END) AS RepairQty,
       SUM(CASE WHEN da.DVStatusID = 4 THEN 1 ELSE 0 END) AS DisabledQty
-    FROM TB_T_Device d
-    JOIN TB_M_Model m ON d.ModelID = m.ModelID
-    LEFT JOIN TB_M_Category c ON d.CategoryID = c.CategoryID
-    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
-    LEFT JOIN TB_M_Type t ON d.TypeID = t.TypeID
-    LEFT JOIN TB_T_DeviceAdd da ON d.DeviceID = da.DeviceID
+    FROM tb_t_device d
+    JOIN tb_m_model m ON d.ModelID = m.ModelID
+    LEFT JOIN tb_m_category c ON d.CategoryID = c.CategoryID
+    LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
+    LEFT JOIN tb_m_type t ON d.TypeID = t.TypeID
+    LEFT JOIN tb_t_deviceadd da ON d.DeviceID = da.DeviceID
     GROUP BY d.DeviceID
   `);
 
   // ✅ เพิ่มตรงนี้
   const [types] = await db.query(`
     SELECT TypeID, TypeName, TypeImage
-    FROM TB_M_Type
+    FROM tb_m_type
     ORDER BY TypeName ASC
   `);
 
@@ -1118,8 +1118,8 @@ router.get("/device/model/delete/:id", async (req, res) => {
   // 🔹 เช็กว่ามีเครื่องถูกเพิ่มแล้วหรือไม่
   const [[used]] = await db.query(`
     SELECT 1
-    FROM TB_T_Device d
-    JOIN TB_T_DeviceAdd da ON d.DeviceID = da.DeviceID
+    FROM tb_t_device d
+    JOIN tb_t_deviceadd da ON d.DeviceID = da.DeviceID
     WHERE d.ModelID = ?
     LIMIT 1
   `, [modelId]);
@@ -1131,7 +1131,7 @@ router.get("/device/model/delete/:id", async (req, res) => {
 
   // 🔥 ลบได้
   await db.query(
-    "DELETE FROM TB_T_Device WHERE ModelID = ?",
+    "DELETE FROM tb_t_device WHERE ModelID = ?",
     [modelId]
   );
 
@@ -1146,12 +1146,12 @@ router.get("/device/add", async (req, res) => {
 
   const [models] = await db.query(`
     SELECT ModelID, ModelName
-    FROM TB_M_Model
+    FROM tb_m_model
   `);
 
-  const [categories] = await db.query("SELECT * FROM TB_M_Category");
-  const [brands] = await db.query("SELECT * FROM TB_M_Brand");
-  const [types] = await db.query("SELECT * FROM TB_M_Type");
+  const [categories] = await db.query("SELECT * FROM tb_m_category");
+  const [brands] = await db.query("SELECT * FROM tb_m_brand");
+  const [types] = await db.query("SELECT * FROM tb_m_type");
 
   res.render("admin/layout", {
     page: "device_add",
@@ -1179,7 +1179,7 @@ router.post(
     } = req.body;
 
     await db.query(`
-      INSERT INTO TB_T_Device
+      INSERT INTO tb_t_device
       (DeviceName, ModelID, CategoryID, BrandID, TypeID, Description, DeviceImage, CreateDate)
       VALUES (?,?,?,?,?,?,?,NOW())
     `,[
@@ -1200,7 +1200,7 @@ router.get("/device/models/:brandId", async (req, res) => {
 
   const [models] = await db.query(`
     SELECT ModelID, ModelName
-    FROM TB_M_Model
+    FROM tb_m_model
     WHERE BrandID = ?
   `,[brandId]);
 
@@ -1212,19 +1212,19 @@ router.get("/device/edit/:id", async (req, res) => {
 
   const [[device]] = await db.query(`
     SELECT d.*, m.ModelName
-    FROM TB_T_Device d
-    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+    FROM tb_t_device d
+    LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
     WHERE d.DeviceID = ?
   `, [id]);
 
   const [models] = await db.query(`
     SELECT ModelID, ModelName
-    FROM TB_M_Model
+    FROM tb_m_model
   `);
 
-  const [categories] = await db.query("SELECT * FROM TB_M_Category");
-  const [brands] = await db.query("SELECT * FROM TB_M_Brand");
-  const [types] = await db.query("SELECT * FROM TB_M_Type");
+  const [categories] = await db.query("SELECT * FROM tb_m_category");
+  const [brands] = await db.query("SELECT * FROM tb_m_brand");
+  const [types] = await db.query("SELECT * FROM tb_m_type");
 
   res.render("admin/layout", {
     page: "device_edit",
@@ -1255,7 +1255,7 @@ router.post(
 
       // 1) ดึงรูปเดิมมาก่อน
       const [rows] = await db.query(
-        "SELECT DeviceImage FROM TB_T_Device WHERE DeviceID = ?",
+        "SELECT DeviceImage FROM tb_t_device WHERE DeviceID = ?",
         [id]
       );
 
@@ -1274,7 +1274,7 @@ router.post(
       // 3) UPDATE ข้อมูลทั้งหมด
       await db.query(
         `
-        UPDATE TB_T_Device
+        UPDATE tb_t_device
         SET
           DeviceName = ?,
           ModelID = ?,
@@ -1317,8 +1317,8 @@ router.get("/device/item/:id/delete", async (req, res) => {
   // 🔹 หา ModelID (ไว้ redirect)
   const [[row]] = await db.query(`
     SELECT d.ModelID
-    FROM TB_T_DeviceAdd da
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    FROM tb_t_deviceadd da
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
     WHERE da.DVID = ?
   `, [id]);
 
@@ -1329,7 +1329,7 @@ router.get("/device/item/:id/delete", async (req, res) => {
   // ❗ เช็กว่ากำลังถูกยืมอยู่หรือไม่
   const [[borrowed]] = await db.query(`
     SELECT 1
-    FROM TB_T_BorrowTransaction
+    FROM tb_t_borrowtransaction
     WHERE DVID = ?
       AND ReturnDate IS NULL
   `, [id]);
@@ -1341,7 +1341,7 @@ router.get("/device/item/:id/delete", async (req, res) => {
 
   // 🔥 ลบได้
   await db.query(
-    "DELETE FROM TB_T_DeviceAdd WHERE DVID = ?",
+    "DELETE FROM tb_t_deviceadd WHERE DVID = ?",
     [id]
   );
 
@@ -1396,14 +1396,14 @@ router.get("/device/export/excel", isAdmin, async (req, res) => {
         DATE_FORMAT(da.CreatedDate, '%d/%m/%Y %H:%i') AS CreatedDate,
         DATE_FORMAT(da.UpdatedDate, '%d/%m/%Y %H:%i') AS UpdatedDate,
         e.username AS CreatedBy
-      FROM TB_T_DeviceAdd da
-      JOIN TB_T_Device d   ON da.DeviceID  = d.DeviceID
-      LEFT JOIN TB_M_Brand b    ON d.BrandID    = b.BrandID
-      LEFT JOIN TB_M_Model m    ON d.ModelID    = m.ModelID
-      LEFT JOIN TB_M_Category c ON d.CategoryID = c.CategoryID
-      LEFT JOIN TB_M_Type t     ON d.TypeID     = t.TypeID
-      JOIN TB_M_DeviceStatus s  ON da.DVStatusID = s.DVStatusID
-      LEFT JOIN TB_T_Employee e ON da.CreatedBy  = e.EMPID
+      FROM tb_t_deviceadd da
+      JOIN tb_t_device d   ON da.DeviceID  = d.DeviceID
+      LEFT JOIN tb_m_brand b    ON d.BrandID    = b.BrandID
+      LEFT JOIN tb_m_model m    ON d.ModelID    = m.ModelID
+      LEFT JOIN tb_m_category c ON d.CategoryID = c.CategoryID
+      LEFT JOIN tb_m_type t     ON d.TypeID     = t.TypeID
+      JOIN tb_m_devicestatus s  ON da.DVStatusID = s.DVStatusID
+      LEFT JOIN tb_t_employee e ON da.CreatedBy  = e.EMPID
       ${whereSQL}
       ORDER BY t.TypeName, d.DeviceName, da.ITCode
     `, params);
@@ -1540,7 +1540,7 @@ router.get("/device/export/excel", isAdmin, async (req, res) => {
 
 router.get("/api/brands", async (req, res) => {
   const [brands] = await db.query(`
-    SELECT BrandID, BrandName FROM TB_M_Brand ORDER BY BrandName ASC
+    SELECT BrandID, BrandName FROM tb_m_brand ORDER BY BrandName ASC
   `);
   res.json(brands);
 });
@@ -1564,10 +1564,10 @@ router.get("/device/:modelId", async (req, res) => {
       da.BarcodeImage,
       s.StatusName,
       e.username AS CreatedByName
-    FROM TB_T_DeviceAdd da
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    JOIN TB_M_DeviceStatus s ON da.DVStatusID = s.DVStatusID
-    LEFT JOIN TB_T_Employee e ON da.CreatedBy = e.EMPID
+    FROM tb_t_deviceadd da
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    JOIN tb_m_devicestatus s ON da.DVStatusID = s.DVStatusID
+    LEFT JOIN tb_t_employee e ON da.CreatedBy = e.EMPID
     WHERE d.ModelID = ?
     ORDER BY da.CreatedDate DESC
   `, [modelId]);
@@ -1591,12 +1591,12 @@ router.get("/device/:modelId/item/add", async (req, res) => {
   const modelId = req.params.modelId;
 
   const [[model]] = await db.query(
-    "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+    "SELECT * FROM tb_m_model WHERE ModelID = ?",
     [modelId]
   );
 
   const [status] = await db.query(
-    "SELECT * FROM TB_M_DeviceStatus"
+    "SELECT * FROM tb_m_devicestatus"
   );
 
   res.render("admin/layout", {
@@ -1623,13 +1623,13 @@ router.post("/device/:modelId/item/add",
     ITCode = normalize(ITCode);
 
     const [[device]] = await db.query(
-      "SELECT DeviceID FROM TB_T_Device WHERE ModelID = ?",
+      "SELECT DeviceID FROM tb_t_device WHERE ModelID = ?",
       [modelId]
     );
 
     // 🔥 เช็คซ้ำ (3 field)
     const [dup] = await db.query(`
-      SELECT 1 FROM TB_T_DeviceAdd
+      SELECT 1 FROM tb_t_deviceadd
       WHERE 
         (
           (SerialNumber = ? AND ? IS NOT NULL)
@@ -1647,12 +1647,12 @@ router.post("/device/:modelId/item/add",
     if (dup.length > 0) {
 
       const [[model]] = await db.query(
-        "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+        "SELECT * FROM tb_m_model WHERE ModelID = ?",
         [modelId]
       );
 
       const [status] = await db.query(
-        "SELECT * FROM TB_M_DeviceStatus"
+        "SELECT * FROM tb_m_devicestatus"
       );
 
       return res.render("admin/layout", {
@@ -1670,7 +1670,7 @@ router.post("/device/:modelId/item/add",
     const imagePath = req.file ? req.file.filename : null;
 
     await db.query(`
-      INSERT INTO TB_T_DeviceAdd
+      INSERT INTO tb_t_deviceadd
       (DeviceID, SerialNumber, AssetTag, ITCode, DVStatusID, BarcodeImage, CreatedBy, CreatedDate)
       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     `, [
@@ -1696,18 +1696,18 @@ router.get("/device/item/:id/edit", async (req, res) => {
 
   const [[device]] = await db.query(`
     SELECT da.*, d.ModelID
-    FROM TB_T_DeviceAdd da
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+    FROM tb_t_deviceadd da
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
     WHERE da.DVID = ?
   `, [id]);
 
   const [[model]] = await db.query(
-    "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+    "SELECT * FROM tb_m_model WHERE ModelID = ?",
     [device.ModelID]
   );
 
   const [statusList] = await db.query(
-    "SELECT * FROM TB_M_DeviceStatus"
+    "SELECT * FROM tb_m_devicestatus"
   );
 
   res.render("admin/layout", {
@@ -1741,7 +1741,7 @@ router.post("/device/item/:id/edit",
 
       // 🔥 เช็คซ้ำ (กันชนตัวเอง)
       const [dup] = await db.query(`
-        SELECT 1 FROM TB_T_DeviceAdd
+        SELECT 1 FROM tb_t_deviceadd
         WHERE 
           (
             (SerialNumber = ? AND ? IS NOT NULL)
@@ -1762,18 +1762,18 @@ router.post("/device/item/:id/edit",
 
         const [[device]] = await db.query(`
           SELECT da.*, d.ModelID
-          FROM TB_T_DeviceAdd da
-          JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+          FROM tb_t_deviceadd da
+          JOIN tb_t_device d ON da.DeviceID = d.DeviceID
           WHERE da.DVID = ?
         `, [id]);
 
         const [[model]] = await db.query(
-          "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+          "SELECT * FROM tb_m_model WHERE ModelID = ?",
           [device.ModelID]
         );
 
         const [statusList] = await db.query(
-          "SELECT * FROM TB_M_DeviceStatus"
+          "SELECT * FROM tb_m_devicestatus"
         );
 
         return res.render("admin/layout", {
@@ -1790,7 +1790,7 @@ router.post("/device/item/:id/edit",
 
       // ✅ UPDATE
       let sql = `
-        UPDATE TB_T_DeviceAdd
+        UPDATE tb_t_deviceadd
         SET
           SerialNumber = ?,
           AssetTag = ?,
@@ -1812,12 +1812,12 @@ router.post("/device/item/:id/edit",
       await db.query(sql, params);
 
       const [[row]] = await db.query(
-        "SELECT DeviceID FROM TB_T_DeviceAdd WHERE DVID = ?",
+        "SELECT DeviceID FROM tb_t_deviceadd WHERE DVID = ?",
         [id]
       );
 
       const [[device]] = await db.query(
-        "SELECT ModelID FROM TB_T_Device WHERE DeviceID = ?",
+        "SELECT ModelID FROM tb_t_device WHERE DeviceID = ?",
         [row.DeviceID]
       );
 
@@ -1833,18 +1833,18 @@ router.post("/device/item/:id/edit",
 
         const [[device]] = await db.query(`
           SELECT da.*, d.ModelID
-          FROM TB_T_DeviceAdd da
-          JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+          FROM tb_t_deviceadd da
+          JOIN tb_t_device d ON da.DeviceID = d.DeviceID
           WHERE da.DVID = ?
         `, [id]);
 
         const [[model]] = await db.query(
-          "SELECT * FROM TB_M_Model WHERE ModelID = ?",
+          "SELECT * FROM tb_m_model WHERE ModelID = ?",
           [device.ModelID]
         );
 
         const [statusList] = await db.query(
-          "SELECT * FROM TB_M_DeviceStatus"
+          "SELECT * FROM tb_m_devicestatus"
         );
 
         return res.render("admin/layout", {
@@ -1867,7 +1867,7 @@ router.post("/device/item/:id/edit",
 router.get("/api/types", async (req, res) => {
   const [types] = await db.query(`
     SELECT TypeID, TypeName, TypeImage
-    FROM TB_M_Type
+    FROM tb_m_type
     ORDER BY TypeName ASC
   `);
 
@@ -1884,9 +1884,9 @@ router.get("/api/devices/type/:typeId", async (req, res) => {
       d.DeviceImage,
       m.ModelName,
       b.BrandName
-    FROM TB_T_Device d
-    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
-    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
+    FROM tb_t_device d
+    LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
+    LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
     WHERE d.TypeID = ?
   `, [typeId]);
 
@@ -1933,7 +1933,7 @@ router.get("/borrow", async (req, res) => {
 
       EXISTS (
       SELECT 1
-      FROM TB_T_BorrowTransaction bt2
+      FROM tb_t_borrowtransaction bt2
       WHERE bt2.DVID = da.DVID
       AND bt2.BorrowStatusID = 6
     ) AS IsBorrowing,
@@ -1951,14 +1951,14 @@ router.get("/borrow", async (req, res) => {
     
       r.RepairID
 
-    FROM TB_T_BorrowTransaction bt
-    JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-    LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-    LEFT JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    LEFT JOIN TB_M_Type t ON bt.TypeID = t.TypeID
-    JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
-    LEFT JOIN TB_T_Employee a ON bt.ApproveBy = a.EMPID
-    LEFT JOIN TB_T_Repair r
+    FROM tb_t_borrowtransaction bt
+    JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+    LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+    LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
+    JOIN tb_m_borrowstatus s ON bt.BorrowStatusID = s.BorrowStatusID
+    LEFT JOIN tb_t_employee a ON bt.ApproveBy = a.EMPID
+    LEFT JOIN tb_t_repair r
       ON da.DVID = r.DVID
       AND r.RepairStatusID IN (1,2)
 
@@ -2080,16 +2080,16 @@ router.get("/borrow/detail/data/:code", async (req, res) => {
         '%d/%m/%Y %H:%i:%s'
       ) AS ActionDate
 
-    FROM TB_T_BorrowTransaction bt
-    JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-    JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
-    LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
-    JOIN TB_M_BorrowStatus s ON bt.BorrowStatusID = s.BorrowStatusID
+    FROM tb_t_borrowtransaction bt
+    JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+    JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
+    LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
+    JOIN tb_m_borrowstatus s ON bt.BorrowStatusID = s.BorrowStatusID
 
-    LEFT JOIN TB_T_Employee ea ON bt.ApproveBy = ea.EMPID
-    LEFT JOIN TB_T_Employee er ON bt.ReturnBy = er.EMPID
+    LEFT JOIN tb_t_employee ea ON bt.ApproveBy = ea.EMPID
+    LEFT JOIN tb_t_employee er ON bt.ReturnBy = er.EMPID
 
     WHERE bt.BorrowCode = ?
   `, [code]);
@@ -2105,13 +2105,13 @@ router.post("/borrow/approve/:id", async (req, res) => {
 
   try {
     await db.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET BorrowStatusID = 2, DVID = ?, ApproveBy = ?, ApproveDate = NOW()
       WHERE BorrowID = ?
     `, [DVID, adminId, borrowId]);
 
     await db.query(`
-      UPDATE TB_T_DeviceAdd SET DVStatusID = 2 WHERE DVID = ?
+      UPDATE tb_t_deviceadd SET DVStatusID = 2 WHERE DVID = ?
     `, [DVID]);
 
     const [[borrower]] = await db.query(`
@@ -2121,11 +2121,11 @@ router.post("/borrow/approve/:id", async (req, res) => {
         d.DeviceName, da.AssetTag, da.ITCode,
         ea.fname AS approverFname,
         ea.lname AS approverLname
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e  ON bt.EMPID     = e.EMPID
-      JOIN TB_T_DeviceAdd da ON da.DVID     = ?
-      JOIN TB_T_Device d     ON da.DeviceID = d.DeviceID
-      JOIN TB_T_Employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อ admin จาก DB ตรงๆ
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e  ON bt.EMPID     = e.EMPID
+      JOIN tb_t_deviceadd da ON da.DVID     = ?
+      JOIN tb_t_device d     ON da.DeviceID = d.DeviceID
+      JOIN tb_t_employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อ admin จาก DB ตรงๆ
       WHERE bt.BorrowID = ?
     `, [DVID, borrowId]);
 
@@ -2169,7 +2169,7 @@ router.post("/borrow/return/:id", async (req, res) => {
   try {
     const [[borrow]] = await db.query(`
       SELECT BorrowStatusID, DVID
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
       WHERE BorrowID = ?
     `, [borrowId]);
 
@@ -2178,7 +2178,7 @@ router.post("/borrow/return/:id", async (req, res) => {
     }
 
     await db.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET
         BorrowStatusID = 4,
         ReturnDate = NOW(),
@@ -2187,7 +2187,7 @@ router.post("/borrow/return/:id", async (req, res) => {
     `, [adminId, borrowId]);
 
     await db.query(`
-      UPDATE TB_T_DeviceAdd
+      UPDATE tb_t_deviceadd
       SET
         DVStatusID = 1,
         UpdatedDate = NOW()
@@ -2201,11 +2201,11 @@ router.post("/borrow/return/:id", async (req, res) => {
       bt.BorrowCode, d.DeviceName,
       ea.fname AS returnFname,
       ea.lname AS returnLname
-    FROM TB_T_BorrowTransaction bt
-    JOIN TB_T_Employee e  ON bt.EMPID    = e.EMPID
-    JOIN TB_T_DeviceAdd da ON bt.DVID   = da.DVID
-    JOIN TB_T_Device d     ON da.DeviceID = d.DeviceID
-    JOIN TB_T_Employee ea  ON bt.ReturnBy = ea.EMPID   -- ✅ ดึงชื่อคนรับคืน
+    FROM tb_t_borrowtransaction bt
+    JOIN tb_t_employee e  ON bt.EMPID    = e.EMPID
+    JOIN tb_t_deviceadd da ON bt.DVID   = da.DVID
+    JOIN tb_t_device d     ON da.DeviceID = d.DeviceID
+    JOIN tb_t_employee ea  ON bt.ReturnBy = ea.EMPID   -- ✅ ดึงชื่อคนรับคืน
     WHERE bt.BorrowID = ?
   `, [borrowId]);
 
@@ -2259,7 +2259,7 @@ router.post("/borrow/reject/:id", async (req, res) => {
     // 🔹 ดึงข้อมูลการยืม + DVID
     const [[borrow]] = await db.query(`
       SELECT BorrowStatusID, DVID
-      FROM TB_T_BorrowTransaction
+      FROM tb_t_borrowtransaction
       WHERE BorrowID = ?
       FOR UPDATE
     `, [borrowId]);
@@ -2270,7 +2270,7 @@ router.post("/borrow/reject/:id", async (req, res) => {
 
     // 1️⃣ ปฏิเสธการยืม
     await db.query(`
-      UPDATE TB_T_BorrowTransaction
+      UPDATE tb_t_borrowtransaction
       SET
         BorrowStatusID = 3,
         Remark = ?,
@@ -2282,7 +2282,7 @@ router.post("/borrow/reject/:id", async (req, res) => {
     // 2️⃣ 🔥 ตั้งค่าอุปกรณ์กลับเป็น "พร้อมใช้งาน" (ถ้ามี DVID)
     if (borrow.DVID) {
       await db.query(`
-        UPDATE TB_T_DeviceAdd
+        UPDATE tb_t_deviceadd
         SET
           DVStatusID = 1,
           UpdatedDate = NOW()
@@ -2302,12 +2302,12 @@ router.post("/borrow/reject/:id", async (req, res) => {
               COALESCE(d.DeviceName, t.TypeName) AS DeviceName,
               ea.fname AS rejectFname,
               ea.lname AS rejectLname
-            FROM TB_T_BorrowTransaction bt
-            JOIN TB_T_Employee e   ON bt.EMPID    = e.EMPID
-            LEFT JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-            LEFT JOIN TB_T_Device d    ON da.DeviceID = d.DeviceID
-            LEFT JOIN TB_M_Type t      ON bt.TypeID   = t.TypeID
-            JOIN TB_T_Employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อคนปฏิเสธ
+            FROM tb_t_borrowtransaction bt
+            JOIN tb_t_employee e   ON bt.EMPID    = e.EMPID
+            LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+            LEFT JOIN tb_t_device d    ON da.DeviceID = d.DeviceID
+            LEFT JOIN tb_m_type t      ON bt.TypeID   = t.TypeID
+            JOIN tb_t_employee ea  ON bt.ApproveBy = ea.EMPID   -- ✅ ดึงชื่อคนปฏิเสธ
             WHERE bt.BorrowID = ?
           `, [borrowId]);
 
@@ -2353,14 +2353,14 @@ router.get("/user/data/:id", async (req, res) => {
 
         (
           SELECT COUNT(*)
-          FROM TB_T_BorrowTransaction b
+          FROM tb_t_borrowtransaction b
           WHERE b.EMPID = e.EMPID
           AND b.BorrowStatusID IN (1,2,6)
         ) AS activeBorrow
 
-      FROM TB_T_Employee e
-      LEFT JOIN TB_M_Department d ON e.DepartmentID = d.DepartmentID
-      LEFT JOIN TB_M_Institution i ON e.InstitutionID = i.InstitutionID
+      FROM tb_t_employee e
+      LEFT JOIN tb_m_department d ON e.DepartmentID = d.DepartmentID
+      LEFT JOIN tb_m_institution i ON e.InstitutionID = i.InstitutionID
       WHERE e.EMPID = ?
     `, [userId]);
 
@@ -2407,11 +2407,11 @@ if (status === undefined) {
       CONCAT(e.fname,' ',e.lname) AS CreateBy,
       r.Technician
 
-    FROM TB_T_Repair r
-    JOIN TB_T_DeviceAdd da ON r.DVID = da.DVID
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    JOIN TB_M_RepairStatus s ON r.RepairStatusID = s.RepairStatusID
-    LEFT JOIN TB_T_Employee e ON r.EMPID = e.EMPID
+    FROM tb_t_repair r
+    JOIN tb_t_deviceadd da ON r.DVID = da.DVID
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    JOIN tb_m_repairstatus s ON r.RepairStatusID = s.RepairStatusID
+    LEFT JOIN tb_t_employee e ON r.EMPID = e.EMPID
     ${where}
     ORDER BY r.CreateDate DESC
   `, params);
@@ -2436,7 +2436,7 @@ router.post("/repair/create/:dvid", async (req, res) => {
     // 1️⃣ เช็กงานซ่อมค้าง
     const [[exists]] = await db.query(`
       SELECT RepairID
-      FROM TB_T_Repair
+      FROM tb_t_repair
       WHERE DVID = ?
         AND RepairStatusID IN (1, 2)
       LIMIT 1
@@ -2453,7 +2453,7 @@ router.post("/repair/create/:dvid", async (req, res) => {
 
     // 3️⃣ INSERT (ใช้ข้อความจาก user)
     const [result] = await db.query(`
-      INSERT INTO TB_T_Repair
+      INSERT INTO tb_t_repair
         (DVID, EMPID, ProblemDetail, RepairStatusID, CreateDate)
       VALUES
         (?, ?, ?, 1, NOW())
@@ -2473,14 +2473,14 @@ router.post("/repair/create/:dvid", async (req, res) => {
 
     // 5️⃣ UPDATE RepairCode
     await db.query(`
-      UPDATE TB_T_Repair
+      UPDATE tb_t_repair
       SET RepairCode = ?
       WHERE RepairID = ?
     `, [repairCode, repairID]);
 
     // 6️⃣ เปลี่ยนสถานะอุปกรณ์ → ซ่อม
     await db.query(`
-      UPDATE TB_T_DeviceAdd
+      UPDATE tb_t_deviceadd
       SET
         DVStatusID = 3,
         UpdatedDate = NOW()
@@ -2515,9 +2515,9 @@ router.get("/repair/:dvid", async (req, res) => {
         d.DeviceImage,
 
         s.StatusName
-      FROM TB_T_DeviceAdd da
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      JOIN TB_M_DeviceStatus s ON da.DVStatusID = s.DVStatusID
+      FROM tb_t_deviceadd da
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      JOIN tb_m_devicestatus s ON da.DVStatusID = s.DVStatusID
       WHERE da.DVID = ?
     `, [dvid]);
 
@@ -2558,11 +2558,11 @@ router.get("/repair/detail/:id", async (req, res) => {
       CONCAT(e.fname,' ',e.lname) AS CreateBy,
       r.Technician
 
-    FROM TB_T_Repair r
-    JOIN TB_T_DeviceAdd da ON r.DVID = da.DVID
-    JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-    JOIN TB_M_RepairStatus s ON r.RepairStatusID = s.RepairStatusID
-    LEFT JOIN TB_T_Employee e ON r.EMPID = e.EMPID
+    FROM tb_t_repair r
+    JOIN tb_t_deviceadd da ON r.DVID = da.DVID
+    JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+    JOIN tb_m_repairstatus s ON r.RepairStatusID = s.RepairStatusID
+    LEFT JOIN tb_t_employee e ON r.EMPID = e.EMPID
     WHERE r.RepairID = ?
   `, [id]);
 
@@ -2576,14 +2576,14 @@ router.post('/repair/start/:id', async (req, res) => {
   
     const [[admin]] = await db.query(`
       SELECT fname, lname
-      FROM TB_T_Employee
+      FROM tb_t_employee
       WHERE EMPID = ?
     `, [adminId]);
 
     const adminName = `${admin.fname} ${admin.lname}`;
 
     await db.query(`
-      UPDATE TB_T_Repair
+      UPDATE tb_t_repair
       SET 
         RepairStatusID = 2,
         Technician = ?,
@@ -2607,7 +2607,7 @@ router.post('/repair/process/:id', async (req, res) => {
   try {
     // 1️⃣ เปลี่ยนสถานะงานซ่อม → ซ่อมเสร็จ (สมมติ ID = 3)
     await db.query(`
-      UPDATE TB_T_Repair
+      UPDATE tb_t_repair
       SET
         RepairStatusID = 3,
         FinishDate = NOW()
@@ -2616,8 +2616,8 @@ router.post('/repair/process/:id', async (req, res) => {
 
     // 2️⃣ คืนสถานะอุปกรณ์ → พร้อมใช้งาน
     await db.query(`
-      UPDATE TB_T_DeviceAdd da
-      JOIN TB_T_Repair r ON da.DVID = r.DVID
+      UPDATE tb_t_deviceadd da
+      JOIN tb_t_repair r ON da.DVID = r.DVID
       SET
         da.DVStatusID = 1,
         da.UpdatedDate = NOW()
@@ -2643,7 +2643,7 @@ router.get('/repair/cancel/:id', async (req, res) => {
     // 1️⃣ ดึง DVID มาก่อน
     const [[repair]] = await db.query(`
       SELECT DVID
-      FROM TB_T_Repair
+      FROM tb_t_repair
       WHERE RepairID = ?
     `, [repairId]);
 
@@ -2653,14 +2653,14 @@ router.get('/repair/cancel/:id', async (req, res) => {
 
     // 2️⃣ อัปเดตสถานะการซ่อม → ยกเลิก
     await db.query(`
-      UPDATE TB_T_Repair
+      UPDATE tb_t_repair
       SET RepairStatusID = 4
       WHERE RepairID = ?
     `, [repairId]);
 
     // 3️⃣ คืนสถานะอุปกรณ์ → พร้อมใช้งาน
     await db.query(`
-      UPDATE TB_T_DeviceAdd
+      UPDATE tb_t_deviceadd
       SET
         DVStatusID = 1,
         UpdatedDate = NOW()
@@ -2784,14 +2784,14 @@ router.get("/report", isAdmin, async (req, res) => {
           ELSE 'รออนุมัติ'
         END AS StatusLabel
 
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      LEFT JOIN TB_M_Department dep ON e.DepartmentID = dep.DepartmentID
-      LEFT JOIN TB_M_Institution ins ON e.InstitutionID = ins.InstitutionID
-      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
-      LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      LEFT JOIN tb_m_department dep ON e.DepartmentID = dep.DepartmentID
+      LEFT JOIN tb_m_institution ins ON e.InstitutionID = ins.InstitutionID
+      JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
+      LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
 
       ${whereSQL}
       ORDER BY bt.BorrowDate DESC
@@ -2800,13 +2800,13 @@ router.get("/report", isAdmin, async (req, res) => {
     // 🔹 ดึงแผนกไว้ใช้ใน dropdown
     const [departments] = await db.query(`
       SELECT DepartmentID, DepartmentName
-      FROM TB_M_Department
+      FROM tb_m_department
       ORDER BY DepartmentName
     `);
 
     const [institutions] = await db.query(`
       SELECT InstitutionID, InstitutionName
-      FROM TB_M_Institution
+      FROM tb_m_institution
       ORDER BY InstitutionName
     `);
 
@@ -2931,14 +2931,14 @@ router.get("/report/excel", isAdmin, async (req, res) => {
           ELSE 'รออนุมัติ'
         END AS StatusLabel
 
-      FROM TB_T_BorrowTransaction bt
-      JOIN TB_T_Employee e ON bt.EMPID = e.EMPID
-      JOIN TB_T_DeviceAdd da ON bt.DVID = da.DVID
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
-      LEFT JOIN TB_M_Brand b ON d.BrandID = b.BrandID
-      LEFT JOIN TB_M_Model m ON d.ModelID = m.ModelID
-      LEFT JOIN TB_M_Department dep ON e.DepartmentID = dep.DepartmentID
-      LEFT JOIN TB_M_Institution ins ON e.InstitutionID = ins.InstitutionID
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+      LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
+      LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
+      LEFT JOIN tb_m_department dep ON e.DepartmentID = dep.DepartmentID
+      LEFT JOIN tb_m_institution ins ON e.InstitutionID = ins.InstitutionID
       
       ${whereSQL}
       ORDER BY bt.BorrowDate DESC
@@ -3116,14 +3116,14 @@ router.post("/type/add", uploadType.single("TypeImage"), async (req, res) => {
     if (TypeID && TypeID !== "") {
       // แก้ไข
       await db.query(`
-        UPDATE TB_M_Type
+        UPDATE tb_m_type
         SET TypeName = ?, TypeImage = COALESCE(?, TypeImage)
         WHERE TypeID = ?
       `, [TypeName, image, TypeID]);
     } else {
       // เพิ่มใหม่
       await db.query(`
-        INSERT INTO TB_M_Type (TypeName, TypeImage)
+        INSERT INTO tb_m_type (TypeName, TypeImage)
         VALUES (?, ?)
       `, [TypeName, image]);
     }
@@ -3144,8 +3144,8 @@ router.get("/search-asset", async (req, res) => {
     // ถ้าพิมพ์ครบ exact → redirect ทันที
     const [[exact]] = await db.query(`
       SELECT da.AssetTag, da.ITCode, da.SerialNumber, d.ModelID
-      FROM TB_T_DeviceAdd da
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      FROM tb_t_deviceadd da
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
       WHERE da.AssetTag = ? OR da.ITCode = ? OR da.SerialNumber = ?
       LIMIT 1
     `, [q, q, q]);
@@ -3164,10 +3164,10 @@ router.get("/search-asset", async (req, res) => {
       SELECT 
         da.AssetTag, da.ITCode, da.SerialNumber,
         d.ModelID, dev.DeviceName, m.ModelName
-      FROM TB_T_DeviceAdd da
-      JOIN TB_T_Device dev ON da.DeviceID = dev.DeviceID
-      JOIN TB_M_Model m ON dev.ModelID = m.ModelID
-      JOIN TB_T_Device d ON da.DeviceID = d.DeviceID
+      FROM tb_t_deviceadd da
+      JOIN tb_t_device dev ON da.DeviceID = dev.DeviceID
+      JOIN tb_m_model m ON dev.ModelID = m.ModelID
+      JOIN tb_t_device d ON da.DeviceID = d.DeviceID
       WHERE da.AssetTag LIKE ? OR da.ITCode LIKE ? OR da.SerialNumber LIKE ?
       LIMIT 8
     `, [`%${q}%`, `%${q}%`, `%${q}%`]);
@@ -3187,14 +3187,14 @@ router.get("/type/delete/:id", async (req, res) => {
 
     // เช็กว่ามีอุปกรณ์ใช้ type นี้อยู่ไหม
     const [[used]] = await db.query(`
-      SELECT 1 FROM TB_T_Device WHERE TypeID = ? LIMIT 1
+      SELECT 1 FROM tb_t_device WHERE TypeID = ? LIMIT 1
     `, [id]);
 
     if (used) {
       return res.redirect("/admin/device?error=used");
     }
 
-    await db.query("DELETE FROM TB_M_Type WHERE TypeID = ?", [id]);
+    await db.query("DELETE FROM tb_m_type WHERE TypeID = ?", [id]);
     res.redirect("/admin/device?success=delete");
 
   } catch (err) {
