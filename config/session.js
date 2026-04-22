@@ -4,14 +4,10 @@ require("dotenv").config();
 
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 4000,
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  ssl: {
-    rejectUnauthorized: true,
-    minVersion: "TLSv1.2"
-  }
+  database: process.env.DB_NAME
 });
 
 module.exports = session({
@@ -19,7 +15,5 @@ module.exports = session({
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
-  cookie: {
-    maxAge: 1000 * 60 * 60
-  }
+  cookie: { maxAge: 1000 * 60 * 60 }
 });
