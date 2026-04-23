@@ -1,15 +1,9 @@
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
+const db = require("./db");
 require("dotenv").config();
 
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 4000,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  ssl: {}
-});
+const sessionStore = new MySQLStore({}, db);
 
 module.exports = session({
   secret: process.env.SESSION_SECRET,
