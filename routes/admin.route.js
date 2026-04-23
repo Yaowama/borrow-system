@@ -1713,11 +1713,10 @@ router.get("/device/item/:id/edit", async (req, res) => {
   res.render("admin/layout", {
     page: "device_listedit",
     active: "device",
-    locals: {
-      device,
-      model,
-      statusList
-    }
+    user: req.user,     
+    device,              
+    model,
+    statusList
   });
 });
 

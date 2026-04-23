@@ -54,11 +54,10 @@
 
     <!-- profile -->
     <div class="profile-menu">
-
     <img
-         src="<%= user.ProfileImage 
-        ? '/uploads/profile/' + user.ProfileImage 
-        : '/images/default-avatar.svg' %>"
+        src="<%= user && user.ProfileImage 
+            ? '/uploads/profile/' + user.ProfileImage 
+            : '/images/default-avatar.svg' %>"
         id="profileBtn"
         class="profile-img"
     >
