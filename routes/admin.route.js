@@ -1068,7 +1068,7 @@ router.post("/change_password", async (req, res) => {
 ================================ */
 router.get("/device", async (req, res) => {
 
-  const [models] = await db.query(`
+    const [models] = await db.query(`
     SELECT
       d.DeviceID, 
       m.ModelID,
@@ -1089,7 +1089,7 @@ router.get("/device", async (req, res) => {
     LEFT JOIN tb_m_brand b ON d.BrandID = b.BrandID
     LEFT JOIN tb_m_type t ON d.TypeID = t.TypeID
     LEFT JOIN tb_t_deviceadd da ON d.DeviceID = da.DeviceID
-    GROUP BY d.DeviceID
+    GROUP BY d.DeviceID, m.ModelID, m.ModelName, d.DeviceName, d.DeviceImage, c.CategoryName, b.BrandName, t.TypeName
   `);
 
   // ✅ เพิ่มตรงนี้

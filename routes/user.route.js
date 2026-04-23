@@ -223,21 +223,16 @@ router.get("/dashboard", async (req, res) => {
         c.CategoryName,
         COUNT(da.DVID) AS Stock
       FROM tb_m_type t
-
       LEFT JOIN tb_t_device d 
         ON d.TypeID = t.TypeID
-
       LEFT JOIN tb_m_category c 
         ON d.CategoryID = c.CategoryID  
-
       LEFT JOIN tb_t_deviceadd da 
         ON da.DeviceID = d.DeviceID 
         AND da.DVStatusID = 1
-
-      GROUP BY t.TypeID
+      GROUP BY t.TypeID, t.TypeName, t.TypeImage, c.CategoryName
       ORDER BY t.TypeName
     `);
-
     const [[stats]] = await db.query(`
       SELECT
         SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL THEN 1 ELSE 0 END) AS borrowing,
