@@ -1713,7 +1713,7 @@ router.get("/device/item/:id/edit", async (req, res) => {
   res.render("admin/layout", {
     page: "device_listedit",
     active: "device",
-    user: req.user,     
+    user: req.session.user,
     device,              
     model,
     statusList
