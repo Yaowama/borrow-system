@@ -10,7 +10,7 @@ const db = mysql.createPool({
   timezone: "+07:00",
   waitForConnections: true,
   connectionLimit: 10,
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false
+  ssl: {}
 });
 
 module.exports = db;
