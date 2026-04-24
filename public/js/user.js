@@ -356,13 +356,20 @@ function initNotification() {
 
       // ✅ click ทีละ item = read ทีละอัน
       list.querySelectorAll(".noti-item").forEach(item => {
-        item.addEventListener("click", async e => {
+        item.addEventListener("click", async e => {  // ← เพิ่ม async
           e.preventDefault();
 
           const key = item.dataset.key;
           const url = item.href;
 
-          // อัป UI ทันที
+          // ← รอให้ save เสร็จก่อน
+          await fetch(markUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ keys: [key] })
+          });
+
+          // อัป UI
           item.classList.remove("noti-unread");
           item.querySelector(".noti-dot")?.remove();
 
@@ -375,13 +382,6 @@ function initNotification() {
             badge.textContent = current;
             countLbl.textContent = `${current} รายการใหม่`;
           }
-
-          // รอ save DB แล้วค่อย navigate
-          await fetch(markUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ keys: [key] })
-          });
 
           window.location.href = url;
         });
