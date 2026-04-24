@@ -355,37 +355,37 @@ function initNotification() {
       `).join("");
 
       // ✅ click ทีละ item = read ทีละอัน
-      list.querySelectorAll(".noti-item").forEach(item => {
-        item.addEventListener("click", async e => {  // ← เพิ่ม async
-          e.preventDefault();
+    list.querySelectorAll(".noti-item").forEach(item => {
+      item.addEventListener("click", async e => {  // ← เพิ่ม async
+        e.preventDefault();
 
-          const key = item.dataset.key;
-          const url = item.href;
+        const key = item.dataset.key;
+        const url = item.href;
 
-          // ← รอให้ save เสร็จก่อน
-          await fetch(markUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ keys: [key] })
-          });
-
-          // อัป UI
-          item.classList.remove("noti-unread");
-          item.querySelector(".noti-dot")?.remove();
-
-          let current = parseInt(badge.textContent) || 0;
-          current--;
-          if (current <= 0) {
-            badge.style.display = "none";
-            countLbl.textContent = "";
-          } else {
-            badge.textContent = current;
-            countLbl.textContent = `${current} รายการใหม่`;
-          }
-
-          window.location.href = url;
+        // ← รอให้ save เสร็จก่อน
+        await fetch(markUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keys: [key] })
         });
+
+        // อัป UI
+        item.classList.remove("noti-unread");
+        item.querySelector(".noti-dot")?.remove();
+
+        let current = parseInt(badge.textContent) || 0;
+        current--;
+        if (current <= 0) {
+          badge.style.display = "none";
+          countLbl.textContent = "";
+        } else {
+          badge.textContent = current;
+          countLbl.textContent = `${current} รายการใหม่`;
+        }
+
+        window.location.href = url;
       });
+    });
 
     } catch (err) {
       console.error("NOTI LOAD ERROR:", err);
