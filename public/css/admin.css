@@ -1286,7 +1286,12 @@ body {
   border-radius: 999px;
 }
 /* ===== NOTIFICATION ===== */
-.noti-wrap { position: relative; }
+.noti-wrap {
+  position: fixed;
+  top: 16px;
+  right: 72px;
+  z-index: 9999;
+}
 
 .noti-btn {
   position: relative;
