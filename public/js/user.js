@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-   initNotification();
 
   /* ===============================
      FILTER DEVICE
@@ -357,27 +356,25 @@ function initNotification() {
 
       // ✅ click ทีละ item = read ทีละอัน
       list.querySelectorAll(".noti-item").forEach(item => {
-        item.addEventListener("click", e => {
+        item.addEventListener("click", async e => {  // ← เพิ่ม async
           e.preventDefault();
 
           const key = item.dataset.key;
           const url = item.href;
 
-          // 🔥 ยิง mark read เฉพาะอันนี้
-          fetch(markUrl, {
+          // ← รอให้ save เสร็จก่อน
+          await fetch(markUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ keys: [key] })
           });
 
-          // 🔥 อัป UI ทันที
+          // อัป UI
           item.classList.remove("noti-unread");
           item.querySelector(".noti-dot")?.remove();
 
-          // 🔥 ลด badge
           let current = parseInt(badge.textContent) || 0;
           current--;
-
           if (current <= 0) {
             badge.style.display = "none";
             countLbl.textContent = "";
@@ -386,10 +383,7 @@ function initNotification() {
             countLbl.textContent = `${current} รายการใหม่`;
           }
 
-          // 👉 delay นิดให้ UX ลื่น
-          setTimeout(() => {
-            window.location.href = url;
-          }, 150);
+          window.location.href = url;
         });
       });
 

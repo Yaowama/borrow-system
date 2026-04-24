@@ -139,18 +139,26 @@ function initNotification() {
         </a>
       `).join("");
       list.querySelectorAll(".noti-item").forEach(item => {
-        item.addEventListener("click", e => {
+        item.addEventListener("click", async e => {  // ← เพิ่ม async
           e.preventDefault();
           const key = item.dataset.key;
           const url = item.href;
-          fetch(markUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys: [key] }) });
+
+          // ← รอให้ save DB เสร็จก่อน
+          await fetch(markUrl, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ keys: [key] }) 
+          });
+
           item.classList.remove("noti-unread");
           item.querySelector(".noti-dot")?.remove();
           let current = parseInt(badge.textContent) || 0;
           current--;
           if (current <= 0) { badge.style.display = "none"; countLbl.textContent = ""; }
           else { badge.textContent = current; countLbl.textContent = `${current} รายการใหม่`; }
-          setTimeout(() => { window.location.href = url; }, 150);
+
+          window.location.href = url;  // ← ลบ setTimeout ออก ใช้ตรงๆ แทน
         });
       });
     } catch (err) {
