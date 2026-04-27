@@ -46,7 +46,6 @@ router.get("/notifications", async (req, res) => {
 
   try {
     const empId = req.session.user?.EMPID;
-    const empId = req.session.user?.EMPID;
 
     let readKeys = new Set();
     if (empId) {
@@ -166,7 +165,7 @@ router.get("/notifications", async (req, res) => {
 
     notifications.sort((a, b) => b.rawTime - a.rawTime);
 
-    // ✅ ใช้ readKeys ที่ดึงมาตั้งแต่ต้น ไม่ดึงซ้ำ
+    
     const items = notifications.map(n => ({
       ...n,
       rawTime: undefined,
