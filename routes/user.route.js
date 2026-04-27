@@ -349,17 +349,15 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
   }
 
   try {
-    const borrowCodes = []; // ✅ เก็บทุก code
+    const borrowCodes = [];
 
-    // =========================
-    // 📝 INSERT BORROW + NOTI
-    // =========================
     for (let i = 0; i < qtyNum; i++) {
       const borrowCode = "BR" + Date.now() + i;
 
       borrowCodes.push(borrowCode);
 
-      await db.query(`
+      // ✅ รับ insertId กลับมา
+      const [result] = await db.query(`
         INSERT INTO tb_t_borrowtransaction
         (BorrowCode, EMPID, TypeID, DVID, DueDate, Purpose, \`Location\`, BorrowStatusID, Remark)
         VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)
@@ -374,6 +372,8 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
         note || null
       ]);
 
+      const newBorrowID = result.insertId; // ✅ BorrowID ที่เพิ่งสร้าง (int)
+
       await db.query(`
         INSERT INTO tb_t_notification
         (ReceiverID, NotiType, Title, Message, RefID, IsRead, CreatedDate)
@@ -383,7 +383,7 @@ router.post("/borrow/:id", isLogin, checkActive, async (req, res) => {
         "borrow_sent",
         "ส่งคำขอยืมแล้ว",
         `คำขอเลขที่ ${borrowCode} ถูกส่งเรียบร้อย`,
-        borrowCode
+        newBorrowID  // ✅ ส่ง int แทน string
       ]);
     }
 
