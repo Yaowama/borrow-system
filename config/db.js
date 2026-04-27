@@ -1,3 +1,6 @@
+const mysql = require("mysql2/promise");
+require("dotenv").config();
+
 const db = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 18527,
@@ -15,3 +18,5 @@ const db = mysql.createPool({
     rejectUnauthorized: false
   }
 });
+
+module.exports = db;
