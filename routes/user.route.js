@@ -142,7 +142,28 @@ router.get("/notifications", async (req, res) => {
     title: `ใกล้ครบกำหนด ${r.remain} วัน`,
     desc: r.BorrowCode, time: `ครบ ${r.DueDate}`, url: "/user/borrowing"
   }));
-
+    // ---- เกินกำหนด ----
+    const [overdue] = await db.query(`
+      SELECT bt.BorrowID, bt.BorrowCode,
+            DATEDIFF(DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')), bt.DueDate) AS days,
+            DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+            bt.DueDate AS rawTime
+      FROM tb_t_borrowtransaction bt
+      WHERE bt.EMPID = ? 
+        AND bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+      ORDER BY days DESC LIMIT 5
+    `, [empId]);
+    overdue.forEach(r => notifications.push({
+      notiKey: `u-overdue-${r.BorrowID}`,
+      rawTime: new Date(r.rawTime),
+      type: "overdue", icon: "triangle-exclamation", color: "#ef4444",
+      title: `เกินกำหนด ${r.days} วัน`,
+      desc: r.BorrowCode,
+      time: `ครบ ${r.DueDate}`,
+      url: "/user/borrowing"
+    }));
   // ---- คืนแล้ว ----
   const [returned] = await db.query(`
     SELECT bt.BorrowID, bt.BorrowCode,

@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const db = require("./config/db");
 const session = require("./config/session");
+require("./config/cron");
 
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
