@@ -43,6 +43,17 @@ function isAdmin(req, res, next) {
 router.get("/notifications", async (req, res) => {
   try {
     const empId = req.session.user?.EMPID;
+
+    // ✅ ดึง readKeys ก่อนเลย
+    let readKeys = new Set();
+    if (empId) {
+      const [readRows] = await db.query(
+        "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?",
+        [empId]
+      );
+      readRows.forEach(r => readKeys.add(r.NotiKey));
+    }
+
     const notifications = [];
 
     // ---- 1. รออนุมัติ ----
@@ -61,9 +72,7 @@ router.get("/notifications", async (req, res) => {
     pending.forEach(r => notifications.push({
       notiKey: `pending-${r.BorrowID}`,
       rawTime: new Date(r.rawTime),
-      type: "pending",
-      icon: "clock",
-      color: "#f59e0b",
+      type: "pending", icon: "clock", color: "#f59e0b",
       title: "รออนุมัติ",
       desc: `${r.name} • ${r.BorrowCode}`,
       time: r.BorrowDate,
@@ -89,9 +98,7 @@ router.get("/notifications", async (req, res) => {
     overdue.forEach(r => notifications.push({
       notiKey: `overdue-${r.BorrowID}`,
       rawTime: new Date(r.rawTime),
-      type: "overdue",
-      icon: "triangle-exclamation",
-      color: "#ef4444",
+      type: "overdue", icon: "triangle-exclamation", color: "#ef4444",
       title: `เกินกำหนด ${r.days} วัน`,
       desc: `${r.name} • ${r.BorrowCode}`,
       time: `ครบ ${r.DueDate}`,
@@ -99,33 +106,32 @@ router.get("/notifications", async (req, res) => {
     }));
 
     // ---- 3. ใกล้ครบกำหนด ----
-      const [nearDue] = await db.query(`
-        SELECT 
-          bt.BorrowID, bt.BorrowCode,
-          CONCAT(e.fname,' ',e.lname) AS name,
-          DATEDIFF(bt.DueDate, CURDATE()) AS remain,
-          DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
-          bt.BorrowDate AS rawTime      
-        FROM tb_t_borrowtransaction bt
-        JOIN tb_t_employee e ON bt.EMPID = e.EMPID
-        WHERE bt.BorrowStatusID = 6
-          AND bt.ReturnDate IS NULL
-          AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
-        ORDER BY bt.BorrowDate DESC
-        LIMIT 10
-      `);
-      nearDue.forEach(r => notifications.push({
-        notiKey: `neardue-${r.BorrowID}`,
-        rawTime: new Date(r.rawTime),   
-        icon: "bell",
-        color: "#f97316",
-        title: `ใกล้ครบกำหนด ${r.remain} วัน`,
-        desc: `${r.name} • ${r.BorrowCode}`,
-        time: `ครบ ${r.DueDate}`,
-        url: "/admin/borrow?status=6"
-      }));
+    const [nearDue] = await db.query(`
+      SELECT 
+        bt.BorrowID, bt.BorrowCode,
+        CONCAT(e.fname,' ',e.lname) AS name,
+        DATEDIFF(bt.DueDate, CURDATE()) AS remain,
+        DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+        bt.BorrowDate AS rawTime      
+      FROM tb_t_borrowtransaction bt
+      JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+      WHERE bt.BorrowStatusID = 6
+        AND bt.ReturnDate IS NULL
+        AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+      ORDER BY bt.BorrowDate DESC
+      LIMIT 10
+    `);
+    nearDue.forEach(r => notifications.push({
+      notiKey: `neardue-${r.BorrowID}`,
+      rawTime: new Date(r.rawTime),
+      icon: "bell", color: "#f97316",
+      title: `ใกล้ครบกำหนด ${r.remain} วัน`,
+      desc: `${r.name} • ${r.BorrowCode}`,
+      time: `ครบ ${r.DueDate}`,
+      url: "/admin/borrow?status=6"
+    }));
 
-    // ---- 4. ปฏิเสธล่าสุด (7 วันย้อนหลัง) ----
+    // ---- 4. ปฏิเสธล่าสุด ----
     const [recentRejected] = await db.query(`
       SELECT
         bt.BorrowID, bt.BorrowCode,
@@ -148,36 +154,23 @@ router.get("/notifications", async (req, res) => {
     recentRejected.forEach(r => notifications.push({
       notiKey: `rejected-${r.BorrowID}`,
       rawTime: new Date(r.rawTime),
-      type: "rejected",
-      icon: "xmark",
-      color: "#ef4444",
+      type: "rejected", icon: "xmark", color: "#ef4444",
       title: `ปฏิเสธแล้ว`,
       desc: `${r.borrowerName} • ${r.BorrowCode}${r.rejectedBy ? ' — โดย ' + r.rejectedBy : ''}`,
       time: r.RejectDate,
       url: "/admin/borrow?status=3"
     }));
-      
 
     notifications.sort((a, b) => b.rawTime - a.rawTime);
 
-    let readKeys = new Set();
-    if (empId) {
-      const [reads] = await db.query(
-        "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?",
-        [empId]
-      );
-      reads.forEach(r => readKeys.add(r.NotiKey));
-    }
-
-    // ---- ใส่ isRead flag ----
+    // ✅ ใช้ readKeys ที่ดึงมาตั้งแต่ต้น ไม่ดึงซ้ำ
     const items = notifications.map(n => ({
       ...n,
-      rawTime: undefined,   // ไม่ส่ง rawTime ออก
+      rawTime: undefined,
       isRead: readKeys.has(n.notiKey)
     }));
 
     const unreadCount = items.filter(i => !i.isRead).length;
-
     res.json({ count: unreadCount, items });
 
   } catch (err) {

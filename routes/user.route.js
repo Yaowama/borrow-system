@@ -68,11 +68,15 @@ async function checkActive(req, res, next) {
 router.get("/", (req, res) => {
   res.redirect("/user/dashboard");
 });
-
-// user router
 router.get("/notifications", async (req, res) => {
   const empId = req.session.user?.EMPID;
   if (!empId) return res.json({ count: 0, items: [] });
+
+  // ✅ ดึง readKeys ก่อนเลย
+  const [readRows] = await db.query(
+    "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?", [empId]
+  );
+  const readKeys = new Set(readRows.map(r => r.NotiKey));
 
   const notifications = [];
 
@@ -111,78 +115,74 @@ router.get("/notifications", async (req, res) => {
   }));
 
   // ---- ใกล้ครบกำหนด ----
-    const [nearDue] = await db.query(`
-      SELECT bt.BorrowID, bt.BorrowCode,
-            DATEDIFF(bt.DueDate, CURDATE()) AS remain,
-            DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
-            bt.BorrowDate AS rawTime    
-      FROM tb_t_borrowtransaction bt
-      WHERE bt.EMPID = ? AND bt.BorrowStatusID = 6
-        AND bt.ReturnDate IS NULL
-        AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
-    `, [empId]);
-    nearDue.forEach(r => notifications.push({
-      notiKey: `u-neardue-${r.BorrowID}`,
-      rawTime: new Date(r.rawTime),   
-      type: "neardue", icon: "bell", color: "#f97316",
-      title: `ใกล้ครบกำหนด ${r.remain} วัน`,
-      desc: r.BorrowCode, time: `ครบ ${r.DueDate}`, url: "/user/borrowing"
-    }));
+  const [nearDue] = await db.query(`
+    SELECT bt.BorrowID, bt.BorrowCode,
+          DATEDIFF(bt.DueDate, CURDATE()) AS remain,
+          DATE_FORMAT(bt.DueDate,'%d/%m/%Y') AS DueDate,
+          bt.BorrowDate AS rawTime    
+    FROM tb_t_borrowtransaction bt
+    WHERE bt.EMPID = ? AND bt.BorrowStatusID = 6
+      AND bt.ReturnDate IS NULL
+      AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+  `, [empId]);
+  nearDue.forEach(r => notifications.push({
+    notiKey: `u-neardue-${r.BorrowID}`,
+    rawTime: new Date(r.rawTime),
+    type: "neardue", icon: "bell", color: "#f97316",
+    title: `ใกล้ครบกำหนด ${r.remain} วัน`,
+    desc: r.BorrowCode, time: `ครบ ${r.DueDate}`, url: "/user/borrowing"
+  }));
 
-      const [returned] = await db.query(`
-        SELECT bt.BorrowID, bt.BorrowCode,
-              DATE_FORMAT(bt.ReturnDate,'%d/%m/%Y %H:%i') AS ReturnDate,
-              bt.ReturnDate AS rawTime
-        FROM tb_t_borrowtransaction bt
-        WHERE bt.EMPID = ?
-          AND bt.BorrowStatusID = 4
-          AND bt.ReturnDate IS NOT NULL
-          AND bt.ReturnDate >= DATE_SUB(NOW(), INTERVAL 3 DAY)
-        ORDER BY bt.ReturnDate DESC LIMIT 5
-      `, [empId]);
-      returned.forEach(r => notifications.push({
-        notiKey: `u-returned-${r.BorrowID}`,
-        rawTime: new Date(r.rawTime),
-        type: "returned", icon: "circle-check", color: "#16a34a",
-        title: "คืนอุปกรณ์เรียบร้อย",
-        desc: r.BorrowCode,
-        time: r.ReturnDate,
-        url: "/user/history"
-      }));
+  // ---- คืนแล้ว ----
+  const [returned] = await db.query(`
+    SELECT bt.BorrowID, bt.BorrowCode,
+          DATE_FORMAT(bt.ReturnDate,'%d/%m/%Y %H:%i') AS ReturnDate,
+          bt.ReturnDate AS rawTime
+    FROM tb_t_borrowtransaction bt
+    WHERE bt.EMPID = ?
+      AND bt.BorrowStatusID = 4
+      AND bt.ReturnDate IS NOT NULL
+      AND bt.ReturnDate >= DATE_SUB(NOW(), INTERVAL 3 DAY)
+    ORDER BY bt.ReturnDate DESC LIMIT 5
+  `, [empId]);
+  returned.forEach(r => notifications.push({
+    notiKey: `u-returned-${r.BorrowID}`,
+    rawTime: new Date(r.rawTime),
+    type: "returned", icon: "circle-check", color: "#16a34a",
+    title: "คืนอุปกรณ์เรียบร้อย",
+    desc: r.BorrowCode,
+    time: r.ReturnDate,
+    url: "/user/history"
+  }));
 
-      // ---- ถูกปฏิเสธ ----
-      const [rejected] = await db.query(`
-        SELECT bt.BorrowID, bt.BorrowCode,
-              bt.Remark,
-              DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS ApproveDate,
-              bt.ApproveDate AS rawTime
-        FROM tb_t_borrowtransaction bt
-        WHERE bt.EMPID = ?
-          AND bt.BorrowStatusID = 3
-          AND bt.ApproveDate >= DATE_SUB(NOW(), INTERVAL 3 DAY)
-        ORDER BY bt.ApproveDate DESC LIMIT 5
-      `, [empId]);
-      rejected.forEach(r => notifications.push({
-        notiKey: `u-rejected-${r.BorrowID}`,
-        rawTime: new Date(r.rawTime),
-        type: "rejected", icon: "circle-xmark", color: "#ef4444",
-        title: "คำขอถูกปฏิเสธ",
-        desc: r.BorrowCode + (r.Remark ? ` • ${r.Remark}` : ''),
-        time: r.ApproveDate,
-        url: "/user/history"
-      }));
-
+  // ---- ถูกปฏิเสธ ----
+  const [rejected] = await db.query(`
+    SELECT bt.BorrowID, bt.BorrowCode,
+          bt.Remark,
+          DATE_FORMAT(bt.ApproveDate,'%d/%m/%Y %H:%i') AS ApproveDate,
+          bt.ApproveDate AS rawTime
+    FROM tb_t_borrowtransaction bt
+    WHERE bt.EMPID = ?
+      AND bt.BorrowStatusID = 3
+      AND bt.ApproveDate >= DATE_SUB(NOW(), INTERVAL 3 DAY)
+    ORDER BY bt.ApproveDate DESC LIMIT 5
+  `, [empId]);
+  rejected.forEach(r => notifications.push({
+    notiKey: `u-rejected-${r.BorrowID}`,
+    rawTime: new Date(r.rawTime),
+    type: "rejected", icon: "circle-xmark", color: "#ef4444",
+    title: "คำขอถูกปฏิเสธ",
+    desc: r.BorrowCode + (r.Remark ? ` • ${r.Remark}` : ''),
+    time: r.ApproveDate,
+    url: "/user/history"
+  }));
 
   notifications.sort((a, b) => b.rawTime - a.rawTime);
 
-  // ---- read keys ----
-  const [reads] = await db.query(
-    "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?", [empId]
-  );
-  const readKeys = new Set(reads.map(r => r.NotiKey));
-
+  // ✅ ใช้ readKeys ที่ดึงมาตั้งแต่ต้น ไม่ดึงซ้ำ
   const items = notifications.map(n => ({
-    ...n, rawTime: undefined,
+    ...n,
+    rawTime: undefined,
     isRead: readKeys.has(n.notiKey)
   }));
 

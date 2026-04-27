@@ -355,44 +355,42 @@ function initNotification() {
         </a>
       `).join("");
 
-      // ✅ click ทีละ item = read ทีละอัน
-      list.querySelectorAll(".noti-item").forEach(item => {
-        item.addEventListener("click", e => {
-          e.preventDefault();
+              // ✅ แก้ตรงนี้ — เพิ่ม async และ await ให้ครบ
+        list.querySelectorAll(".noti-item").forEach(item => {
+          item.addEventListener("click", async e => {
+            e.preventDefault();
 
-          const key = item.dataset.key;
-          const url = item.href;
+            const key = item.dataset.key;
+            const url = item.href;
 
-          // 🔥 ยิง mark read เฉพาะอันนี้
-          fetch(markUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ keys: [key] })
-          });
+            // ✅ รอให้ mark-read บันทึกใน DB เสร็จก่อน
+            try {
+              await fetch(markUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ keys: [key] })
+              });
+            } catch (err) {
+              console.error("Mark read failed:", err);
+            }
 
-          // 🔥 อัป UI ทันที
-          item.classList.remove("noti-unread");
-          item.querySelector(".noti-dot")?.remove();
+            // ✅ อัป UI
+            item.classList.remove("noti-unread");
+            item.querySelector(".noti-dot")?.remove();
 
-          // 🔥 ลด badge
-          let current = parseInt(badge.textContent) || 0;
-          current--;
+            let current = parseInt(badge.textContent) || 0;
+            current--;
+            if (current <= 0) {
+              badge.style.display = "none";
+              countLbl.textContent = "";
+            } else {
+              badge.textContent = current;
+              countLbl.textContent = `${current} รายการใหม่`;
+            }
 
-          if (current <= 0) {
-            badge.style.display = "none";
-            countLbl.textContent = "";
-          } else {
-            badge.textContent = current;
-            countLbl.textContent = `${current} รายการใหม่`;
-          }
-
-          // 👉 delay นิดให้ UX ลื่น
-          setTimeout(() => {
             window.location.href = url;
-          }, 150);
+          });
         });
-      });
-
     } catch (err) {
       console.error("NOTI LOAD ERROR:", err);
     }
@@ -423,7 +421,12 @@ function initNotification() {
   loadNotifications();
 
   // refresh ทุก 60 วิ
-  setInterval(loadNotifications, 60000);
+setInterval(() => {
+  // ไม่ refresh ถ้า dropdown เปิดอยู่
+  if (!dropdown.classList.contains("open")) {
+    loadNotifications();
+  }
+}, 60000);
 }
 
 /* ===============================
