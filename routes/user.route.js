@@ -70,14 +70,23 @@ router.get("/", (req, res) => {
 });
 
 router.get("/notifications", async (req, res) => {
-  const empId = req.session.user?.EMPID;
-  if (!empId) return res.json({ count: 0, items: [] });
+    const empId = req.session.user?.EMPID;
 
-  // ✅ ดึง readKeys ก่อนเลย
-  const [readRows] = await db.query(
-    "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?", [empId]
-  );
-  const readKeys = new Set(readRows.map(r => r.NotiKey));
+    // ✅ ถ้าไม่มี session ให้ return เลย ไม่ต้อง query
+    if (!empId) return res.json({ count: 0, items: [] });
+
+    let readKeys = new Set();
+    try {
+      const [readRows] = await db.query(
+        "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?",
+        [empId]
+      );
+      readRows.forEach(r => readKeys.add(r.NotiKey));
+    } catch (dbErr) {
+      // ✅ ถ้า DB หลุด ให้ treat ทุกอันว่า read ไว้ก่อน ไม่แจ้งซ้ำ
+      console.warn("readKeys query failed, treating all as read:", dbErr.message);
+      return res.json({ count: 0, items: [] });
+    }
 
   const notifications = [];
 
