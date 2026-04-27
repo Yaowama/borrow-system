@@ -310,9 +310,7 @@ function initNotification() {
   let lastItems = [];
 
   async function loadNotifications() {
-  try {
-      const res = await fetch(apiUrl, { cache: "no-store" });
-      const data = await res.json();
+    try {
       const res  = await fetch(apiUrl);
       const data = await res.json();
       lastItems  = data.items || [];

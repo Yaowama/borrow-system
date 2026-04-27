@@ -44,7 +44,6 @@ router.get("/notifications", async (req, res) => {
   try {
     const empId = req.session.user?.EMPID;
 
-    // ✅ ดึง readKeys ก่อนเลย
     let readKeys = new Set();
     if (empId) {
       const [readRows] = await db.query(
@@ -185,14 +184,17 @@ router.post("/notifications/mark-read", async (req, res) => {
     const empId = req.session.user?.EMPID;
     if (!empId) return res.json({ ok: false });
 
-    const { keys } = req.body; // array of notiKey strings
+    const { keys } = req.body;
     if (!Array.isArray(keys) || !keys.length) return res.json({ ok: true });
 
-    const values = keys.map(k => [empId, k]);
-    await db.query(
-      "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES ?",
-      [values]
-    );
+    // ✅ แก้จาก VALUES ? เป็น loop แทน
+    for (const key of keys) {
+      await db.query(
+        "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES (?, ?)",
+        [empId, key]
+      );
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error("MARK READ ERROR:", err);
