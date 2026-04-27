@@ -71,13 +71,10 @@ router.get("/", (req, res) => {
 
 
 router.get("/notifications", async (req, res) => {
-  
   const empId = req.session.user?.EMPID;
   if (!empId) return res.json({ count: 0, items: [] });
 
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-
+  // ✅ ดึง readKeys ก่อนเลย
   const [readRows] = await db.query(
     "SELECT NotiKey FROM tb_t_notificationread WHERE EMPID = ?", [empId]
   );
