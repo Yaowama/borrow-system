@@ -878,7 +878,7 @@ router.get("/profile", async (req, res) => {
       d.DepartmentName,
       i.InstitutionName
     FROM tb_t_employee e
-    LEFT JOIN Roles r 
+    LEFT JOIN roles r
       ON e.RoleID = r.RoleID
     LEFT JOIN tb_m_department d 
       ON e.DepartmentID = d.DepartmentID
