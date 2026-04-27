@@ -41,13 +41,10 @@ function isAdmin(req, res, next) {
 // 🔔 NOTIFICATION API
 // ============================
 router.get("/notifications", async (req, res) => {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-
   try {
     const empId = req.session.user?.EMPID;
-    const empId = req.session.user?.EMPID;
 
+    // ✅ ดึง readKeys ก่อนเลย
     let readKeys = new Set();
     if (empId) {
       const [readRows] = await db.query(
@@ -188,17 +185,14 @@ router.post("/notifications/mark-read", async (req, res) => {
     const empId = req.session.user?.EMPID;
     if (!empId) return res.json({ ok: false });
 
-    const { keys } = req.body;
+    const { keys } = req.body; // array of notiKey strings
     if (!Array.isArray(keys) || !keys.length) return res.json({ ok: true });
 
-    // ✅ แก้จาก VALUES ? เป็น loop แทน
-    for (const key of keys) {
-      await db.query(
-        "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES (?, ?)",
-        [empId, key]
-      );
-    }
-
+    const values = keys.map(k => [empId, k]);
+    await db.query(
+      "INSERT IGNORE INTO tb_t_notificationread (EMPID, NotiKey) VALUES ?",
+      [values]
+    );
     res.json({ ok: true });
   } catch (err) {
     console.error("MARK READ ERROR:", err);

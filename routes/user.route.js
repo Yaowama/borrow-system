@@ -68,8 +68,6 @@ async function checkActive(req, res, next) {
 router.get("/", (req, res) => {
   res.redirect("/user/dashboard");
 });
-
-
 router.get("/notifications", async (req, res) => {
   const empId = req.session.user?.EMPID;
   if (!empId) return res.json({ count: 0, items: [] });
