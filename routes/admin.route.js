@@ -270,12 +270,12 @@ router.get("/", isAdmin, async (req, res) => {
   `);
 
   const [[overdue]] = await db.query(`
-  SELECT COUNT(*) total
-  FROM tb_t_borrowtransaction
-  WHERE BorrowStatusID = 6
-    AND ReturnDate IS NULL
-    AND DueDate < CURDATE()
-`);
+    SELECT COUNT(*) total
+    FROM tb_t_borrowtransaction
+    WHERE BorrowStatusID = 6
+      AND ReturnDate IS NULL
+      AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+  `);
 
 
   const [[employeeTotal]] = await db.query(`
@@ -283,38 +283,26 @@ router.get("/", isAdmin, async (req, res) => {
   `);
 
   const [nearDueList] = await db.query(`
-    SELECT
+  SELECT
     bt.BorrowCode,
     bt.DueDate,
-    DATEDIFF(bt.DueDate, CURDATE()) AS remain_day,
-
+    DATEDIFF(bt.DueDate, DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) AS remain_day,
     e.fname,
     e.lname,
-
-    da.ITCode,
-    da.AssetTag,
-    m.ModelName
-
+    COALESCE(da.ITCode, t.TypeName, '-') AS ITCode,
+    COALESCE(da.AssetTag, '-') AS AssetTag,
+    COALESCE(m.ModelName, '-') AS ModelName
   FROM tb_t_borrowtransaction bt
-
-  JOIN tb_t_employee e 
-    ON bt.EMPID = e.EMPID
-
-  JOIN tb_t_deviceadd da
-    ON bt.DVID = da.DVID
-
-  JOIN tb_t_device d
-    ON da.DeviceID = d.DeviceID
-
-  JOIN tb_m_model m
-    ON d.ModelID = m.ModelID
-
+  JOIN tb_t_employee e ON bt.EMPID = e.EMPID
+  LEFT JOIN tb_t_deviceadd da ON bt.DVID = da.DVID
+  LEFT JOIN tb_t_device d ON da.DeviceID = d.DeviceID
+  LEFT JOIN tb_m_model m ON d.ModelID = m.ModelID
+  LEFT JOIN tb_m_type t ON bt.TypeID = t.TypeID
   WHERE bt.BorrowStatusID = 6
     AND bt.ReturnDate IS NULL
-    AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
-
+    AND DATEDIFF(bt.DueDate, DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) BETWEEN -30 AND 3
   ORDER BY remain_day ASC
-  `);
+`);
 
   res.render("admin/layout", {
     page: "admin",
@@ -336,13 +324,13 @@ router.get("/", isAdmin, async (req, res) => {
 
 router.get("/dashboard-data", async (req, res) => {
   try {
-
     const [[borrowStatus]] = await db.query(`
       SELECT
-        SUM(CASE WHEN BorrowStatusID = 2 THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN BorrowStatusID IN (2,6) AND NOT (BorrowStatusID = 6 AND ReturnDate IS NULL AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) THEN 1 ELSE 0 END) AS approved,
         SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
         SUM(CASE WHEN BorrowStatusID = 3 THEN 1 ELSE 0 END) AS rejected,
-        SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned
+        SUM(CASE WHEN BorrowStatusID = 4 THEN 1 ELSE 0 END) AS returned,
+        SUM(CASE WHEN BorrowStatusID = 6 AND ReturnDate IS NULL AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')) THEN 1 ELSE 0 END) AS overdue
       FROM tb_t_borrowtransaction
     `);
 
@@ -356,22 +344,19 @@ router.get("/dashboard-data", async (req, res) => {
 
     res.json({
       approved: borrowStatus.approved || 0,
-      pending: borrowStatus.pending || 0,
+      pending:  borrowStatus.pending  || 0,
       rejected: borrowStatus.rejected || 0,
       returned: borrowStatus.returned || 0,
+      overdue:  borrowStatus.overdue  || 0,
       deviceStatus
     });
 
   } catch (err) {
-
     console.error("DASHBOARD API ERROR:", err);
-
-    res.status(500).json({
-      error: "dashboard error"
-    });
-
+    res.status(500).json({ error: "dashboard error" });
   }
 });
+
 
 // ── NEW: dashboard monthly borrow trend (12 เดือนย้อนหลัง) ──
 router.get("/dashboard/monthly", async (req, res) => {
