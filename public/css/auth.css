@@ -927,10 +927,20 @@ img { max-width: 100%; display: block; }
   .otp-box { width: 44px; height: 50px; font-size: 20px; }
 }
 
-/* globals.css */
-input::-ms-reveal,
-input::-ms-clear,
-input::-webkit-contacts-auto-fill-button,
-input::-webkit-credentials-auto-fill-button {
-  display: none;
+.toggle-pw {
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 0;
+  font-size: 14px;
+  transition: color .2s;
+}
+
+.toggle-pw:hover {
+  color: #ff7a2d;
 }
