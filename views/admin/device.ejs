@@ -42,17 +42,22 @@
 <!-- TAB -->
 <div class="tab-header">
   <div class="tab-switch">
-    <button class="tab-btn active" data-tab="device">
-      <i class="fa-solid fa-box"></i> คลังอุปกรณ์
-    </button>
-    <button class="tab-btn" data-tab="type">
-      <i class="fa-solid fa-tags"></i> ประเภทอุปกรณ์
-    </button>
-  </div>
-    <button class="btn-export" id="btnExportDevice">
-      <i class="fa-solid fa-file-excel"></i> Export Excel
-    </button>
-  </div>
+  <button class="tab-btn active" data-tab="device">
+    <i class="fa-solid fa-box"></i> คลังอุปกรณ์
+  </button>
+  <button class="tab-btn" data-tab="type">
+    <i class="fa-solid fa-tags"></i> ประเภท
+  </button>
+  <button class="tab-btn" data-tab="category">
+    <i class="fa-solid fa-layer-group"></i> หมวด
+  </button>
+  <button class="tab-btn" data-tab="brand">
+    <i class="fa-solid fa-copyright"></i> ยี่ห้อ
+  </button>
+  <button class="tab-btn" data-tab="model">
+    <i class="fa-solid fa-microchip"></i> รุ่น
+  </button>
+</div>
 
 
 
@@ -209,7 +214,174 @@
 
   </div>
 </div>
+<!-- CATEGORY SECTION -->
+<div id="category-section" class="tab-content">
+  <div class="page-card">
+    <div class="section-header">
+      <h2>หมวดอุปกรณ์</h2>
+      <button class="btn-add" id="btnAddCategory">
+        <i class="fa-solid fa-plus"></i> เพิ่มหมวด
+      </button>
+    </div>
+    <div class="type-grid">
+      <% categories.forEach(c => { %>
+      <div class="type-card">
+        <div class="type-img">
+          <div class="no-img-icon"><i class="fa-solid fa-layer-group"></i></div>
+        </div>
+        <div class="type-name"><%= c.CategoryName %></div>
+        <div class="type-actions">
+          <button class="btn-type-edit btn-cat-edit" data-id="<%= c.CategoryID %>" data-name="<%= c.CategoryName %>">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn-type-del btn-cat-del" data-id="<%= c.CategoryID %>" data-name="<%= c.CategoryName %>">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
 
+<!-- BRAND SECTION -->
+<div id="brand-section" class="tab-content">
+  <div class="page-card">
+    <div class="section-header">
+      <h2>ยี่ห้ออุปกรณ์</h2>
+      <button class="btn-add" id="btnAddBrand">
+        <i class="fa-solid fa-plus"></i> เพิ่มยี่ห้อ
+      </button>
+    </div>
+    <div class="type-grid">
+      <% brands.forEach(b => { %>
+      <div class="type-card">
+        <div class="type-img">
+          <div class="no-img-icon"><i class="fa-solid fa-copyright"></i></div>
+        </div>
+        <div class="type-name"><%= b.BrandName %></div>
+        <div class="type-actions">
+          <button class="btn-type-edit btn-brand-edit" data-id="<%= b.BrandID %>" data-name="<%= b.BrandName %>">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn-type-del btn-brand-del" data-id="<%= b.BrandID %>" data-name="<%= b.BrandName %>">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<!-- MODEL SECTION -->
+<div id="model-section" class="tab-content">
+  <div class="page-card">
+    <div class="section-header">
+      <h2>รุ่นอุปกรณ์</h2>
+      <button class="btn-add" id="btnAddModel">
+        <i class="fa-solid fa-plus"></i> เพิ่มรุ่น
+      </button>
+    </div>
+    <div class="table-box">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ชื่อรุ่น</th>
+            <th>ยี่ห้อ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% allModels.forEach((m, i) => { %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td><%= m.ModelName %></td>
+            <td><%= m.BrandName %></td>
+            <td>
+              <div class="action-box">
+                <button class="btn-icon edit btn-model-edit" data-id="<%= m.ModelID %>" data-name="<%= m.ModelName %>" data-brand="<%= m.BrandID %>">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn-icon del btn-model-del" data-id="<%= m.ModelID %>" data-name="<%= m.ModelName %>">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div id="categoryModal" class="modal-overlay">
+  <form id="categoryForm" method="POST" action="/admin/category/add" class="modal-box">
+    <div class="modal-header">
+      <h3 id="categoryModalTitle">เพิ่มหมวด</h3>
+      <button type="button" class="modal-close-btn" id="closeCategoryModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input type="hidden" name="CategoryID" id="categoryId">
+    <div class="form-group">
+      <label>ชื่อหมวด <span class="required">*</span></label>
+      <input type="text" name="CategoryName" id="categoryName" required placeholder="กรอกชื่อหมวด">
+    </div>
+    <div class="modal-actions" style="padding:20px 24px;border-top:1px solid #f5f5f5;margin-top:18px;">
+      <button type="button" class="btn-cancel" id="cancelCategoryBtn">ยกเลิก</button>
+      <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<!-- BRAND MODAL -->
+<div id="brandModal" class="modal-overlay">
+  <form id="brandForm" method="POST" action="/admin/brand/add" class="modal-box">
+    <div class="modal-header">
+      <h3 id="brandModalTitle">เพิ่มยี่ห้อ</h3>
+      <button type="button" class="modal-close-btn" id="closeBrandModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input type="hidden" name="BrandID" id="brandId">
+    <div class="form-group">
+      <label>ชื่อยี่ห้อ <span class="required">*</span></label>
+      <input type="text" name="BrandName" id="brandName" required placeholder="กรอกชื่อยี่ห้อ">
+    </div>
+    <div class="modal-actions" style="padding:20px 24px;border-top:1px solid #f5f5f5;margin-top:18px;">
+      <button type="button" class="btn-cancel" id="cancelBrandBtn">ยกเลิก</button>
+      <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<!-- MODEL MODAL -->
+<div id="modelModal" class="modal-overlay">
+  <form id="modelForm" method="POST" action="/admin/model/add" class="modal-box">
+    <div class="modal-header">
+      <h3 id="modelModalTitle">เพิ่มรุ่น</h3>
+      <button type="button" class="modal-close-btn" id="closeModelModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input type="hidden" name="ModelID" id="modelId">
+    <div class="form-group">
+      <label>ชื่อรุ่น <span class="required">*</span></label>
+      <input type="text" name="ModelName" id="modelName" required placeholder="กรอกชื่อรุ่น">
+    </div>
+    <div class="form-group">
+      <label>ยี่ห้อ <span class="required">*</span></label>
+      <select name="BrandID" id="modelBrand" required class="form-select">
+        <option value="">เลือกยี่ห้อ</option>
+        <% brands.forEach(b => { %>
+        <option value="<%= b.BrandID %>"><%= b.BrandName %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="modal-actions" style="padding:20px 24px;border-top:1px solid #f5f5f5;margin-top:18px;">
+      <button type="button" class="btn-cancel" id="cancelModelBtn">ยกเลิก</button>
+      <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> บันทึก</button>
+    </div>
+  </form>
+</div>
 
 <!-- ================= IMAGE MODAL ================= -->
 <div id="imageModal" class="img-modal" role="dialog" aria-label="ดูรูปขนาดใหญ่">

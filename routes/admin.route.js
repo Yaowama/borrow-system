@@ -1079,23 +1079,33 @@ router.get("/device", async (req, res) => {
     GROUP BY d.DeviceID, m.ModelID, m.ModelName, d.DeviceName, d.DeviceImage, c.CategoryName, b.BrandName, t.TypeName
   `);
 
-  // ✅ เพิ่มตรงนี้
   const [types] = await db.query(`
     SELECT TypeID, TypeName, TypeImage
     FROM tb_m_type
     ORDER BY TypeName ASC
   `);
 
-  res.render("admin/layout", {
-    page: "device",
-    active: "device",
-    models,
-    types, // ✅ ตอนนี้ใช้ได้แล้ว
-    success: req.query.success || null,   
-    error: req.query.error || null
-  });
-});
+  const [brands] = await db.query("SELECT * FROM tb_m_brand ORDER BY BrandName");
+    const [categories] = await db.query("SELECT * FROM tb_m_category ORDER BY CategoryName");
+    const [models] = await db.query(`
+      SELECT m.*, b.BrandName 
+      FROM tb_m_model m 
+      JOIN tb_m_brand b ON m.BrandID = b.BrandID 
+      ORDER BY m.ModelName
+    `);
 
+    res.render("admin/layout", {
+      page: "device",
+      active: "device",
+      models,
+      types,
+      brands,      
+      categories,  
+      allModels: models, 
+      success: req.query.success || null,
+      error: req.query.error || null
+    });
+  });
 // ============================
 // ลบรุ่นอุปกรณ์ (MODEL)
 // ============================
@@ -1334,6 +1344,76 @@ router.get("/device/item/:id/delete", async (req, res) => {
 
   res.redirect(`/admin/device/${row.ModelID}?success=delete`);
 });
+
+
+// ============================
+// CATEGORY CRUD
+// ============================
+router.get("/api/categories", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM tb_m_category ORDER BY CategoryName");
+  res.json(rows);
+});
+
+router.post("/category/add", async (req, res) => {
+  const { CategoryID, CategoryName } = req.body;
+  if (CategoryID) {
+    await db.query("UPDATE tb_m_category SET CategoryName=? WHERE CategoryID=?", [CategoryName, CategoryID]);
+  } else {
+    await db.query("INSERT INTO tb_m_category (CategoryName) VALUES (?)", [CategoryName]);
+  }
+  res.redirect("/admin/device?success=add");
+});
+
+router.get("/category/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  const [[used]] = await db.query("SELECT 1 FROM tb_t_device WHERE CategoryID=? LIMIT 1", [id]);
+  if (used) return res.redirect("/admin/device?error=used");
+  await db.query("DELETE FROM tb_m_category WHERE CategoryID=?", [id]);
+  res.redirect("/admin/device?success=delete");
+});
+
+// ============================
+// BRAND CRUD
+// ============================
+router.post("/brand/add", async (req, res) => {
+  const { BrandID, BrandName } = req.body;
+  if (BrandID) {
+    await db.query("UPDATE tb_m_brand SET BrandName=? WHERE BrandID=?", [BrandName, BrandID]);
+  } else {
+    await db.query("INSERT INTO tb_m_brand (BrandName) VALUES (?)", [BrandName]);
+  }
+  res.redirect("/admin/device?success=add");
+});
+
+router.get("/brand/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  const [[used]] = await db.query("SELECT 1 FROM tb_m_model WHERE BrandID=? LIMIT 1", [id]);
+  if (used) return res.redirect("/admin/device?error=used");
+  await db.query("DELETE FROM tb_m_brand WHERE BrandID=?", [id]);
+  res.redirect("/admin/device?success=delete");
+});
+
+// ============================
+// MODEL CRUD
+// ============================
+router.post("/model/add", async (req, res) => {
+  const { ModelID, ModelName, BrandID } = req.body;
+  if (ModelID) {
+    await db.query("UPDATE tb_m_model SET ModelName=?, BrandID=? WHERE ModelID=?", [ModelName, BrandID, ModelID]);
+  } else {
+    await db.query("INSERT INTO tb_m_model (ModelName, BrandID) VALUES (?,?)", [ModelName, BrandID]);
+  }
+  res.redirect("/admin/device?success=add");
+});
+
+router.get("/model/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  const [[used]] = await db.query("SELECT 1 FROM tb_t_device WHERE ModelID=? LIMIT 1", [id]);
+  if (used) return res.redirect("/admin/device?error=used");
+  await db.query("DELETE FROM tb_m_model WHERE ModelID=?", [id]);
+  res.redirect("/admin/device?success=delete");
+});
+
 
 // ============================
 // HELPER

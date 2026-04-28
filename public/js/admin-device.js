@@ -23,6 +23,9 @@ function init() {
   numberedRows();
   highlightRowFromURL();
   initExportModal();
+  initCategoryModal(); 
+  initBrandModal();     
+  initModelModal();
 }
 
 // รองรับทั้งกรณีที่ DOM พร้อมแล้ว และยังไม่พร้อม
@@ -306,7 +309,7 @@ head.addEventListener("click", e => {
     const rect = head.getBoundingClientRect();
     const scrollY = window.scrollY || document.documentElement.scrollTop;
 
-    // ✅ ใช้ scrollY เพื่อให้ตำแหน่งถูกต้องเมื่อ scroll
+    
     dropdown.style.position = "fixed";
     dropdown.style.top  = (rect.bottom + 6) + "px";
     dropdown.style.left = rect.left + "px";
@@ -461,6 +464,9 @@ function initDeleteModal() {
     if (deleteType === "model")      window.location.href = `/admin/device/model/delete/${deleteId}`;
     if (deleteType === "item")       window.location.href = `/admin/device/item/${deleteId}/delete`;
     if (deleteType === "deviceType") window.location.href = `/admin/type/delete/${deleteId}`;
+    if (deleteType === "category")   window.location.href = `/admin/category/delete/${deleteId}`;
+    if (deleteType === "brand")      window.location.href = `/admin/brand/delete/${deleteId}`;
+    if (deleteType === "model-item") window.location.href = `/admin/model/delete/${deleteId}`;
   });
 
   cancelBtn?.addEventListener("click", () => modal?.classList.remove("show"));
@@ -696,3 +702,123 @@ document.querySelectorAll(".js-success-action").forEach(btn => {
     setTimeout(() => window.location.href = url, 1200);
   });
 });
+
+// ============================
+// CATEGORY MODAL
+// ============================
+function initCategoryModal() {
+  const modal = document.getElementById("categoryModal");
+  const form  = document.getElementById("categoryForm");
+  if (!modal) return;
+
+  const close = () => modal.classList.remove("show");
+  document.getElementById("closeCategoryModal")?.addEventListener("click", close);
+  document.getElementById("cancelCategoryBtn")?.addEventListener("click", close);
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+
+  document.getElementById("btnAddCategory")?.addEventListener("click", () => {
+    document.getElementById("categoryModalTitle").textContent = "เพิ่มหมวด";
+    document.getElementById("categoryId").value = "";
+    document.getElementById("categoryName").value = "";
+    modal.classList.add("show");
+  });
+
+  document.querySelectorAll(".btn-cat-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById("categoryModalTitle").textContent = "แก้ไขหมวด";
+      document.getElementById("categoryId").value = btn.dataset.id;
+      document.getElementById("categoryName").value = btn.dataset.name;
+      modal.classList.add("show");
+    });
+  });
+
+  document.querySelectorAll(".btn-cat-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const desc = document.getElementById("deleteModalDesc");
+      if (desc) desc.textContent = `คุณต้องการลบหมวด "${btn.dataset.name}" ใช่หรือไม่?`;
+      deleteId   = btn.dataset.id;
+      deleteType = "category";
+      document.getElementById("deleteModal")?.classList.add("show");
+    });
+  });
+}
+
+// ============================
+// BRAND MODAL
+// ============================
+function initBrandModal() {
+  const modal = document.getElementById("brandModal");
+  if (!modal) return;
+
+  const close = () => modal.classList.remove("show");
+  document.getElementById("closeBrandModal")?.addEventListener("click", close);
+  document.getElementById("cancelBrandBtn")?.addEventListener("click", close);
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+
+  document.getElementById("btnAddBrand")?.addEventListener("click", () => {
+    document.getElementById("brandModalTitle").textContent = "เพิ่มยี่ห้อ";
+    document.getElementById("brandId").value = "";
+    document.getElementById("brandName").value = "";
+    modal.classList.add("show");
+  });
+
+  document.querySelectorAll(".btn-brand-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById("brandModalTitle").textContent = "แก้ไขยี่ห้อ";
+      document.getElementById("brandId").value = btn.dataset.id;
+      document.getElementById("brandName").value = btn.dataset.name;
+      modal.classList.add("show");
+    });
+  });
+
+  document.querySelectorAll(".btn-brand-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const desc = document.getElementById("deleteModalDesc");
+      if (desc) desc.textContent = `คุณต้องการลบยี่ห้อ "${btn.dataset.name}" ใช่หรือไม่?`;
+      deleteId   = btn.dataset.id;
+      deleteType = "brand";
+      document.getElementById("deleteModal")?.classList.add("show");
+    });
+  });
+}
+
+// ============================
+// MODEL MODAL
+// ============================
+function initModelModal() {
+  const modal = document.getElementById("modelModal");
+  if (!modal) return;
+
+  const close = () => modal.classList.remove("show");
+  document.getElementById("closeModelModal")?.addEventListener("click", close);
+  document.getElementById("cancelModelBtn")?.addEventListener("click", close);
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+
+  document.getElementById("btnAddModel")?.addEventListener("click", () => {
+    document.getElementById("modelModalTitle").textContent = "เพิ่มรุ่น";
+    document.getElementById("modelId").value = "";
+    document.getElementById("modelName").value = "";
+    document.getElementById("modelBrand").value = "";
+    modal.classList.add("show");
+  });
+
+  document.querySelectorAll(".btn-model-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById("modelModalTitle").textContent = "แก้ไขรุ่น";
+      document.getElementById("modelId").value = btn.dataset.id;
+      document.getElementById("modelName").value = btn.dataset.name;
+      document.getElementById("modelBrand").value = btn.dataset.brand;
+      modal.classList.add("show");
+    });
+  });
+
+  document.querySelectorAll(".btn-model-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const desc = document.getElementById("deleteModalDesc");
+      if (desc) desc.textContent = `คุณต้องการลบรุ่น "${btn.dataset.name}" ใช่หรือไม่?`;
+      deleteId   = btn.dataset.id;
+      deleteType = "model-item";
+      document.getElementById("deleteModal")?.classList.add("show");
+    });
+  });
+}
