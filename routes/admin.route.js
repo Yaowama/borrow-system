@@ -1086,8 +1086,8 @@ router.get("/device", async (req, res) => {
   `);
 
   const [brands] = await db.query("SELECT * FROM tb_m_brand ORDER BY BrandName");
-    const [categories] = await db.query("SELECT * FROM tb_m_category ORDER BY CategoryName");
-    const [models] = await db.query(`
+      const [categories] = await db.query("SELECT * FROM tb_m_category ORDER BY CategoryName");
+      const [allModels] = await db.query(`
       SELECT m.*, b.BrandName 
       FROM tb_m_model m 
       JOIN tb_m_brand b ON m.BrandID = b.BrandID 
@@ -1099,9 +1099,9 @@ router.get("/device", async (req, res) => {
       active: "device",
       models,
       types,
-      brands,      
-      categories,  
-      allModels: models, 
+      brands,
+      categories,
+      allModels,
       success: req.query.success || null,
       error: req.query.error || null
     });
