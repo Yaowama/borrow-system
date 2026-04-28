@@ -274,7 +274,7 @@ router.get("/dashboard", async (req, res) => {
       SELECT
         SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL THEN 1 ELSE 0 END) AS borrowing,
         SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
-        SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')) THEN 1 ELSE 0 END) AS overdue
+        SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')) THEN 1 ELSE 0 END) AS overdue,
         COUNT(*) AS history
       FROM tb_t_borrowtransaction
       WHERE EMPID = ?
