@@ -97,8 +97,8 @@ router.get("/notifications", async (req, res) => {
       JOIN tb_t_employee e ON bt.EMPID = e.EMPID
       WHERE bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
-        AND bt.DueDate < CURDATE()
-      ORDER BY days DESC
+        AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+        ORDER BY days DESC
       LIMIT 10
     `);
     overdue.forEach(r => notifications.push({
@@ -123,7 +123,7 @@ router.get("/notifications", async (req, res) => {
       JOIN tb_t_employee e ON bt.EMPID = e.EMPID
       WHERE bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
-        AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+        AND DATEDIFF(bt.DueDate, DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) BETWEEN 0 AND 3
       ORDER BY bt.BorrowDate DESC
       LIMIT 10
     `);
@@ -1954,38 +1954,36 @@ router.get("/borrow", async (req, res) => {
     `, params);
 
   const today = new Date();
-    today.setHours(0,0,0,0);
+  // ✅ แปลงเป็น timezone ไทย
+  const bangkokToday = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+  bangkokToday.setHours(0, 0, 0, 0);
 
-    borrows.forEach(b => {
+  borrows.forEach(b => {
+    if (b.BorrowStatusID == 2) {
+      b.statusText = "อนุมัติแล้ว";
+      b.statusClass = "badge purple";
+    }
+    else if (b.BorrowStatusID == 6 && b.DueDate) {
+      const due = new Date(b.DueDateRaw);
+      due.setHours(0, 0, 0, 0);
 
-      if (b.BorrowStatusID == 2) {
-        b.statusText = "อนุมัติแล้ว";
-        b.statusClass = "badge purple";
+      const diffDays = Math.floor((due - bangkokToday) / (1000*60*60*24));
+
+      if (diffDays < 0) {
+        b.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
+        b.statusClass = "badge red";
+      } 
+      else if (diffDays <= 2) {
+        b.statusText = `ใกล้ครบกำหนด (${diffDays} วัน)`;
+        b.statusClass = "badge orange";
+      } 
+      else {
+        b.statusText = "กำลังยืม";
+        b.statusClass = "badge blue";
       }
-
-      else if (b.BorrowStatusID == 6 && b.DueDate) {
-
-        const due = new Date(b.DueDateRaw);
-        due.setHours(0,0,0,0);
-
-        const diffDays = Math.floor((due - today) / (1000*60*60*24));
-
-        if (diffDays < 0) {
-          b.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
-          b.statusClass = "badge red";
-        } 
-        else if (diffDays <= 2) {
-          b.statusText = `ใกล้ครบกำหนด (${diffDays} วัน)`;
-          b.statusClass = "badge orange";
-        } 
-        else {
-          b.statusText = "กำลังยืม";
-          b.statusClass = "badge blue";
-        }
-      }
-
-    });
-
+    }
+  });
+  
   res.render("admin/layout", {
     page: "borrow_list",
     active: "borrow",

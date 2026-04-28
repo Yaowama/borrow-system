@@ -133,7 +133,7 @@ router.get("/notifications", async (req, res) => {
     FROM tb_t_borrowtransaction bt
     WHERE bt.EMPID = ? AND bt.BorrowStatusID = 6
       AND bt.ReturnDate IS NULL
-      AND DATEDIFF(bt.DueDate, CURDATE()) BETWEEN 0 AND 3
+      AND DATEDIFF(bt.DueDate, DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) BETWEEN 0 AND 3
   `, [empId]);
   nearDue.forEach(r => notifications.push({
     notiKey: `u-neardue-${r.BorrowID}`,
@@ -274,7 +274,7 @@ router.get("/dashboard", async (req, res) => {
       SELECT
         SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL THEN 1 ELSE 0 END) AS borrowing,
         SUM(CASE WHEN BorrowStatusID = 1 THEN 1 ELSE 0 END) AS pending,
-        SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL AND DueDate < CURDATE() THEN 1 ELSE 0 END) AS overdue,
+        SUM(CASE WHEN BorrowStatusID IN (2,6) AND ReturnDate IS NULL AND DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')) THEN 1 ELSE 0 END) AS overdue
         COUNT(*) AS history
       FROM tb_t_borrowtransaction
       WHERE EMPID = ?
@@ -757,28 +757,28 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
 `, [EMPID]);
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0); 
+  const bangkokToday = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+  bangkokToday.setHours(0, 0, 0, 0);
+
   rows.forEach(r => {
-
     const due = new Date(r.DueDate);
-    due.setHours(0, 0, 0, 0); 
+    due.setHours(0, 0, 0, 0);
 
-  const diffTime = due - today;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((due - bangkokToday) / (1000*60*60*24));
 
-  if (diffDays < 0) {
-    r.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
-    r.statusClass = "status-danger";
-  } else if (diffDays <= 2) {
-    r.statusText = `ใกล้ครบกำหนด (เหลือ ${diffDays} วัน)`;
-    r.statusClass = "status-warning";
-  } else {
-    r.statusText = "กำลังยืม";
-    r.statusClass = "status-active";
-  }
+    if (diffDays < 0) {
+      r.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
+      r.statusClass = "status-danger";
+    } else if (diffDays <= 2) {
+      r.statusText = `ใกล้ครบกำหนด (เหลือ ${diffDays} วัน)`;
+      r.statusClass = "status-warning";
+    } else {
+      r.statusText = "กำลังยืม";
+      r.statusClass = "status-active";
+    }
 
-  r.DueDate = due.toLocaleDateString("th-TH-u-ca-gregory");
-});
+    r.DueDate = due.toLocaleDateString("th-TH-u-ca-gregory");
+  });
 
 
   res.render("user/layout", {
