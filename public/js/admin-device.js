@@ -515,7 +515,6 @@ function initTypeModal() {
   const btnClose = document.getElementById("closeTypeModal");
   const btnCancel= document.getElementById("cancelTypeBtn");
 
-  // Image preview
   const fileInput  = document.getElementById("typeImageInput");
   const preview    = document.getElementById("typeImgPreview");
   const previewImg = document.getElementById("typeImgPreviewImg");
@@ -538,20 +537,17 @@ function initTypeModal() {
     preview.style.display = "none";
   });
 
-  // Open for add
   btnAdd?.addEventListener("click", () => {
     resetTypeModal("เพิ่มประเภท", "บันทึก");
     modal?.classList.add("show");
   });
 
-  // Close
   const closeModal = () => modal?.classList.remove("show");
   btnClose?.addEventListener("click", closeModal);
   btnCancel?.addEventListener("click", closeModal);
   modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
 
-  // Edit buttons
-  document.querySelectorAll(".btn-type-edit").forEach(btn => {
+  document.querySelectorAll(".btn-type-edit:not(.btn-cat-edit):not(.btn-brand-edit)").forEach(btn => {
     btn.addEventListener("click", () => {
       const id   = btn.dataset.id;
       const name = btn.dataset.name;
@@ -562,7 +558,6 @@ function initTypeModal() {
     });
   });
 }
-
 
 function resetTypeModal(title, submitLabel) {
   document.getElementById("modalTitle").textContent = title;
