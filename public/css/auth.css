@@ -926,3 +926,11 @@ img { max-width: 100%; display: block; }
   .auth-card-top  { padding: 28px 24px 24px; }
   .otp-box { width: 44px; height: 50px; font-size: 20px; }
 }
+
+/* globals.css */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none;
+}
