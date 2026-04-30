@@ -1,3 +1,7 @@
+const cron = require("node-cron");  // ← เพิ่มบรรทัดนี้
+const db = require("./db");
+const { sendEmail, emailOverdue, emailNearDue } = require("./mail");
+
 cron.schedule("0 8 * * *", async () => {
   console.log("⏰ Cron: ส่งเมลแจ้งเตือนการยืม...");
 
