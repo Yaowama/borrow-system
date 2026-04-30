@@ -1,20 +1,43 @@
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require("nodemailer");
 
-const sendEmail = async ({ to, subject, html }) => {
-  try {
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html
+let _transporter = null;
+let _etherealUser = null;
+
+async function getTransporter() {
+  if (_transporter) return _transporter;
+
+  const hasRealConfig =
+    process.env.EMAIL_HOST &&
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASS &&
+    process.env.EMAIL_USER !== "test";
+
+  if (hasRealConfig) {
+    _transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || "587"),
+      secure: false,
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
     });
-    return { success: true };
-  } catch (err) {
-    console.error("Send email error:", err);
-    return { success: false, error: err };
+    console.log("📧 Mail: using real SMTP →", process.env.EMAIL_HOST);
+  } else {
+    // Auto-create Ethereal test account
+    const testAccount = await nodemailer.createTestAccount();
+    _etherealUser = testAccount.user;
+    _transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass }
+    });
+    console.log("📧 Mail: using Ethereal (test mode)");
+    console.log("   Inbox → https://ethereal.email/messages");
+    console.log("   User  →", testAccount.user);
   }
-};
+
+  return _transporter;
+}
+
 
 function emailWrapper({ headerColor, iconText, headerTitle, bodyHtml }) {
   return `
@@ -180,5 +203,5 @@ function emailReturned({ borrowCode, name, deviceName, returnDate, returnBy }) {
   });
 }
 
-module.exports = { sendEmail, emailNewRequest, emailApproved, emailRejected, emailNearDue, emailOverdue, emailReturned };
+module.exports = { emailNewRequest, emailApproved, emailRejected, emailNearDue, emailOverdue, emailReturned };
 
