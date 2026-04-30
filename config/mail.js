@@ -229,6 +229,5 @@ function emailReturned({ borrowCode, name, deviceName, returnDate, returnBy }) {
   });
 }
 
-module.exports = { sendEmail,emailNewRequest, emailApproved, emailRejected, emailNearDue, emailOverdue ,emailReturned };
-
+module.exports = { emailNewRequest, emailApproved, emailRejected, emailNearDue, emailOverdue, emailReturned };
 
