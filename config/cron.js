@@ -1,14 +1,13 @@
-const cron = require("node-cron");  // ← เพิ่มบรรทัดนี้
+const cron = require("node-cron");
 const db = require("./db");
 const { sendEmail, emailOverdue, emailNearDue } = require("./mail");
 
-cron.schedule("0 8 * * *", async () => {
+// ทดสอบ: รันทุก 1 นาที → พอใช้งานจริงเปลี่ยนเป็น "0 8 * * *"
+cron.schedule("* * * * *", async () => {
   console.log("⏰ Cron: ส่งเมลแจ้งเตือนการยืม...");
 
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
   try {
-    // ---- เกินกำหนด (status 2 หรือ 6) ----
+    // ---- เกินกำหนด ----
     const [overdueList] = await db.query(`
       SELECT
         bt.BorrowID,
@@ -27,8 +26,13 @@ cron.schedule("0 8 * * *", async () => {
         AND bt.ReturnDate IS NULL
         AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
         AND e.email IS NOT NULL
-        AND (bt.LastOverdueNotiDate IS NULL OR bt.LastOverdueNotiDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')))
+        AND (
+          bt.LastOverdueNotiDate IS NULL 
+          OR bt.LastOverdueNotiDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+        )
     `);
+
+    console.log(`พบเกินกำหนด: ${overdueList.length} รายการ`);
 
     for (const r of overdueList) {
       const result = await sendEmail({
@@ -45,13 +49,14 @@ cron.schedule("0 8 * * *", async () => {
       });
 
       if (result.success) {
-        // บันทึกว่าส่งแล้ววันนี้
         await db.query(`
           UPDATE tb_t_borrowtransaction
           SET LastOverdueNotiDate = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
           WHERE BorrowID = ?
         `, [r.BorrowID]);
         console.log(`📧 ส่งเมลเกินกำหนด → ${r.email} (${r.BorrowCode})`);
+      } else {
+        console.error(`❌ ส่งไม่ได้ → ${r.email}:`, result.error);
       }
     }
 
@@ -74,8 +79,13 @@ cron.schedule("0 8 * * *", async () => {
         AND bt.ReturnDate IS NULL
         AND DATEDIFF(bt.DueDate, DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))) BETWEEN 0 AND 3
         AND e.email IS NOT NULL
-        AND (bt.LastNearDueNotiDate IS NULL OR bt.LastNearDueNotiDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')))
+        AND (
+          bt.LastNearDueNotiDate IS NULL 
+          OR bt.LastNearDueNotiDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+        )
     `);
+
+    console.log(`พบใกล้ครบกำหนด: ${nearDueList.length} รายการ`);
 
     for (const r of nearDueList) {
       const result = await sendEmail({
@@ -98,6 +108,8 @@ cron.schedule("0 8 * * *", async () => {
           WHERE BorrowID = ?
         `, [r.BorrowID]);
         console.log(`📧 ส่งเมลใกล้ครบ → ${r.email} (${r.BorrowCode})`);
+      } else {
+        console.error(`❌ ส่งไม่ได้ → ${r.email}:`, result.error);
       }
     }
 

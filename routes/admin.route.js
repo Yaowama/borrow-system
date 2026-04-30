@@ -2058,7 +2058,8 @@ router.get("/borrow", async (req, res) => {
         bangkokToday.setHours(0, 0, 0, 0);
 
         const diffDays = Math.round((due - bangkokToday) / (1000 * 60 * 60 * 24));
-
+        
+        console.log("DueDateRaw:", b.DueDateRaw, typeof b.DueDateRaw);
         if (diffDays < 0) {
           b.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
           b.statusClass = "badge red";
