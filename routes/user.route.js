@@ -295,7 +295,7 @@ router.get("/dashboard", async (req, res) => {
         res.render("user/layout", {
           title: "ระบบยืม–คืน",
           page: "user",
-          user: req.session.user,  
+          user: req.session.user,  // ✅ ใช้ session ที่อัปแล้ว
           types,
           stats,
           success: req.query.success,
@@ -761,19 +761,10 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
   bangkokToday.setHours(0, 0, 0, 0);
 
   rows.forEach(r => {
-    // แปลง DueDate เป็น string แล้วตัด timezone ออก
-    const dateStr = r.DueDate instanceof Date
-      ? r.DueDate.toISOString().split('T')[0]
-      : String(r.DueDate).split('T')[0]; // "2026-04-29"
+    const due = new Date(r.DueDate);
+    due.setHours(0, 0, 0, 0);
 
-    const [y, mo, d] = dateStr.split('-').map(Number);
-    const due = new Date(y, mo - 1, d); // local midnight ไม่มี offset
-
-    const today = new Date();
-    const bangkokToday = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
-    bangkokToday.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.round((due - bangkokToday) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((due - bangkokToday) / (1000*60*60*24));
 
     if (diffDays < 0) {
       r.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
@@ -786,7 +777,6 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
       r.statusClass = "status-active";
     }
 
-    // แปลงวันแสดงผลหลังคำนวณแล้ว
     r.DueDate = due.toLocaleDateString("th-TH-u-ca-gregory");
   });
 
