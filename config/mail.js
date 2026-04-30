@@ -64,23 +64,6 @@ async function getTransporter() {
   return _transporter;
 }
 
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const sendEmail = async ({ to, subject, html }) => {
-  try {
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Borrow System <onboarding@resend.dev>",
-      to,
-      subject,
-      html
-    });
-    return { success: true };
-  } catch (err) {
-    console.error("📧 sendEmail error:", err.message);
-    return { success: false, error: err.message };
-  }
-};
 
 function emailWrapper({ headerColor, iconText, headerTitle, bodyHtml }) {
   return `
