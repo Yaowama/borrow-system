@@ -1,29 +1,3 @@
-// const nodemailer = require("nodemailer");
-
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS
-//   }
-// });
-
-// // function กลาง
-// const sendEmail = async ({ to, subject, html }) => {
-//   try {
-//     await transporter.sendMail({
-//       from: `"Borrow System" <${process.env.EMAIL_USER}>`,
-//       to,
-//       subject,
-//       html
-//     });
-//   } catch (err) {
-//     console.error("Send email error:", err);
-//   }
-// };
-
-// module.exports = { sendEmail };
-
 const nodemailer = require("nodemailer");
 
 let _transporter = null;

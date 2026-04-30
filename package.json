@@ -26,6 +26,7 @@
     "multer": "^2.0.2",
     "mysql2": "^3.16.1",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^7.0.12",
+    "resend": "^6.12.2"
   }
 }
