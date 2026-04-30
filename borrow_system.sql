@@ -906,6 +906,7 @@ ALTER TABLE `tb_t_borrowtransaction`
   ADD UNIQUE KEY `BorrowCode` (`BorrowCode`),
   ADD KEY `fk_bt_empid` (`EMPID`),
   ADD KEY `fk_bt_dvid` (`DVID`);
+  
 
 --
 -- Indexes for table `tb_t_device`

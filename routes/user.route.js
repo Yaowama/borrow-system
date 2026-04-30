@@ -295,7 +295,7 @@ router.get("/dashboard", async (req, res) => {
         res.render("user/layout", {
           title: "ระบบยืม–คืน",
           page: "user",
-          user: req.session.user,  // ✅ ใช้ session ที่อัปแล้ว
+          user: req.session.user,  
           types,
           stats,
           success: req.query.success,

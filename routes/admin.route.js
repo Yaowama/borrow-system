@@ -2043,25 +2043,33 @@ router.get("/borrow", async (req, res) => {
       b.statusText = "อนุมัติแล้ว";
       b.statusClass = "badge purple";
     }
-    else if (b.BorrowStatusID == 6 && b.DueDate) {
-      const due = new Date(b.DueDateRaw);
-      due.setHours(0, 0, 0, 0);
+      else if (b.BorrowStatusID == 6 && b.DueDateRaw) {
+        // แปลง DueDate เป็น Bangkok midnight
+        const dueStr = b.DueDateRaw instanceof Date 
+          ? b.DueDateRaw.toISOString().split('T')[0] 
+          : String(b.DueDateRaw).split('T')[0];
+        
+        const [y, m, d] = dueStr.split('-').map(Number);
+        const due = new Date(y, m - 1, d); // local midnight — ไม่มี timezone offset
+        due.setHours(0, 0, 0, 0);
 
-      const diffDays = Math.floor((due - bangkokToday) / (1000*60*60*24));
+        const today = new Date();
+        const bangkokToday = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+        bangkokToday.setHours(0, 0, 0, 0);
 
-      if (diffDays < 0) {
-        b.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
-        b.statusClass = "badge red";
-      } 
-      else if (diffDays <= 2) {
-        b.statusText = `ใกล้ครบกำหนด (${diffDays} วัน)`;
-        b.statusClass = "badge orange";
-      } 
-      else {
-        b.statusText = "กำลังยืม";
-        b.statusClass = "badge blue";
+        const diffDays = Math.round((due - bangkokToday) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          b.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
+          b.statusClass = "badge red";
+        } else if (diffDays <= 2) {
+          b.statusText = `ใกล้ครบกำหนด (${diffDays} วัน)`;
+          b.statusClass = "badge orange";
+        } else {
+          b.statusText = "กำลังยืม";
+          b.statusClass = "badge blue";
+        }
       }
-    }
   });
   
   res.render("admin/layout", {
