@@ -1,18 +1,18 @@
-const nodemailer = require("nodemailer");
+// config/mailer.js
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // 587 = false, 465 = true
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-
-  tls: {
-    rejectUnauthorized: false
+// จำลอง interface เดิมของ nodemailer ให้ใช้งานได้เหมือนเดิม
+const transporter = {
+  sendMail: async ({ from, to, subject, html }) => {
+    const result = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "Borrow System <onboarding@resend.dev>",
+      to,
+      subject,
+      html
+    });
+    return result;
   }
-});
+};
 
 module.exports = transporter;

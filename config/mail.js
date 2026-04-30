@@ -1,89 +1,21 @@
-// const nodemailer = require("nodemailer");
 
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS
-//   }
-// });
-
-// // function กลาง
-// const sendEmail = async ({ to, subject, html }) => {
-//   try {
-//     await transporter.sendMail({
-//       from: `"Borrow System" <${process.env.EMAIL_USER}>`,
-//       to,
-//       subject,
-//       html
-//     });
-//   } catch (err) {
-//     console.error("Send email error:", err);
-//   }
-// };
-
-// module.exports = { sendEmail };
-
-const nodemailer = require("nodemailer");
-
-let _transporter = null;
-let _etherealUser = null;
-
-async function getTransporter() {
-  if (_transporter) return _transporter;
-
-  const hasRealConfig =
-    process.env.EMAIL_HOST &&
-    process.env.EMAIL_USER &&
-    process.env.EMAIL_PASS &&
-    process.env.EMAIL_USER !== "test";
-
-  if (hasRealConfig) {
-    _transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || "587"),
-      secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-    });
-    console.log("📧 Mail: using real SMTP →", process.env.EMAIL_HOST);
-  } else {
-    // Auto-create Ethereal test account
-    const testAccount = await nodemailer.createTestAccount();
-    _etherealUser = testAccount.user;
-    _transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass }
-    });
-    console.log("📧 Mail: using Ethereal (test mode)");
-    console.log("   Inbox → https://ethereal.email/messages");
-    console.log("   User  →", testAccount.user);
-  }
-
-  return _transporter;
-}
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const t = await getTransporter();
-    const from = process.env.EMAIL_FROM ||
-      (_etherealUser ? `"ระบบยืม-คืน" <${_etherealUser}>` : '"ระบบยืม-คืน" <noreply@borrowsystem.com>');
-
-    const info = await t.sendMail({ from, to, subject, html });
-
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    if (previewUrl) {
-      console.log(`📧 Preview: ${previewUrl}`);
-    }
-
-    return { success: true, previewUrl };
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM || "Borrow System <onboarding@resend.dev>",
+      to,
+      subject,
+      html
+    });
+    return { success: true };
   } catch (err) {
     console.error("📧 sendEmail error:", err.message);
     return { success: false, error: err.message };
   }
 };
-
 
 function emailWrapper({ headerColor, iconText, headerTitle, bodyHtml }) {
   return `
