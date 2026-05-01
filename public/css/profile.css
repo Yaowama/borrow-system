@@ -408,3 +408,21 @@
   color: #888;
 }
 
+/* ดัน manual ไปชิดขวา */
+.profile-actions {
+  justify-content: flex-start; 
+}
+
+.btn.manual {
+  margin-left: auto;           
+  background: #fff;
+  color: #ff7a2d;
+  border: 2px solid #ff7a2d;
+  font-weight: 700;
+  transition: .25s;
+}
+
+.btn.manual:hover {
+  background: #ff7a2d;
+  color: #fff;
+}
