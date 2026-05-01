@@ -2045,9 +2045,9 @@ router.get("/borrow", async (req, res) => {
     }
       else if (b.BorrowStatusID == 6 && b.DueDateRaw) {
         // แปลง DueDate เป็น Bangkok midnight
-        const dueStr = b.DueDateRaw instanceof Date 
-          ? b.DueDateRaw.toISOString().split('T')[0] 
-          : String(b.DueDateRaw).split('T')[0];
+        const dueStr = b.DueDateRaw instanceof Date
+        ? `${b.DueDateRaw.getFullYear()}-${String(b.DueDateRaw.getMonth()+1).padStart(2,'0')}-${String(b.DueDateRaw.getDate()).padStart(2,'0')}`
+        : String(b.DueDateRaw).split('T')[0];
         
         const [y, m, d] = dueStr.split('-').map(Number);
         const due = new Date(y, m - 1, d); // local midnight — ไม่มี timezone offset
@@ -2793,7 +2793,7 @@ router.get("/report", isAdmin, async (req, res) => {
       where.push(`
         bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
-        AND bt.DueDate < CURDATE()
+        AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
       `);
     }
 
@@ -2837,18 +2837,17 @@ router.get("/report", isAdmin, async (req, res) => {
             THEN GREATEST(DATEDIFF(bt.ReturnDate, bt.DueDate), 0)
           WHEN bt.BorrowStatusID = 6
               AND bt.ReturnDate IS NULL
-            THEN GREATEST(DATEDIFF(CURDATE(), bt.DueDate), 0)
+            THEN GREATEST(DATEDIFF(DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')), bt.DueDate), 0)
           ELSE 0
         END AS LateDays,
 
-        -- สถานะแสดงผล (ผูกกับ BorrowStatusID เท่านั้น)
         CASE
           WHEN bt.BorrowStatusID = 3 THEN 'ปฏิเสธ'
           WHEN bt.BorrowStatusID = 5 THEN 'ยกเลิก'
           WHEN bt.BorrowStatusID = 4 THEN 'คืนแล้ว'
           WHEN bt.BorrowStatusID = 6
               AND bt.ReturnDate IS NULL
-              AND bt.DueDate < CURDATE()
+              AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
             THEN 'เกินกำหนด'
           WHEN bt.BorrowStatusID = 6
               AND bt.ReturnDate IS NULL
@@ -2936,7 +2935,7 @@ router.get("/report/excel", isAdmin, async (req, res) => {
       where.push(`
         bt.BorrowStatusID = 6
         AND bt.ReturnDate IS NULL
-        AND bt.DueDate >= CURDATE()
+        AND bt.DueDate >= DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
       `);
     }
 
@@ -2993,13 +2992,16 @@ router.get("/report/excel", isAdmin, async (req, res) => {
           WHEN bt.BorrowStatusID = 3 THEN 'ปฏิเสธ'
           WHEN bt.BorrowStatusID = 5 THEN 'ยกเลิก'
           WHEN bt.BorrowStatusID = 4 THEN 'คืนแล้ว'
+      
           WHEN bt.BorrowStatusID = 6
             AND bt.ReturnDate IS NULL
-            AND bt.DueDate < CURDATE()
+            THEN GREATEST(DATEDIFF(DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00')), bt.DueDate), 0)
+
+          WHEN bt.BorrowStatusID = 6
+            AND bt.ReturnDate IS NULL
+            AND bt.DueDate < DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
             THEN 'เกินกำหนด'
-          WHEN bt.BorrowStatusID = 6
-            AND bt.ReturnDate IS NULL
-            THEN 'กำลังยืม'
+
           WHEN bt.BorrowStatusID = 2 THEN 'อนุมัติแล้ว'
           ELSE 'รออนุมัติ'
         END AS StatusLabel

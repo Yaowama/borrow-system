@@ -1,3 +1,29 @@
+// const nodemailer = require("nodemailer");
+
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS
+//   }
+// });
+
+// // function กลาง
+// const sendEmail = async ({ to, subject, html }) => {
+//   try {
+//     await transporter.sendMail({
+//       from: `"Borrow System" <${process.env.EMAIL_USER}>`,
+//       to,
+//       subject,
+//       html
+//     });
+//   } catch (err) {
+//     console.error("Send email error:", err);
+//   }
+// };
+
+// module.exports = { sendEmail };
+
 const nodemailer = require("nodemailer");
 
 let _transporter = null;
@@ -38,6 +64,25 @@ async function getTransporter() {
   return _transporter;
 }
 
+async function sendEmail({ to, subject, html }) {
+  try {
+    const transporter = await getTransporter();
+
+    const info = await transporter.sendMail({
+      from: `"Borrow System" <${process.env.EMAIL_USER || _etherealUser}>`,
+      to,
+      subject,
+      html
+    });
+
+    console.log("📧 Email sent:", info.messageId);
+
+    return { success: true, info };
+  } catch (error) {
+    console.error("EMAIL ERROR:", error);
+    return { success: false, error };
+  }
+}
 
 function emailWrapper({ headerColor, iconText, headerTitle, bodyHtml }) {
   return `
@@ -203,5 +248,13 @@ function emailReturned({ borrowCode, name, deviceName, returnDate, returnBy }) {
   });
 }
 
-module.exports = { emailNewRequest, emailApproved, emailRejected, emailNearDue, emailOverdue, emailReturned };
+module.exports = { 
+  sendEmail,
+  emailNewRequest, 
+  emailApproved, 
+  emailRejected, 
+  emailNearDue, 
+  emailOverdue, 
+  emailReturned 
+};
 

@@ -37,7 +37,7 @@ cron.schedule("* * * * *", async () => {
     for (const r of overdueList) {
       const result = await sendEmail({
         to: r.email,
-        subject: `🚨 อุปกรณ์เกินกำหนดคืน ${r.overdueDays} วัน - ${r.BorrowCode}`,
+        subject: `อุปกรณ์เกินกำหนดคืน ${r.overdueDays} วัน - ${r.BorrowCode}`,
         html: emailOverdue({
           borrowCode: r.BorrowCode,
           name: `${r.fname} ${r.lname}`,
@@ -90,7 +90,7 @@ cron.schedule("* * * * *", async () => {
     for (const r of nearDueList) {
       const result = await sendEmail({
         to: r.email,
-        subject: `⏰ อุปกรณ์ใกล้ครบกำหนดคืน ${r.remainDays} วัน - ${r.BorrowCode}`,
+        subject: `อุปกรณ์ใกล้ครบกำหนดคืน ${r.remainDays} วัน - ${r.BorrowCode}`,
         html: emailNearDue({
           borrowCode: r.BorrowCode,
           name: `${r.fname} ${r.lname}`,

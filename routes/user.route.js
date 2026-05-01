@@ -761,10 +761,14 @@ router.get("/borrowing", isLogin, checkActive, async (req, res) => {
   bangkokToday.setHours(0, 0, 0, 0);
 
   rows.forEach(r => {
-    const due = new Date(r.DueDate);
+    const dueRaw = r.DueDate;
+    const dueStr = dueRaw instanceof Date
+      ? `${dueRaw.getFullYear()}-${String(dueRaw.getMonth()+1).padStart(2,'0')}-${String(dueRaw.getDate()).padStart(2,'0')}`
+      : String(dueRaw).split('T')[0];
+    const [dy, dm, dd] = dueStr.split('-').map(Number);
+    const due = new Date(dy, dm - 1, dd);
     due.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.floor((due - bangkokToday) / (1000*60*60*24));
+    const diffDays = Math.round((due - bangkokToday) / (1000*60*60*24));
 
     if (diffDays < 0) {
       r.statusText = `เกินกำหนด ${Math.abs(diffDays)} วัน`;
